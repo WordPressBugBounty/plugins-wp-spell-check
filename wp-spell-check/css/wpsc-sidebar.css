@@ -1,0 +1,4 @@
+.wpsc-sidebar-content input[type=button] { padding: 5px; max-width: 250px; margin: 10px 0 0 10px; background: green; color: white; font-weight: bold; font-size: 16px; line-height: 20px; border-radius: 5px; }
+.wpsc-modal-box { position: fixed; left: 50%; top: 50%; margin-left: -500px; margin-top: -500px; width: 1000px; height: 1000px; border: 1px solid grey; border-radius: 5px; box-shadow: grey 1px 1px 1px; display: none; padding: 5px; background: white; }
+.wpsc-close-modal { font-weight: bold; text-decoration: none; font-size: 20px; float: right; margin: 5px; line-height: 22px; }
+.wpsc-modal-box iframe { height: 95%; }

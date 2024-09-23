@@ -1,0 +1,20 @@
+li#wp-admin-bar-WP_Spell_Check > a.ab-item, li#wp-admin-bar-WP_Spell_Check > a.ab-item:hover, li#wp-admin-bar-WP_Spell_Check > a.ab-item:active { background-image: url('images/logo-icon-16x16.png')!important; background-repeat: no-repeat!important; background-position: 0.15em 50%!important; padding-left: 25px!important; }
+#wpsc-scan-results-tab th { vertical-align: top; }
+#wpgc-scan-results-tab .wp-list-table th { text-align: center; vertical-align: top; }
+.wpgc-desc .wpgc-desc-content { display: none; }
+.wpsc-misspelled-word { background: yellow; }
+.wpsc-install-notice { position: fixed; left: 50%; top: 50%; width: 600px; margin: -192px 0 0 -300px; border-radius: 10px; background: white; box-shadow: black 0px 0px 5px; text-align: center; height: 385px; padding: 10px; z-index: 99999; }
+.wpsc-install-content { display: block; width: 100%; vertical-align: top; margin: 10px 0px; }
+.wpsc-install-notice img { display: block; margin: auto; }
+.wpsc-install-dismiss { float: right; text-align: right; }
+.wpgc-dialog { border: 1px solid black; background: white; position: absolute; z-index:999999; border-radius: 4px; min-width: 100px; margin-top: 20px; }
+.wpgc-dialog ul { margin: 0px; }
+.wpgc-dialog a { text-decoration: none; color: black; background: white!important; }
+.wpgc-dialog a:hover { color:black; }
+.wpgc-dialog hr { margin: 0px; }
+.wpgc-dialog li { padding: 3px 5px 3px 11px; margin: 0px; }
+.wpgc-dialog li:first-child { background: grey; color: black!important; border-top-left-radius: 4px; border-top-right-radius: 4px; padding: 5px; font-weight: bold; }
+#major-publishing-actions { background: white!important; }
+.wpgc-desc .wpgc-desc-content { display: none; }
+#wpgc-scan-results-tab .wp-list-table th { text-align: center; }
+.wpsc-scan-nav-bar a { border-radius: 5px 5px 0 0; }
