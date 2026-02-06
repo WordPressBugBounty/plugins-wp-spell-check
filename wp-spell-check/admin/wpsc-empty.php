@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 function wpscx_check_page_title_empty( $scanner = null ) {
 	if ( null === $scanner ) {
-		$scanner = new Wpscx_Seo_Scanner;
+		$scanner = new Wpscx_Seo_Scanner();
 	}
 		$scanner->check_page_title_empty();
 }
@@ -36,7 +36,7 @@ function wpscx_check_page_title_empty( $scanner = null ) {
 
 function wpscx_check_post_title_empty( $scanner = null ) {
 	if ( null === $scanner ) {
-		$scanner = new Wpscx_Seo_Scanner;
+		$scanner = new Wpscx_Seo_Scanner();
 	}
 			$scanner->check_post_title_empty();
 }
@@ -44,7 +44,7 @@ function wpscx_check_post_title_empty( $scanner = null ) {
 
 function wpscx_check_author_empty( $scanner = null ) {
 	if ( null === $scanner ) {
-		$scanner = new Wpscx_Seo_Scanner;
+		$scanner = new Wpscx_Seo_Scanner();
 	}
 		$scanner->check_author_empty( 0, null );
 }
@@ -54,11 +54,11 @@ function wpscx_clear_results_empty() {
 	global $wpdb;
 	$table_name    = $wpdb->prefix . 'spellcheck_empty';
 	$options_table = $wpdb->prefix . 'spellcheck_options';
-	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'pro_empty_count' ) ); //$ Clear out the pro errors count
-	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'empty_checked' ) ); //$ Clear out the total empty field count
-	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'page_count' ) ); //$ Clear out the page count
-	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'post_count' ) ); //$ Clear out the post count
-	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'media_count' ) ); //$Clear out the media count
+	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'pro_empty_count' ) ); // $ Clear out the pro errors count
+	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'empty_checked' ) ); // $ Clear out the total empty field count
+	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'page_count' ) ); // $ Clear out the page count
+	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'post_count' ) ); // $ Clear out the post count
+	$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'media_count' ) ); // $Clear out the media count
 
 	$wpdb->delete( $table_name, array( 'ignore_word' => false ) );
 }
@@ -202,22 +202,23 @@ function wpscx_scan_site_empty( $rng_seed = 0 ) {
 	global $wpscx_ent_included;
 
 	wpscx_clear_empty_results();
-	//wpsc_clear_events_empty(); //Clear out the event scheduler of any previous empty field events
+	// wpsc_clear_events_empty(); //Clear out the event scheduler of any previous empty field events
 
 	$table_name    = $wpdb->prefix . 'spellcheck_empty';
 	$options_table = $wpdb->prefix . 'spellcheck_options';
-	set_time_limit( 600 ); //$ Set PHP timeout limit
+	set_time_limit( 600 ); // $ Set PHP timeout limit
 	$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'empty_scan_in_progress' ) );
-	$sql_count++;
+	++$sql_count;
 	$start_time = time();
-	//$wpdb->update($options_table, array('option_value' => $start_time), array('option_name' => 'scan_start_time'));  $sql_count++;
+	// $wpdb->update($options_table, array('option_value' => $start_time), array('option_name' => 'scan_start_time'));  $sql_count++;
 
-	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table ); //4 = Pages, 5 = Posts, 6 = Theme, 7 = Menus
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
+	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table ); // 4 = Pages, 5 = Posts, 6 = Theme, 7 = Menus
 
-			$scanner_base = new Wpscx_Seo_Scanner;
+			$scanner_base = new Wpscx_Seo_Scanner();
 
 	if ( $wpscx_ent_included ) {
-				$scanner_pro = new Wpscx_Seo_Scanner_pro;
+				$scanner_pro = new Wpscx_Seo_Scanner_pro();
 
 		if ( 'true' === $settings[48]->option_value ) {
 			wpscx_check_menus_empty_ent( $scanner_pro );
@@ -274,8 +275,7 @@ function wpscx_scan_site_empty( $rng_seed = 0 ) {
 	add_action( 'adminscansiteempty', 'wpscx_scan_site_empty' );
 
 function wpscx_check_empty_wpsc() {
-		$scanner = new Wpscx_Seo_Scanner;
+		$scanner = new Wpscx_Seo_Scanner();
 		$scanner->check_empty_wpsc();
 }
 	add_action( 'admincheckemptywpsc', 'wpscx_check_empty_wpsc' );
-

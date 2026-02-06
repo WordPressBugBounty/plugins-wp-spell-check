@@ -1,53 +1,34 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; }
+global $wpsc_version;
 ?>
 
-<div style="float: right; width:23%; margin-left: 2%; margin-top: 50px">
-				<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-<script type="text/javascript">
-//<![CDATA[
-if (typeof newsletter_check !== "function") {
-window.newsletter_check = function (f) {
-	var re = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-]{1,})+\.)+([a-zA-Z0-9]{2,})+$/;
-	if (!re.test(f.elements["ne"].value)) {
-		alert("The email is not correct");
-		return false;
-	}
-	for (var i=1; i<20; i++) {
-	if (f.elements["np" + i] && f.elements["np" + i].value == "") {
-		alert("");
-		return false;
-	}
-	}
-	if (f.elements["ny"] && !f.elements["ny"].checked) {
-		alert("You must accept the privacy statement");
-		return false;
-	}
-	return true;
-}
-}
-//]]>
-</script>
-
-<div style="padding: 5px 5px 10px 5px; border-radius: 5px; background: white; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5); text-align: center;">
-				<a href="https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( $wpsc_version ); ?>" target="_blank"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/wpsc-sidebar.jpg'; ?>" style="max-width: 99%;" alt="Watch WP Spell Check Tutorials" /></a>
+<div class="wpsc-sidebar-container">
+<div class="wpsc-sidebar-tutorial-box">
+			<a href="https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( isset( $wpsc_version ) ? $wpsc_version : '1.0' ); ?>" target="_blank"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/wpsc-sidebar.jpg'; ?>" alt="Watch WP Spell Check Tutorials" /></a>
 </div>
-<hr style="margin: 1em 0;">
-<div style="padding: 5px 5px 10px 5px; border-radius: 5px; background: white; text-align: center; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);">
-				<h2>Follow us on Facebook</h2>
-				<div class="fb-page" data-href="https://www.facebook.com/wpspellcheck/" data-width="180px" data-small-header="true" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/wpspellcheck/" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/wpspellcheck/">WP Spell Check</a></blockquote></div>
+<hr>
+<div class="wpsc-sidebar-social-box">
+				<h2>Stay In Touch</h2>
+				<div class="wpsc-social-links">
+					<a href="https://www.facebook.com/wpspellcheck/" target="_blank" rel="noopener noreferrer" class="wpsc-social-link wpsc-social-facebook" aria-label="Follow us on Facebook">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+							<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+						</svg>
+						<span>Facebook</span>
+					</a>
+					<a href="https://x.com/wpspellcheck" target="_blank" rel="noopener noreferrer" class="wpsc-social-link wpsc-social-x" aria-label="Follow us on X">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+							<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+						</svg>
+						<span>X</span>
+					</a>
+				</div>
 </div>
-<hr style="margin: 1em 0;">
-<div class="newsletter newsletter-subscription" style="padding: 5px 5px 10px 5px; border-radius: 5px; background: white; box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5); ">
-<div class="wpsc-sidebar" style="margin-bottom: 15px; text-align: center;"><h2>Enjoying this plugin?</h2>Please help by giving us a <a class="review-button" href="https://wordpress.org/support/plugin/wp-spell-check/reviews/?filter=5" target="_blank">★★★★★ Rating</a></div>
+<hr>
+<div class="newsletter newsletter-subscription">
+<div class="wpsc-sidebar"><h2>Enjoying this plugin?</h2>Please help by giving us a <a class="review-button" href="https://wordpress.org/support/plugin/wp-spell-check/reviews/" target="_blank">★★★★★ Rating</a></div>
 </div>
-<hr style="margin: 1em 0;">
+<hr>
 			</div>

@@ -1,8 +1,11 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-    const WPSCX_EMPTY = 'Empty Field';
+	const WPSCX_EMPTY = 'Empty Field';
 class Wpscx_Seo_Scanner extends wpscx_scanner {
-    
+
 	function check_page_title_empty( $rng_seed = 0, $is_running = false ) {
 		$start = round( microtime( true ), 5 );
 		ini_set( 'memory_limit', '512M' );
@@ -25,7 +28,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running && ! empty( $is_running ) ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'empty_scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 		}
 
@@ -37,22 +40,27 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_title, ID FROM $page_table WHERE post_type='page'$post_status LIMIT $wpscx_base_page_max" ) );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-			$sql_count++;
-                        $ignore_list = $wpdb->get_results("SELECT page_name, page_type, page_id FROM $table_name WHERE ignore_word=1");
+			++$sql_count;
+						$ignore_list = $wpdb->get_results( 'SELECT page_name, page_type, page_id FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=1' );
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-				$total_count++;
+				++$total_count;
 				$word_list = $page_list[ $x ]->post_title;
-                                
-                                $ignore_field = false;
-                                foreach($ignore_list as $row) {
-                                    if ($row->page_type == 'Page Title' && $row->page_id == $page_list[ $x ]->ID) $ignore_field = true;
-                                }
-                                if ($ignore_field) continue;
 
-                                if ( wpscx_check_empty( $word_list, false ) ) {
-					$error_count++;
+								$ignore_field = false;
+				foreach ( $ignore_list as $row ) {
+					if ( $row->page_type == 'Page Title' && $row->page_id == $page_list[ $x ]->ID ) {
+						$ignore_field = true;
+					}
+				}
+				if ( $ignore_field ) {
+					continue;
+				}
+
+				if ( wpscx_check_empty( $word_list, false ) ) {
+					++$error_count;
 					array_push(
 						$error_list,
 						array(
@@ -67,22 +75,22 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			wpscx_sql_insert( $error_list, WPSCX_EMPTY, $table_name );
 			$wpdb->update( $options_table, array( 'option_value' => $total_count ), array( 'option_name' => 'empty_page_count' ) );
-			$sql_count++;
+			++$sql_count;
 
 			$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='empty_checked';" );
-			$sql_count++;
+			++$sql_count;
 			$total_count = $total_count + intval( $counter[0]->option_value );
 			$wpdb->update( $options_table, array( 'option_value' => $total_count ), array( 'option_name' => 'empty_checked' ) );
-			$sql_count++;
+			++$sql_count;
 			if ( ! $is_running && ! empty( $is_running ) ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_scan_in_progress' ) );
-				$sql_count++;
+				++$sql_count;
 				$end_time   = time();
 				$total_time = wpscx_time_elapsed( $end_time - $start_time );
-				//$wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time')); $sql_count++;
+				// $wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time')); $sql_count++;
 			}
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_page_title_sip' ) );
-			$sql_count++;
+			++$sql_count;
 
 			$end = round( microtime( true ), 5 );
 			wpscx_print_debug( 'Empty Page Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
@@ -109,13 +117,14 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running && ! empty( $is_running ) ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'empty_scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 		}
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 		$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
-                $ignore_list = $wpdb->get_results("SELECT page_name, page_type, page_id FROM $table_name WHERE ignore_word=1");
+		++$sql_count;
+				$ignore_list = $wpdb->get_results( 'SELECT page_name, page_type, page_id FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=1' );
 
 		$post_types     = get_post_types();
 		$post_type_list = array();
@@ -140,20 +149,24 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 					)
 				)
 			);
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$total_count++;
+			++$total_count;
 			$word_list = $posts_list[ $x ]->post_title;
-                        
-                        $ignore_field = false;
-                        foreach($ignore_list as $row) {
-                            if ($row->page_type == 'Post Title' && $row->page_id == $posts_list[ $x ]->ID) $ignore_field = true;
-                        }
-                        if ($ignore_field) continue;
-                        
-                        if ( wpscx_check_empty( $word_list, false ) ) {
-				$error_count++;
+
+						$ignore_field = false;
+			foreach ( $ignore_list as $row ) {
+				if ( $row->page_type == 'Post Title' && $row->page_id == $posts_list[ $x ]->ID ) {
+					$ignore_field = true;
+				}
+			}
+			if ( $ignore_field ) {
+				continue;
+			}
+
+			if ( wpscx_check_empty( $word_list, false ) ) {
+				++$error_count;
 
 				array_push(
 					$error_list,
@@ -169,22 +182,22 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		wpscx_sql_insert( $error_list, WPSCX_EMPTY, $table_name );
 		$wpdb->update( $options_table, array( 'option_value' => $total_count ), array( 'option_name' => 'empty_post_count' ) );
-		$sql_count++;
+		++$sql_count;
 
 		$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='empty_checked';" );
-		$sql_count++;
+		++$sql_count;
 		$total_count = $total_count + intval( $counter[0]->option_value );
 		$wpdb->update( $options_table, array( 'option_value' => $total_count ), array( 'option_name' => 'empty_checked' ) );
-		$sql_count++;
+		++$sql_count;
 		if ( ! $is_running && ! empty( $is_running ) ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$end_time   = time();
 			$total_time = wpscx_time_elapsed( $end_time - $start_time );
-			//$wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time'));  $sql_count++;
+			// $wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time'));  $sql_count++;
 		}
 		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_post_title_sip' ) );
-		$sql_count++;
+		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
 		wpscx_print_debug( 'Empty Post Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
@@ -209,15 +222,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$error_list  = array();
 
 		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE (a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'twitter' OR a.meta_key = 'facebook');" ) );
-		$sql_count++;
-                $ignore_list = $wpdb->get_results("SELECT page_name, page_type FROM $table_name WHERE ignore_word=1");
+		++$sql_count;
+				$ignore_list = $wpdb->get_results( 'SELECT page_name, page_type FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=1' );
 
 		for ( $x = 0; $x < $posts_list->getSize(); $x++ ) {
-			$total_count++;
+			++$total_count;
 
 			if ( '' !== $posts_list[ $x ]->user_login && null !== $posts_list[ $x ]->user_login ) {
-                                if ( wpscx_check_empty( $posts_list[ $x ]->meta_value, false ) ) {
-					$error_count++;
+				if ( wpscx_check_empty( $posts_list[ $x ]->meta_value, false ) ) {
+					++$error_count;
 					if ( 'first_name' === $posts_list[ $x ]->meta_key ) {
 						$post_type = 'First Name';
 					} elseif ( 'last_name' === $posts_list[ $x ]->meta_key ) {
@@ -227,20 +240,24 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 					} else {
 						$post_type = $posts_list[ $x ]->meta_key; }
 
-                                        $ignore_field = false;
-                                        foreach($ignore_list as $row) {
-                                            if ($row->page_type == 'Author ' . $post_type && $row->page_name == $posts_list[ $x ]->user_login) $ignore_field = true;
-                                        }
-                                        if ($ignore_field) continue;
-					array_push(
-						$error_list,
-						array(
-							'word'      => WPSCX_EMPTY,
-							'page_name' => $posts_list[ $x ]->user_login,
-							'page_type' => 'Author ' . $post_type,
-							'page_id'   => $posts_list[ $x ]->post_author,
-						)
-					);
+						$ignore_field = false;
+					foreach ( $ignore_list as $row ) {
+						if ( $row->page_type == 'Author ' . $post_type && $row->page_name == $posts_list[ $x ]->user_login ) {
+							$ignore_field = true;
+						}
+					}
+					if ( $ignore_field ) {
+						continue;
+					}
+									array_push(
+										$error_list,
+										array(
+											'word'      => WPSCX_EMPTY,
+											'page_name' => $posts_list[ $x ]->user_login,
+											'page_type' => 'Author ' . $post_type,
+											'page_id'   => $posts_list[ $x ]->post_author,
+										)
+									);
 				}
 			}
 		}
@@ -248,10 +265,10 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		wpscx_sql_insert( $error_list, WPSCX_EMPTY, $table_name );
 
 		$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='empty_checked';" );
-		$sql_count++;
+		++$sql_count;
 		$total_count = $total_count + intval( $counter[0]->option_value );
 		$wpdb->update( $options_table, array( 'option_value' => $total_count ), array( 'option_name' => 'empty_checked' ) );
-		$sql_count++;
+		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
 		wpscx_print_debug( 'Empty Author', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
@@ -269,7 +286,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$this->check_author_empty_run( true );
 		if ( $wpscx_ent_included ) {
-						$scanner = new Wpscx_Seo_Scanner_pro;
+						$scanner = new Wpscx_Seo_Scanner_pro();
 			$scanner->check_author_seotitle_empty_ent( true );
 			$scanner->check_author_seodesc_empty_ent( true );
 		}
@@ -278,7 +295,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		if ( ! $is_running && ! empty( $is_running ) ) {
 					$end_time   = time();
 					$total_time = wpscx_time_elapsed( $end_time - $start_time + 6 );
-					//$wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time'));
+					// $wpdb->update($options_table, array('option_value' => $total_time), array('option_name' => 'empty_start_time'));
 		}
 	}
 
@@ -287,7 +304,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		global $wpscx_ent_included;
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
-		set_time_limit( 600 ); //$ Set PHP timeout limit
+		set_time_limit( 600 ); // $ Set PHP timeout limit
 		$pro_errors = 0;
 		$last_count = 0;
 
@@ -367,13 +384,14 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$start_time = time();
 		}
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'posts', no user input
 		$menus = $wpdb->get_results( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE post_type ="nav_menu_item" LIMIT 10000;' );
 
 		foreach ( $menus as $menu ) {
-			$total_count++;
+			++$total_count;
 			$word_list = $menu->post_title;
-			if ( wpscx_check_empty( $word_list, false )  ) {
-				$error_count++;
+			if ( wpscx_check_empty( $word_list, false ) ) {
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -417,10 +435,10 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$tags_list = get_tags();
 
 		foreach ( $tags_list as $tag ) {
-			$total_count++;
+			++$total_count;
 			$word = $tag->description;
-                        if ( wpscx_check_empty( $word, false ) ) {
-				$error_count++;
+			if ( wpscx_check_empty( $word, false ) ) {
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -444,8 +462,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 	function check_post_categories_description_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
 		$start       = round( microtime( true ), 5 );
 		$timer_start = round( microtime( true ), 5 );
-		//
-		global $wpdb;
+				global $wpdb;
 		global $wpsc_settings;
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
@@ -457,12 +474,12 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$error_list  = array();
 
 		$cats_list = get_categories();
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $cats_list as $cat ) {
 			$words = $cat->description;
 			if ( wpscx_check_empty( $words, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -505,10 +522,10 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$words_list = $post->post_content;
 			if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -553,10 +570,10 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$words_list = $post->post_excerpt;
 			if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -600,11 +617,11 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$word_list = get_post_meta( $post->ID, '_wp_attachment_image_alt', true );
-                        
+
 			if ( wpscx_check_empty( $word_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -641,6 +658,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$total_count = 0;
 		$error_list  = array();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, query contains only hardcoded value
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = get_posts(
@@ -655,7 +673,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$ignore_flag = 'false';
 			foreach ( $ignore_posts as $ignore_check ) {
 				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
@@ -665,8 +683,8 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			if ( 'true' === $ignore_flag ) {
 				continue; }
 			$words_list = $post->post_title;
-                        if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+			if ( wpscx_check_empty( $words_list, false ) ) {
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -702,6 +720,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$total_count = 0;
 		$error_list  = array();
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, query contains only hardcoded value
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = get_posts(
@@ -716,7 +735,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$ignore_flag = 'false';
 			foreach ( $ignore_posts as $ignore_check ) {
 				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
@@ -727,7 +746,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				continue; }
 			$words_list = $post->post_excerpt;
 			if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -763,6 +782,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$total_count = 0;
 		$error_list  = array();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 		$posts_list   = get_posts(
 			array(
@@ -776,7 +796,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$ignore_flag = 'false';
 			foreach ( $ignore_posts as $ignore_check ) {
 				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
@@ -787,7 +807,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				continue; }
 			$words_list = $post->post_title;
 			if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -823,6 +843,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$total_count = 0;
 		$error_list  = array();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = get_posts(
@@ -837,7 +858,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		);
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$ignore_flag = 'false';
 			foreach ( $ignore_posts as $ignore_check ) {
 				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
@@ -848,7 +869,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				continue; }
 			$words_list = $post->post_excerpt;
 			if ( wpscx_check_empty( $words_list, false ) ) {
-				$error_count++;
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -881,17 +902,18 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
 		set_time_limit( 600 );
-		$error_count = 0;
-                $sql_count = 0;
-		$total_count = 0;
-		$error_list  = array();
+		$error_count       = 0;
+				$sql_count = 0;
+		$total_count       = 0;
+		$error_list        = array();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = $wpdb->get_results( "SELECT * FROM $post_table GROUP By post_author LIMIT 10000" );
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$author      = $wpdb->get_results( "SELECT * FROM $user_table WHERE meta_key='wpseo_title' AND user_id='$post->post_author'" );
 			$author_name = $wpdb->get_results( "SELECT * FROM $username_table WHERE id='$post->post_author'" );
 
@@ -899,8 +921,8 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				continue;
 			}
 			$words_list = $author[0]->meta_value;
-                        if ( wpscx_check_empty( $words_list, false ) && '' !== $author_name->user_login ) {
-				$error_count++;
+			if ( wpscx_check_empty( $words_list, false ) && '' !== $author_name->user_login ) {
+				++$error_count;
 				array_push(
 					$error_list,
 					array(
@@ -933,17 +955,18 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
 		set_time_limit( 600 );
-		$total_count = 0;
-                $sql_count = 0;
-		$error_count = 0;
-		$error_list  = array();
+		$total_count       = 0;
+				$sql_count = 0;
+		$error_count       = 0;
+		$error_list        = array();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = $wpdb->get_results( "SELECT * FROM $post_table GROUP By post_author LIMIT 10000" );
 
 		foreach ( $posts_list as $post ) {
-			$total_count++;
+			++$total_count;
 			$author      = $wpdb->get_results( "SELECT * FROM $user_table WHERE meta_key='wpseo_metadesc' AND user_id='$post->post_author'" );
 			$author_name = $wpdb->get_results( "SELECT * FROM $username_table WHERE id='$post->post_author'" );
 
@@ -995,8 +1018,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 				$haystack[ $value->post_id ] = 'true';
@@ -1009,7 +1033,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='page'$post_status" ) );
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-                                if ( !isset($haystack[ $page_list[ $x ]->ID ]) ) {
+				if ( ! isset( $haystack[ $page_list[ $x ]->ID ] ) ) {
 					array_push(
 						$error_list,
 						array(
@@ -1053,8 +1077,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 				$haystack[ $value->post_id ] = 'true';
@@ -1067,7 +1092,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='page'$post_status" ) );
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-				if ( !isset($haystack[ $page_list[ $x ]->ID ]) ) {
+				if ( ! isset( $haystack[ $page_list[ $x ]->ID ] ) ) {
 					array_push(
 						$error_list,
 						array(
@@ -1111,8 +1136,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_dscription") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 				$haystack[ $value->post_id ] = 'true';
@@ -1125,7 +1151,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='post'$post_status" ) );
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-				if ( !isset($haystack[ $page_list[ $x ]->ID ]) ) {
+				if ( ! isset( $haystack[ $page_list[ $x ]->ID ] ) ) {
 					array_push(
 						$error_list,
 						array(
@@ -1169,8 +1195,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 				$haystack[ $value->post_id ] = 'true';
@@ -1183,7 +1210,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='post'$post_status" ) );
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-				if ( !isset($haystack[ $page_list[ $x ]->ID ]) ) {
+				if ( ! isset( $haystack[ $page_list[ $x ]->ID ] ) ) {
 					array_push(
 						$error_list,
 						array(
@@ -1227,8 +1254,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, query contains only hardcoded meta_key values
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 				$haystack[ $value->post_id ] = 'true';
@@ -1237,7 +1265,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='attachment'" ) );
 
 		for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-			if ( !isset($haystack[ $page_list[ $x ]->ID ]) ) {
+			if ( ! isset( $haystack[ $page_list[ $x ]->ID ] ) ) {
 				array_push(
 					$error_list,
 					array(
@@ -1281,8 +1309,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$words_table = $wpdb->prefix . 'spellcheck_empty';
 		$posts_table = $wpdb->prefix . 'posts';
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
 		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
 			if ( '' !== $value->meta_value ) {
@@ -1293,7 +1322,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='attachment'" ) );
 
 		for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-			if ( isset($haystack[ $page_list[ $x ]->ID ]) && wpscx_check_empty( $haystack[ $page_list[ $x ]->ID ], true ) ) {
+			if ( isset( $haystack[ $page_list[ $x ]->ID ] ) && wpscx_check_empty( $haystack[ $page_list[ $x ]->ID ], true ) ) {
 				array_push(
 					$error_list,
 					array(

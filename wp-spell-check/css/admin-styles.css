@@ -17,3 +17,988 @@
 .wpsc-edit-update-button { margin: 12px 0px; }
 #wp-admin-bar-WP_Spell_Check ul { z-index: 9999999999; }
 .wpsc-suggestion-content span { font-weight: bold; color: red!important; }
+
+/* HTML Results Page Styles */
+input[type=submit] {
+	border-radius: 32px !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	border: none !important;
+}
+
+.search-box input[type=submit] {
+	color: white;
+	background-color: #00A0D2;
+	border-color: #0073AA;
+}
+
+#cb-select-all-1,
+#cb-select-all-2 {
+	display: none;
+}
+
+/* Dictionary Page - Add to Dictionary Button */
+#add-to-dictionary input[type=submit] {
+	background: #2271b1 !important;
+	border-color: #2271b1 !important;
+	border-width: 1px !important;
+	border-style: solid !important;
+	border-radius: 3px !important;
+	color: #fff !important;
+	text-decoration: none;
+	font-size: 13px;
+	line-height: 2.15384615;
+	min-height: 30px;
+	margin: 0;
+	padding: 0 10px;
+	cursor: pointer;
+	white-space: nowrap;
+	box-sizing: border-box;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+#add-to-dictionary input[type=submit]:hover {
+	background: #135e96 !important;
+	border-color: #135e96 !important;
+	color: #fff !important;
+}
+
+#add-to-dictionary input[type=submit]:active {
+	background: #0a4b78 !important;
+	border-color: #0a4b78 !important;
+	color: #fff !important;
+}
+
+td.word {
+	font-size: 15px;
+}
+
+p.submit {
+	display: inline-block;
+	margin-left: 10px;
+}
+
+h3.sc-message {
+	width: 49%;
+	display: inline-block;
+	padding-left: 8px;
+	font-weight: normal;
+}
+
+.wpsc-mouseover-text-page,
+.wpsc-mouseover-text-post,
+.wpsc-mouseover-text-emfeature,
+.wpsc-mouseover-text-emfeature-seo,
+.wpsc-mouseover-text-emfeature-2,
+.wpsc-mouseover-text-emfeature-3,
+.wpsc-mouseover-text-scfeature,
+.wpsc-mouseover-text-scfeature-2,
+.wpsc-mouseover-text-change,
+.wpsc-mouseover-text-change-2 {
+	color: black;
+	font-size: 12px;
+	width: 225px;
+	display: none;
+	position: absolute;
+	margin: 0px;
+	padding: 0px 0px 15px 0px;
+	border: 2px solid #008200;
+	border-radius: 7px;
+	opacity: 0;
+	background: white;
+	z-index: -100;
+	box-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%);
+	font-weight: bold;
+	max-width: 205px;
+	overflow: hidden;
+	box-sizing: border-box;
+	left: -9999px;
+	top: -9999px;
+}
+
+.wpsc-mouseover-text-refresh {
+	color: black;
+	font-size: 12px;
+	width: 225px;
+	display: inline-block;
+	position: absolute;
+	margin: -13px 0 0 -290px;
+	padding: 5px 15px 5px 30px;
+	border: 1px solid #008200;
+	border-radius: 50px;
+	box-shadow: #008200 1px 1px 1px;
+	font-weight: bold;
+	opacity: 0;
+	background: white;
+	z-index: -100;
+}
+
+.wpsc-row .row-actions,
+.wpsc-row .row-actions * {
+	visibility: visible !important;
+	left: 0 !important;
+}
+
+#current-page-selector {
+	width: 12%;
+}
+
+.hidden {
+	display: none;
+}
+
+.wpsc-scan-nav-bar {
+	border-bottom: 1px solid #BBB;
+}
+
+.wpsc-scan-nav-bar a {
+	text-decoration: none;
+	margin: 5px 1px -1px 1px;
+	padding: 8px;
+	border: 1px solid #BBB;
+	display: inline-block;
+	font-weight: bold;
+	color: black;
+	font-size: 14px;
+	height: 16px;
+	border-radius: 5px 5px 0 0;
+}
+
+.wpsc-scan-nav-bar a.selected {
+	border-bottom: 1px solid white;
+	background: white;
+}
+
+/* Ignore List Page - Override margin to match original inline styles */
+.wpsc-ignore-page .wpsc-scan-nav-bar a {
+	margin: 5px 5px -2px 5px;
+}
+
+/* Ignore List Page - Add to Ignore List Button Styling */
+#add-to-ignore input[type=submit] {
+	background: #2271b1 !important;
+	border-color: #2271b1 !important;
+	border-width: 1px !important;
+	border-style: solid !important;
+	border-radius: 3px !important;
+	color: #fff !important;
+	text-decoration: none;
+	font-size: 13px;
+	line-height: 2.15384615;
+	min-height: 30px;
+	margin: 0;
+	padding: 0 10px;
+	cursor: pointer;
+	white-space: nowrap;
+	box-sizing: border-box;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+#add-to-ignore input[type=submit]:hover {
+	background: #135e96 !important;
+	border-color: #135e96 !important;
+	color: #fff !important;
+}
+
+#add-to-ignore input[type=submit]:active {
+	background: #0a4b78 !important;
+	border-color: #0a4b78 !important;
+	color: #fff !important;
+}
+
+#wpsc-empty-fields-tab .button-primary {
+	background: #73019a;
+	border-color: #51006E;
+	text-shadow: 1px 1px #51006d;
+	box-shadow: 0 1px 0 #51006d;
+}
+
+#wpsc-empty-fields-tab .button-primary:hover {
+	background: #9100c3
+}
+
+#wpsc-empty-fields-tab .button-primary:active {
+	background: #51006d;
+}
+
+.wpsc-scan-buttons input#submit:active {
+	margin-top: -7px;
+}
+
+#wphc-scan-results-tab .wp-list-table th {
+	text-align: center;
+}
+
+.wpgc-desc .wpgc-desc-content {
+	display: none;
+}
+
+.wpgc-desc-hover {
+	display: block !important;
+	position: relative;
+	top: -125px;
+	left: -55px;
+	width: 125px;
+	padding: 0px;
+	margin: 0px;
+	z-index: 100;
+	height: 0px !important;
+}
+
+.wpgc-desc {
+	position: absolute;
+	bottom: 0px;
+	margin-right: -4px;
+	width: 125px;
+}
+
+#wpsc-table-results table {
+	border-radius: 5px;
+	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+}
+
+.wpsc-button-greyout,
+.wpsc-button-greyout:hover {
+	background: darkgrey !important
+}
+
+/* Empty Results Page Specific Styles */
+#wpsc-empty-fields-tab span.wpsc-bulk {
+	display: none;
+}
+
+span.wpsc-bulk {
+	color: black;
+}
+
+input.edit-seo-title,
+input.edit-seo-desc {
+	border-width: 3px !important;
+	border-color: orange;
+}
+
+/* Options Page Specific Styles */
+td {
+	padding-left: 25px !important;
+	max-width: 755px;
+}
+
+.wpsc-message h3 {
+	color: rgb(0, 200, 0);
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.wpsc-mouseover-text-pro-feature,
+.wpsc-mouseover-text-freq,
+.wpsc-mouseover-text-email,
+.wpsc-mouseover-text-import,
+.wpsc-mouseover-text-export {
+	color: black;
+	font-size: 12px;
+	width: 225px;
+	display: inline-block;
+	position: absolute;
+	margin: 0px;
+	padding: 0px 0px 15px 0px;
+	border: 2px solid #008200;
+	border-radius: 7px;
+	opacity: 0;
+	background: white;
+	z-index: -100;
+	box-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%);
+	font-weight: bold;
+	max-width: 205px;
+}
+
+/* Options Page - Uninstall Button Styling */
+#wpsc-options-form input[name="uninstall"] {
+	background: #646970 !important;
+	border-color: #646970 !important;
+	border-width: 1px !important;
+	border-style: solid !important;
+	border-radius: 8px !important;
+	color: #fff !important;
+	text-decoration: none;
+	font-size: 13px;
+	line-height: 2.15384615;
+	min-height: 30px;
+	margin: 0;
+	padding: 0 10px;
+	cursor: pointer;
+	white-space: nowrap;
+	box-sizing: border-box;
+	box-shadow: 0 1px 0 #646970;
+	text-shadow: none;
+	font-weight: 400;
+}
+
+#wpsc-options-form input[name="uninstall"]:hover {
+	background: #50575e !important;
+	border-color: #50575e !important;
+	color: #fff !important;
+	box-shadow: 0 1px 0 #50575e;
+}
+
+#wpsc-options-form input[name="uninstall"]:active,
+#wpsc-options-form input[name="uninstall"]:focus {
+	background: #3c434a !important;
+	border-color: #3c434a !important;
+	color: #fff !important;
+	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* Spell Check Scan Results Page Specific Styles */
+/* These styles are scoped to .wpsc-table to avoid conflicts with other pages */
+.wpsc-table .search-box input[type=submit] {
+	color: white;
+	background-color: #00A0D2;
+	border-color: #0073AA;
+}
+
+.wpsc-table #cb-select-all-1,
+.wpsc-table #cb-select-all-2 {
+	display: none;
+}
+
+.wpsc-table td.word {
+	font-size: 15px;
+}
+
+.wpsc-table p.submit {
+	display: inline-block;
+	margin-left: 8px;
+}
+
+.wpsc-table h3.sc-message {
+	width: 49%;
+	display: inline-block;
+	font-weight: normal;
+	padding-left: 8px;
+}
+
+.wpsc-table .wpsc-mouseover-text-page,
+.wpsc-table .wpsc-mouseover-text-post,
+.wpsc-table .wpsc-mouseover-text-refresh {
+	color: black;
+	font-size: 12px;
+	width: 225px;
+	display: inline-block;
+	position: absolute;
+	margin: -13px 0 0 -280px;
+	padding: 5px;
+	border: 1px solid black;
+	border-radius: 50px;
+	opacity: 0;
+	background: white;
+	z-index: -100;
+	box-shadow: black 1px 1px 1px;
+}
+
+.wpsc-table .wpsc-row .row-actions,
+.wpsc-table .wpsc-row .row-actions * {
+	visibility: visible !important;
+	left: 0 !important;
+}
+
+.wpsc-table #current-page-selector {
+	width: 12%;
+}
+
+.wpsc-table .hidden {
+	display: none;
+}
+
+.wpsc-table .wpsc-scan-nav-bar {
+	border-bottom: 1px solid #BBB;
+}
+
+.wpsc-table .wpsc-scan-nav-bar a {
+	text-decoration: none;
+	margin: 5px 5px -1px 5px;
+	padding: 8px;
+	border: 1px solid #BBB;
+	display: inline-block;
+	font-weight: bold;
+	color: black;
+	font-size: 14px;
+}
+
+.wpsc-table .wpsc-scan-nav-bar a.selected {
+	border-bottom: 1px solid white;
+	background: white;
+}
+
+.wpsc-table #wpsc-empty-fields-tab .button-primary {
+	background: #73019a;
+	border-color: #51006E;
+	text-shadow: 1px 1px #51006d;
+	box-shadow: 0 1px 0 #51006d;
+}
+
+.wpsc-table #wpsc-empty-fields-tab .button-primary:hover {
+	background: #9100c3
+}
+
+.wpsc-table #wpsc-empty-fields-tab .button-primary:active {
+	background: #51006d;
+}
+
+.wpsc-table .wpsc-scan-buttons input#submit:active {
+	margin-top: -7px;
+}
+
+.wpsc-table #wpsc-empty-fields-tab span.wpsc-bulk {
+	display: none;
+}
+
+.wpsc-table span.wpsc-bulk {
+	color: black;
+}
+
+.wpsc-table th#count {
+	width: 80px;
+}
+
+/* Grammar Page Specific Styles */
+/* Enqueue early via admin_enqueue_scripts hook to prevent FOUC */
+/* Override scoped mouseover refresh style for grammar page */
+.wpsc-table .wpsc-mouseover-text-refresh {
+	margin: -13px 0 0 -270px;
+	padding: 3px;
+	border-radius: 10px;
+}
+
+#wpgc-scan-results-tab .wp-list-table th {
+	text-align: center;
+}
+
+.wpgc-desc-hover {
+	display: block !important;
+	position: relative;
+	top: -125px;
+	left: -55px;
+	width: 125px;
+	padding: 0px;
+	margin: 0px;
+	z-index: 100;
+	height: 0px !important;
+}
+
+#wpgc-scan-results-tab .wp-list-table td:not(.column-page) {
+	text-align: center;
+}
+
+.wpscScanSite {
+	background-color: #ffb01f;
+	border-color: #ffb01f;
+	box-shadow: 0px 1px 0px #ffb01f;
+	text-shadow: 1px 1px 1px #ffb01f;
+	font-weight: bold;
+}
+
+/* SEO Page Specific Styles - Scoped to #wpsc-empty-fields-tab */
+#wpsc-empty-fields-tab .wpsc-seo-page-title {
+	position: relative;
+	top: -8px;
+}
+
+#wpsc-empty-fields-tab .wpsc-seo-instructions {
+	margin-bottom: 15px;
+}
+
+#wpsc-empty-fields-tab .wpsc-seo-instructions span {
+	display: block;
+}
+
+#wpsc-empty-fields-tab .wpsc-pro-feature-header {
+	display: block;
+	text-align: center;
+	font-size: 14px;
+	padding: 10px 0;
+	background-color: #2271b1;
+	color: white;
+	margin-bottom: 8px;
+}
+
+#wpsc-empty-fields-tab .wpsc-pro-feature-content {
+	padding: 0 10px;
+	display: block;
+}
+
+#wpsc-empty-fields-tab .wpsc-save-key-button {
+	margin-left: 0;
+}
+
+#wpsc-empty-fields-tab .wpsc-openai-key-row {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	flex-wrap: wrap;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-container {
+	border-radius: 5px;
+	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+	background: white;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-buttons {
+	padding-left: 8px;
+	padding-top: 5px;
+}
+
+/* Disabled/inactive buttons should be grey like spell check page */
+#wpsc-empty-fields-tab .wpsc-scan-buttons input[disabled],
+#wpsc-empty-fields-tab .wpsc-scan-buttons input:disabled {
+	background: darkgrey !important;
+	color: white !important;
+	border-color: grey !important;
+}
+
+/* Ensure Entire Site button keeps orange color */
+#wpsc-empty-fields-tab .wpscScanSite:not(:disabled) {
+	background-color: #ffb01f !important;
+	border-color: #ffb01f !important;
+	box-shadow: 0px 1px 0px #ffb01f !important;
+	text-shadow: 1px 1px 1px #ffb01f !important;
+	font-weight: bold !important;
+	color: white !important;
+}
+
+/* Ensure purple buttons (Authors, Page Titles, Post Titles) keep purple - only when enabled */
+#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled) {
+	background: #73019a !important;
+	border-color: #51006E !important;
+	text-shadow: 1px 1px #51006d !important;
+	box-shadow: 0 1px 0 #51006d !important;
+	color: white !important;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled):hover {
+	background: #9100c3 !important;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled):active {
+	background: #51006d !important;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-buttons h3:first-child {
+	margin-bottom: 0px;
+}
+
+#wpsc-empty-fields-tab .wpsc-scan-buttons h3.scan-label {
+	display: inline-block;
+}
+
+#wpsc-empty-fields-tab .wpsc-action-buttons .submit {
+	margin-left: -11px;
+}
+
+#wpsc-empty-fields-tab .wpsc-action-dash {
+	position: relative;
+	left: 15px;
+}
+
+#wpsc-empty-fields-tab .wpsc-action-icon {
+	width: 20px;
+	position: relative;
+	top: 5px;
+}
+
+#wpsc-empty-fields-tab .wpsc-action-icon.clear-results {
+	left: 27px;
+	filter: brightness(0) invert(1);
+}
+
+#wpsc-empty-fields-tab .wpsc-action-icon.see-results {
+	left: 26px;
+	filter: brightness(0) invert(1);
+}
+
+#wpsc-empty-fields-tab .wpsc-action-icon.stop-scans {
+	left: 25px;
+	filter: brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(7151%) hue-rotate(357deg) brightness(95%) contrast(118%);
+}
+
+#wpsc-empty-fields-tab .wpsc-clear-results-button,
+#wpsc-empty-fields-tab .wpsc-see-results-button,
+#wpsc-empty-fields-tab .wpsc-stop-scans-button {
+	padding-left: 30px;
+	background-color: red !important;
+	border-color: red !important;
+	color: white !important;
+}
+
+#wpsc-empty-fields-tab .wpsc-options-icon {
+	width: 30px;
+	position: relative;
+	top: 11px;
+	left: 20px;
+	padding: 0px;
+	border-radius: 25px;
+}
+
+#wpsc-empty-fields-tab .wpsc-stats-container {
+	padding: 5px;
+	font-size: 12px;
+}
+
+#wpsc-empty-fields-tab .empty-eps-message.hidden {
+	display: none;
+}
+
+#wpsc-empty-fields-tab .wpsc-mesage-container {
+	text-align: center;
+	background-color: white;
+	padding: 5px;
+	margin: 15px 0;
+}
+
+#wpsc-empty-fields-tab .wpsc-message {
+	width: 74%;
+	font-size: 1.3em;
+	color: rgb(0, 115, 0);
+	font-weight: bold;
+}
+
+#wpsc-empty-fields-tab #words-list {
+	width: 75%;
+	float: left;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+#wpsc-empty-fields-tab .search-box.top {
+	position: relative;
+	margin-top: 8px;
+}
+
+#wpsc-empty-fields-tab .search-box.bottom {
+	margin-top: -3em;
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-update-button.top {
+	width: 16%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-left: 32.5%;
+	display: block;
+	background: #008200;
+	border-color: #005200;
+	color: white;
+	font-weight: bold;
+	position: absolute;
+	margin-top: 7px;
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-update-button.bottom {
+	width: 16%;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-left: 31.5%;
+	display: block;
+	background: #008200;
+	border-color: #005200;
+	color: white;
+	font-weight: bold;
+	position: absolute;
+	margin-top: -31px;
+}
+
+#wpsc-empty-fields-tab .wpsc-stats-summary {
+	padding: 15px;
+	background: white;
+	clear: both;
+	width: 72%;
+	font-family: helvetica, sans-serif;
+	border-radius: 5px;
+	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-content h4 {
+	display: inline-block;
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-content h4.seo {
+	font-size: 14px;
+	font-weight: bold;
+	margin: 0.5em 0;
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-field {
+	margin-left: 3em;
+}
+
+#wpsc-empty-fields-tab .wpsc-edit-field.seo {
+	margin: 0 0 1em 1em;
+	width: 90%;
+}
+
+#wpsc-empty-fields-tab .wpsc-buttons .clear {
+	clear: both;
+}
+
+#wpsc-empty-fields-tab .wpsc-generate-seo-button {
+	background: #008200;
+	margin-left: 10px;
+	color: white;
+	border: none;
+	font-weight: bold;
+}
+
+#wpsc-empty-fields-tab .seo-progress {
+	margin-left: 1em;
+	display: none;
+}
+
+/* SEO Page Message color classes - scoped to prevent conflicts */
+#wpsc-empty-fields-tab .sc-message {
+	color: rgb(0, 150, 255);
+	font-weight: bold;
+}
+
+/* Pro Version error message should be red - must override .sc-message */
+#wpsc-empty-fields-tab .sc-message.error,
+#wpsc-empty-fields-tab h3.sc-message.error {
+	color: rgb(225, 0, 0) !important;
+}
+
+#wpsc-empty-fields-tab .sc-factor {
+	color: rgb(115, 1, 154);
+	font-size: 1.4em;
+}
+
+#wpsc-empty-fields-tab .sc-time {
+	color: rgb(0, 115, 0);
+}
+
+#wpsc-empty-fields-tab .sc-type {
+	color: rgb(0, 115, 0);
+}
+
+#wpsc-empty-fields-tab .sc-type span {
+	color: rgb(115, 1, 154);
+	font-weight: bold;
+}
+
+#wpsc-empty-fields-tab .sc-page,
+#wpsc-empty-fields-tab .sc-post,
+#wpsc-empty-fields-tab .sc-media {
+	color: rgb(0, 115, 0);
+}
+
+#wpsc-empty-fields-tab .wpsc-message.error {
+	color: rgb(225, 0, 0);
+}
+
+#wpsc-empty-fields-tab .wpsc-message.error-red,
+#wpsc-empty-fields-tab .error-red {
+	color: red;
+}
+
+#wpsc-empty-fields-tab .wpsc-mouseover-button-refresh {
+	border-radius: 29px;
+	border: 1px solid green;
+	display: inline-block;
+	margin-left: 10px;
+	padding: 4px 10px;
+	cursor: help;
+}
+
+#wpsc-empty-fields-tab .wpsc-mouseover-button-page,
+#wpsc-empty-fields-tab .wpsc-mouseover-button-post {
+	border-radius: 29px;
+	border: 1px solid green;
+	display: inline-block;
+	margin-left: 10px;
+	padding: 4px 10px;
+	cursor: help;
+}
+
+/* HTML Results Page (wp-spellcheck-html.php) Specific Styles */
+/* Scoped to .wpsc-html-results-page and #wphc-scan-results-tab to ensure page-specific targeting */
+
+/* Dialog element */
+.wpsc-html-results-page #wpsc-dialog-confirm {
+	display: none;
+}
+
+/* H2 title span */
+.wpsc-html-results-page h2 span {
+	position: relative;
+	top: -8px;
+}
+
+/* Table column spans */
+.wpsc-html-results-page .wpsc-row span {
+	color: silver;
+}
+
+/* Main scan container */
+#wphc-scan-results-tab .wpsc-scan-container {
+	border-radius: 5px;
+	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+	background: white;
+}
+
+/* Scan buttons container */
+#wphc-scan-results-tab .wpsc-scan-buttons {
+	padding-left: 8px;
+	padding-top: 5px;
+}
+
+/* H3 headings in scan section */
+#wphc-scan-results-tab .wpsc-scan-buttons h3 {
+	margin-bottom: 0px;
+}
+
+#wphc-scan-results-tab .wpsc-scan-buttons h3:first-child {
+	padding-top: 10px;
+}
+
+#wphc-scan-results-tab .wpsc-scan-buttons h3.scan-label {
+	display: inline-block;
+}
+
+/* Orange scan buttons */
+.wpsc-html-results-page .wpscScan,
+.wpsc-html-results-page .wpscScanSite {
+	background-color: #ffb01f !important;
+	border-color: #ffb01f !important;
+	box-shadow: 0px 1px 0px #ffb01f !important;
+	text-shadow: 1px 1px 1px #ffb01f !important;
+	font-weight: bold !important;
+}
+
+/* Action button wrappers */
+#wphc-scan-results-tab .wpsc-scan-buttons p.submit.wpsc-action-button-wrapper {
+	margin-left: -11px;
+}
+
+/* Action dash span */
+#wphc-scan-results-tab .wpsc-action-dash {
+	position: relative;
+	left: 15px;
+}
+
+/* Action icons */
+#wphc-scan-results-tab .wpsc-icon-clear-results {
+	width: 20px;
+	position: relative;
+	top: 5px;
+	left: 27px;
+}
+
+#wphc-scan-results-tab .wpsc-icon-see-results {
+	width: 20px;
+	position: relative;
+	top: 5px;
+	left: 26px;
+}
+
+#wphc-scan-results-tab .wpsc-icon-stop-scans {
+	width: 20px;
+	position: relative;
+	top: 5px;
+	left: 25px;
+}
+
+/* Red action buttons */
+#wphc-scan-results-tab .wpsc-button-red {
+	padding-left: 30px !important;
+	background-color: red !important;
+	border-color: red !important;
+	color: white !important;
+}
+
+/* Options icon */
+#wphc-scan-results-tab .wpsc-options-icon {
+	width: 30px;
+	position: relative;
+	top: 11px;
+	left: 20px;
+	padding: 0px;
+	border-radius: 25px;
+}
+
+/* Stats container */
+#wphc-scan-results-tab .wpsc-stats-container {
+	padding: 5px;
+	font-size: 12px;
+}
+
+/* Message H3 elements */
+.wpsc-html-results-page .sc-message {
+	color: rgb(0, 115, 0);
+}
+
+.wpsc-html-results-page .sc-message.sc-time {
+	color: rgb(0, 115, 0);
+}
+
+.wpsc-html-results-page .sc-message.error {
+	color: rgb(225, 0, 0);
+}
+
+.wpsc-html-results-page .sc-message span.wpsc-site-span {
+	color: rgb(0, 150, 255);
+	font-weight: bold;
+}
+
+.wpsc-html-results-page .sc-type span {
+	color: rgb(0, 150, 255);
+	font-weight: bold;
+}
+
+/* Words list form */
+.wpsc-html-results-page #words-list {
+	width: 75%;
+	float: left;
+	margin-top: 10px;
+}
+
+/* Search boxes */
+.wpsc-html-results-page .search-box:first-of-type {
+	position: relative;
+	margin-top: 0.5em;
+}
+
+.wpsc-html-results-page .search-box:last-of-type {
+	margin-top: 0.7em;
+}
+
+/* Stats summary div */
+.wpsc-html-results-page .wpsc-stats-summary {
+	padding: 15px;
+	background: white;
+	clear: both;
+	width: 72%;
+	font-family: helvetica, sans-serif;
+	border-radius: 5px;
+	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+}
+
+/* Non-pro form */
+.wpsc-html-results-page form[action*="admin.php"]:not(#words-list) {
+	width: 75%;
+	float: left;
+	margin-top: 10px;
+}
+
+/* Non-pro submit button */
+.wpsc-html-results-page form[action*="admin.php"]:not(#words-list) p.submit {
+	margin: 0px;
+}
+
+/* Examples heading */
+.wpsc-html-results-page .wpsc-examples-heading {
+	color: red;
+}
+
+/* Error message */
+.wpsc-html-results-page .wpsc-error-message {
+	color: red;
+}

@@ -1,0 +1,113 @@
+.wpsc_survey_modal {
+	display: none;
+	table-layout: fixed;
+	position: fixed;
+	z-index: 9999;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	font-size: 14px;
+	top: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.wpsc_survey_wrapper {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.wpsc_survey_form {
+	background-color: #fff;
+	max-width: 550px;
+	margin: 0 auto;
+	padding: 30px;
+	text-align: left;
+}
+
+.wpsc_deactivate_survey .error {
+	display: block;
+	color: red;
+	margin: 0 0 10px 0;
+}
+
+.wpsc_survey_title {
+	display: block;
+	font-size: 18px;
+	font-weight: 700;
+	text-transform: uppercase;
+	border-bottom: 1px solid #ddd;
+	padding: 0 0 18px 0;
+	margin: 0 0 18px 0;
+}
+
+.wpsc_survey_desc {
+	display: block;
+	font-weight: 600;
+	margin: 0 0 18px 0;
+}
+
+.wpsc_survey_label {
+	display: block;
+	margin: 10px;
+}
+
+.wpsc_survey_option {
+	margin: 0 0 10px 0;
+}
+
+.wpsc_survey_option_input {
+	margin-right: 10px !important;
+}
+
+.wpsc-contact-form {
+	width: 90%;
+	margin: 10px 0 0 30px;
+}
+
+.wpsc_survey_option_details {
+	display: none;
+	width: 90%;
+	margin: 10px 0 0 30px;
+}
+
+.wpsc_survey_footer {
+	margin-top: 18px;
+}
+
+.wpsc_skip_survey {
+	float: right;
+	font-size: 13px;
+	color: #ccc;
+	text-decoration: none;
+	padding-top: 7px;
+}
+
+.wpsc_survey_sending {
+	display: none;
+	margin: 0 0 10px;
+}
+
+.wpsc_survey_footer button {
+	background: green !important;
+	border-color: #006a00 !important;
+	box-shadow: 0 1px #006a00 !important;
+	text-shadow: 1px 1px 1px #006a00 !important;
+}
+
+.wpsc-close-survey {
+	float: right;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.wpsc_survey_label_further {
+	margin: 10px 0;
+	display: block;
+}
+
+.wpsc-contact-form-positioned {
+	position: absolute;
+	margin: -57px 0 0 60px;
+	width: 440px;
+}

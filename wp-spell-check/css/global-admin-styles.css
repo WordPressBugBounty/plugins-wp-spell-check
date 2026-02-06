@@ -18,3 +18,44 @@ li#wp-admin-bar-WP_Spell_Check > a.ab-item, li#wp-admin-bar-WP_Spell_Check > a.a
 .wpgc-desc .wpgc-desc-content { display: none; }
 #wpgc-scan-results-tab .wp-list-table th { text-align: center; }
 .wpsc-scan-nav-bar a { border-radius: 5px 5px 0 0; }
+/* Install notice banner styles - moved from inline styles */
+.wpsc-install-notice img[alt="WP Spell Check"]:last-of-type {
+	position: absolute;
+	left: 5px;
+	bottom: 10px;
+	width: 125px;
+}
+.wpsc-install-notice > div:first-of-type {
+	text-align: center;
+	font-weight: bold;
+	font-size: 28px;
+	margin: 5px 0 25px 0;
+}
+.wpsc-install-notice > div:nth-of-type(2) {
+	position: absolute;
+	top: 40%;
+	width: 45%;
+	left: 30%;
+	text-align: left;
+}
+.wpsc-install-notice ul {
+	list-style: disc;
+}
+.wpsc-install-notice li {
+	font-size: 18px;
+}
+.wpsc-install-notice li:nth-of-type(2) {
+	list-style-type: none;
+	text-align: center;
+	padding-right: 25%;
+}
+.wpsc-install-notice > div:last-of-type {
+	text-align: center;
+	position: absolute;
+	bottom: 17px;
+	width: 100%;
+}
+.wpsc-install-notice-dismiss {
+	text-decoration: none;
+	font-size: 16px;
+}

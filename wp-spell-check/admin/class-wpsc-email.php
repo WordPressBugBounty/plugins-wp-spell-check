@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class Wpscx_Email {
 	function email_admin() {
@@ -7,16 +10,20 @@ class Wpscx_Email {
 			$table_name  = $wpdb->prefix . 'spellcheck_options';
 			$words_table = $wpdb->prefix . 'spellcheck_words';
 			$empty_table = $wpdb->prefix . 'spellcheck_empty';
-			$html_table  = $wpdb->prefix . 'spellcheck_html';
-			set_time_limit( 600 );
-			sleep( 2 );
+		$html_table      = $wpdb->prefix . 'spellcheck_html';
+		set_time_limit( 600 );
+		sleep( 2 );
 
-			$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="email_address";' );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', no user input
+		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="email_address";' );
 
-			$words_list = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $words_table . ' WHERE ignore_word is false' );
-			$empty_list = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $empty_table . ' WHERE ignore_word is false' );
-			$html_list  = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $html_table . ' WHERE ignore_word is false' );
-			$login_url  = wp_login_url();
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_words', no user input
+		$words_list = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $words_table . ' WHERE ignore_word is false' );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_empty', no user input
+		$empty_list = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $empty_table . ' WHERE ignore_word is false' );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_html', no user input
+		$html_list     = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $html_table . ' WHERE ignore_word is false' );
+			$login_url = wp_login_url();
 
 			$date        = gmdate( 'l jS' ) . ' of ' . gmdate( 'F Y' ) . ' at ' . gmdate( 'g:i:s A' );
 			$options_url = get_site_url() . '/wp-admin/admin.php?page=wp-spellcheck-options.php';
@@ -55,12 +62,11 @@ class Wpscx_Email {
 
 	function send_test_email() {
 		global $wpdb;
-		$table_name  = $wpdb->prefix . 'spellcheck_options';
-		$words_table = $wpdb->prefix . 'spellcheck_words';
+		$table_name = $wpdb->prefix . 'spellcheck_options';
 		set_time_limit( 600 );
 
-		$settings   = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="email_address";' );
-		$words_list = $wpdb->get_results( 'SELECT word FROM ' . $words_table . ' WHERE ignore_word is false' );
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', no user input
+		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="email_address";' );
 
 		$output   = 'This is a test email sent from WP Spell Check on ' . get_option( 'blogname' );
 		$headers  = "MIME-Version: 1.0\r\n";

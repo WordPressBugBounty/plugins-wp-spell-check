@@ -1,21 +1,25 @@
 <?php
-    const WPSCX_POST = 'Post Content';
-    const WPSCX_SITE = 'Site Tagline';
-    const WPSCX_DEBUG_LOC = '/../../../../debug-var.log';
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+	const WPSCX_POST      = 'Post Content';
+	const WPSCX_SITE      = 'Site Tagline';
+	const WPSCX_DEBUG_LOC = '/../../../../debug-var.log';
 
 class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
-    
+
 	function check_pages( $log_errors = false, $wpsc_haystack = null, $is_running = false ) {
 		$start = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 		$sql_count = 0;
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		global $wpdb;
 		global $wpscx_ignore_list;
 		global $wpsc_settings;
 		global $wpscx_base_page_max;
-                global $wpscx_title;
+				global $wpscx_title;
 
 		$start_time = time();
 		wpscx_set_global_vars();
@@ -26,10 +30,10 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$page_table    = $wpdb->prefix . 'posts';
 		$max_pages     = $wpscx_base_page_max;
-                
-                if ( ! $is_running ) {
-                    $wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-                }
+
+		if ( ! $is_running ) {
+			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
+		}
 
 		if ( null === $wpsc_haystack ) {
 			$loc = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
@@ -42,22 +46,23 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 		}
 
-		$total_pages = $max_pages;
-		$total_words = 0;
-		$page_count  = 0;
-		$word_count  = 0;
-		$error_count = 0;
-                $pro_error_count = 0;
+		$total_pages             = $max_pages;
+		$total_words             = 0;
+		$page_count              = 0;
+		$word_count              = 0;
+		$error_count             = 0;
+				$pro_error_count = 0;
 
 		if ( 'true' === $wpsc_settings[136]->option_value ) {
 			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
 			$post_status = " AND post_status='publish'"; }
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $page_table WHERE post_type='page'$post_status" ) );
-			$sql_count++;
+			++$sql_count;
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-			$sql_count++;
+			++$sql_count;
 
 			$error_list = new SplFixedArray( 1 );
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
@@ -73,8 +78,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 				if ( 'true' === $ignore_flag ) {
 					continue; }
-				$page_count++;
-                                $wpscx_title = $page_list[ $x ]->post_title;
+				++$page_count;
+								$wpscx_title = $page_list[ $x ]->post_title;
 
 				$words_content = $page_list[ $x ]->post_content;
 				try {
@@ -88,26 +93,26 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 					foreach ( $words as $word ) {
 
-						$total_words++;
+						++$total_words;
 						$word = trim( $word, "'`”“$" );
 
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-									if ( $page_count <= $total_pages ) {
-										//Add the error to a new fixed holding array
-										$hold    = new SplFixedArray( 4 );
-										$hold[0] = $word;
-										$hold[1] = $page_list[ $x ]->post_title;
-										$hold[2] = $page_list[ $x ]->ID;
-										$hold[3] = 'Page Content';
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							if ( $page_count <= $total_pages ) {
+								// Add the error to a new fixed holding array
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $page_list[ $x ]->post_title;
+								$hold[2] = $page_list[ $x ]->ID;
+								$hold[3] = 'Page Content';
 
-										$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-										$error_list[ $error_count ] = $hold;
-										$error_count++;
-									} else {
-										$pro_error_count++;
-									}
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							} else {
+								++$pro_error_count;
+							}
 						}
-                                        }
+					}
 					unset( $page_list[ $x ] );
 			}
 
@@ -117,27 +122,27 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				return $pro_error_count;
 			}
 
-                        if ( $page_count > $max_pages ) {
-                                $counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='pro_word_count';" );
-                                $word_count = $word_count + intval( $counter[0]->option_value );
-                        }
+			if ( $page_count > $max_pages ) {
+					$counter    = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='pro_word_count';" );
+					$word_count = $word_count + intval( $counter[0]->option_value );
+			}
 
-                        $counter     = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count';" );
-                        $total_words = $total_words + intval( $counter[0]->option_value );
-                        $wpdb->update( $options_table, array( 'option_value' => $total_words ), array( 'option_name' => 'total_word_count' ) );
-                        if ( $page_count > $total_pages ) {
-                                $page_count = $total_pages;
-                        }
-                        $wpdb->update( $options_table, array( 'option_value' => $page_count ), array( 'option_name' => 'page_count' ) );
-                        $sql_count += 4;
+						$counter     = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count';" );
+						$total_words = $total_words + intval( $counter[0]->option_value );
+						$wpdb->update( $options_table, array( 'option_value' => $total_words ), array( 'option_name' => 'total_word_count' ) );
+			if ( $page_count > $total_pages ) {
+					$page_count = $total_pages;
+			}
+						$wpdb->update( $options_table, array( 'option_value' => $page_count ), array( 'option_name' => 'page_count' ) );
+						$sql_count += 4;
 
-                        wpscx_sql_insert( $error_list, 'Page Content' );
+						wpscx_sql_insert( $error_list, 'Page Content' );
 
-                        if ( ! $is_running ) {
-                                wpscx_finalize( $start_time );
-                        }
+			if ( ! $is_running ) {
+					wpscx_finalize( $start_time );
+			}
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'page_sip' ) );
-			$sql_count++;
+			++$sql_count;
 
 			$end = round( microtime( true ), 5 );
 			wpscx_print_debug( 'Page Content', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
@@ -150,22 +155,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				global $wpscx_title;
 		$sql_count = 0;
 
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		global $wpdb;
-		//global $wpsc_haystack;
+		// global $wpsc_haystack;
 		global $wpscx_ignore_list;
 		global $wpsc_settings;
 		global $wpscx_base_page_max;
-		$timer_init       = 0; //Initialization
-		$timer_ignore     = 0; //Ignore Page
-		$timer_email      = 0; //Ignore Emails if needed
-		$timer_website    = 0; //Ignore websites if needed
-		$timer_upper      = 0; //Ignore uppercase words if needed
-		$timer_spellcheck = 0; //Spellcheck the word
-		$timer_cleanup    = 0; //Cleanup words before checking them
-		$timer_errors     = 0; //Add errors to database
-		$timer_final      = 0; //Finalization
+		$timer_init       = 0; // Initialization
+		$timer_ignore     = 0; // Ignore Page
+		$timer_email      = 0; // Ignore Emails if needed
+		$timer_website    = 0; // Ignore websites if needed
+		$timer_upper      = 0; // Ignore uppercase words if needed
+		$timer_spellcheck = 0; // Spellcheck the word
+		$timer_cleanup    = 0; // Cleanup words before checking them
+		$timer_errors     = 0; // Add errors to database
+		$timer_final      = 0; // Finalization
 
 		$start_time = time();
 		wpscx_set_global_vars();
@@ -178,8 +183,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$max_pages         = $wpscx_base_page_max;
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
 
 		if ( null === $wpsc_haystack ) {
 					$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
@@ -193,14 +198,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$divi_check = wp_get_theme();
 
-		//$total_pages = $max_pages;
-		$total_words         = 0;
-		$page_count          = 0;
-		$word_count          = 0;
-				$total_pages = $max_pages;
-		$pro_word_count      = 0;
-		$error_count         = 0;
-                $pro_error_count     = 0;
+		// $total_pages = $max_pages;
+		$total_words             = 0;
+		$page_count              = 0;
+		$word_count              = 0;
+				$total_pages     = $max_pages;
+		$pro_word_count          = 0;
+		$error_count             = 0;
+				$pro_error_count = 0;
 
 		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
@@ -217,7 +222,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$post_status = " AND post_status='publish'"; }
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $page_table WHERE $post_type_list$post_status" ) );
-			$sql_count++;
+			++$sql_count;
 
 			if ( ! $is_running ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
@@ -226,8 +231,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			$max_time = ini_get( 'max_execution_time' );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-			$sql_count++;
+			++$sql_count;
 
 			global $wpscx_ignore_list;
 			global $wpsc_settings;
@@ -235,7 +241,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			$timer_init = round( microtime( true ), 5 ) - $start;
 
-				//wpscx_print_debug("Post Content - Init: ", 0, 0, round(memory_get_usage() / 1000,5), 0);
+			// wpscx_print_debug("Post Content - Init: ", 0, 0, round(memory_get_usage() / 1000,5), 0);
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
 				if ( ! $log_errors && $x >= 25 ) {
@@ -251,9 +257,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 				if ( 'true' === $ignore_flag ) {
 					continue; }
-				$page_count++;
+				++$page_count;
 						$wpscx_title = $page_list[ $x ]->post_title;
-						//wpscx_print_debug("Page Content - ID: " . $page_list[$x]->ID, 0, 0, round(memory_get_usage() / 1000,5), 0);
+						// wpscx_print_debug("Page Content - ID: " . $page_list[$x]->ID, 0, 0, round(memory_get_usage() / 1000,5), 0);
 
 				$timer_ignore += round( microtime( true ), 5 ) - $start_timer;
 
@@ -273,29 +279,29 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					foreach ( $words as $word ) {
 						$start_timer = round( microtime( true ), 5 );
 
-						$total_words++;
+						++$total_words;
 						$word = trim( $word, "'`”“$" );
 
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 									$timer_upper += round( microtime( true ), 5 ) - $start_timer;
-									if ( $page_count <= $total_pages ) {
-										//$word = addslashes($word);
+							if ( $page_count <= $total_pages ) {
+								// $word = addslashes($word);
 
-										//Add the error to a new fixed holding array
-										$hold    = new SplFixedArray( 4 );
-										$hold[0] = $word;
-										$hold[1] = $page_list[ $x ]->post_title;
-										$hold[2] = $page_list[ $x ]->ID;
-										$hold[3] = WPSCX_POST;
+								// Add the error to a new fixed holding array
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $page_list[ $x ]->post_title;
+								$hold[2] = $page_list[ $x ]->ID;
+								$hold[3] = WPSCX_POST;
 
-										$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-										$error_list[ $error_count ] = $hold;
-										$error_count++;
-									} else {
-										$pro_error_count++;
-									}
-                                                }
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							} else {
+								++$pro_error_count;
+							}
 						}
+					}
 					unset( $page_list[ $x ] );
 			}
 
@@ -305,21 +311,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				return $pro_error_count;
 			}
 
-				if ( $page_count > $max_pages ) {
-					$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='pro_word_count';" );
-					$sql_count++;
-					$word_count = $word_count + intval( $counter[0]->option_value ); }
+			if ( $page_count > $max_pages ) {
+				$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='pro_word_count';" );
+				++$sql_count;
+				$word_count = $word_count + intval( $counter[0]->option_value ); }
 
 				$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count';" );
-				$sql_count++;
+				++$sql_count;
 				$total_words = $total_words + intval( $counter[0]->option_value );
 				$wpdb->update( $options_table, array( 'option_value' => $total_words ), array( 'option_name' => 'total_word_count' ) );
-				$sql_count++;
-				if ( $page_count > $total_pages ) {
-					$page_count = $total_pages;
-				}
+				++$sql_count;
+			if ( $page_count > $total_pages ) {
+				$page_count = $total_pages;
+			}
 				$wpdb->update( $options_table, array( 'option_value' => $page_count ), array( 'option_name' => 'post_count' ) );
-				$sql_count++;
+				++$sql_count;
 
 				$start_timer = round( microtime( true ), 5 );
 
@@ -328,11 +334,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$timer_errors += round( microtime( true ), 5 ) - $start_timer;
 				$start_timer   = round( microtime( true ), 5 );
 
-				if ( ! $is_running ) {
-					wpscx_finalize( $start_time );
-				}
+			if ( ! $is_running ) {
+				wpscx_finalize( $start_time );
+			}
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'post_sip' ) );
-			$sql_count++;
+			++$sql_count;
 
 			$timer_final += round( microtime( true ), 5 ) - $start_timer;
 
@@ -371,7 +377,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_list = new SplFixedArray( 1 );
 
 		$options_settings = SplFixedArray::fromArray( $wpdb->get_results( "SELECT option_value FROM $options_table;" ) );
-		$sql_count++;
+		++$sql_count;
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -387,10 +393,10 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
 
 		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE (a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'wpseo_metadesc' OR a.meta_key='wpseo_title');" ) );
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0; $x < $posts_list->getSize(); $x++ ) {
 
@@ -402,40 +408,40 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$total_words++;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							// $word = addslashes($word);
 							$to_add = true;
-							if ( 'first_name' === $posts_list[ $x ]->meta_key ) {
-								$post_type = 'Author First Name';
-							} elseif ( 'last_name' === $posts_list[ $x ]->meta_key ) {
-								$post_type = 'Author Last Name';
-							} elseif ( 'description' === $posts_list[ $x ]->meta_key ) {
-								$post_type = 'Author Biography';
-							} elseif ( 'wpseo_metadesc' === $posts_list[ $x ]->meta_key ) {
-								$post_type = 'Author SEO Description';
-								if ( ! $wpscx_ent_included ) {
-									$to_add = false;
-								}
-							} elseif ( 'wpseo_title' === $posts_list[ $x ]->meta_key ) {
-								$post_type = 'Author SEO Title';
-								if ( ! $wpscx_ent_included ) {
-									$to_add = false;
-								}
-							} else {
-								$post_type = $posts_list[ $x ]->meta_key; }
+					if ( 'first_name' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Author First Name';
+					} elseif ( 'last_name' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Author Last Name';
+					} elseif ( 'description' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Author Biography';
+					} elseif ( 'wpseo_metadesc' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Author SEO Description';
+						if ( ! $wpscx_ent_included ) {
+							$to_add = false;
+						}
+					} elseif ( 'wpseo_title' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Author SEO Title';
+						if ( ! $wpscx_ent_included ) {
+							$to_add = false;
+						}
+					} else {
+						$post_type = $posts_list[ $x ]->meta_key; }
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
 							$hold[1] = $posts_list[ $x ]->user_login;
 							$hold[2] = $posts_list[ $x ]->user_id;
 							$hold[3] = $post_type;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
@@ -460,7 +466,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$post_table    = $wpdb->prefix . 'posts';
 		$opt_table     = $wpdb->prefix . 'options';
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 600 );
 		$sql_count = 0;
 
@@ -488,12 +494,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			wpscx_set_global_vars();
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 		}
 		$ind_start_time = time();
 
-		//$posts_list = SplFixedArray::fromArray($wpdb->get_results("SELECT * FROM $opt_table WHERE option_name='blogname'"));$sql_count++;
+		// $posts_list = SplFixedArray::fromArray($wpdb->get_results("SELECT * FROM $opt_table WHERE option_name='blogname'"));$sql_count++;
 				$words_list = get_bloginfo( 'name' );
 
 		global $wpscx_ignore_list;
@@ -505,19 +511,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$words      = explode( ' ', $words_list );
 
 		foreach ( $words as $word ) {
-			$total_words++;
+			++$total_words;
 			$word = trim( $word, "'`”“" );
-			if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-						//$word = addslashes($word);
-						//Add the error to a new fixed holding array
+			if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						// $word = addslashes($word);
+						// Add the error to a new fixed holding array
 						$hold    = new SplFixedArray( 3 );
 						$hold[0] = $word;
 						$hold[1] = 'Site Name';
 						$hold[2] = 0;
 
-						$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 						$error_list[ $error_count ] = $hold;
-						$error_count++;
+						++$error_count;
 			}
 		}
 
@@ -545,7 +551,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$post_table    = $wpdb->prefix . 'posts';
 		$opt_table     = $wpdb->prefix . 'options';
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 600 );
 		$sql_count = 0;
 
@@ -576,36 +582,36 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			wpscx_set_global_vars();
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 		}
 
-		//$posts_list = SplFixedArray::fromArray($wpdb->get_results("SELECT * FROM $opt_table WHERE option_name='blogdescription'"));$sql_count++;
+		// $posts_list = SplFixedArray::fromArray($wpdb->get_results("SELECT * FROM $opt_table WHERE option_name='blogdescription'"));$sql_count++;
 				$words_list = get_bloginfo( 'description' );
 
 		$error_list = new SplFixedArray( 1 );
 
-				$end = round( microtime( true ), 5 );
+				$end   = round( microtime( true ), 5 );
 				$start = round( microtime( true ), 5 );
 
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
 		foreach ( $words as $word ) {
-			$total_words++;
+			++$total_words;
 			$word = trim( $word, "'`”“" );
-			if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-						//$word = addslashes($word);
+			if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						// $word = addslashes($word);
 
-						//Add the error to a new fixed holding array
+						// Add the error to a new fixed holding array
 						$hold    = new SplFixedArray( 3 );
 						$hold[0] = $word;
 						$hold[1] = WPSCX_SITE;
 						$hold[2] = 0;
 
-						$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 						$error_list[ $error_count ] = $hold;
-						$error_count++;
+						++$error_count;
 			}
 		}
 
@@ -613,11 +619,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$end_time   = time();
 			$total_time = wpscx_time_elapsed( $end_time - $start_time + 6 );
 			$wpdb->update( $options_table, array( 'option_value' => $total_time ), array( 'option_name' => 'last_scan_finished' ) );
-			$sql_count++;
+			++$sql_count;
 		}
 
 		$end = round( microtime( true ), 5 );
@@ -628,7 +634,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpscx_scan_delay;
 		global $wpsc_settings;
 
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 
 		global $wpdb;
@@ -655,8 +661,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$this->check_site_tagline( true, $wpsc_haystack );
 		$this->check_site_name( true, $wpsc_haystack );
 		if ( $wpscx_ent_included ) {
-			//check_author_seotitle_ent(true);
-			//check_author_seodesc_ent(true);
+			// check_author_seotitle_ent(true);
+			// check_author_seodesc_ent(true);
 		}
 
 		$end_time   = time();
@@ -677,7 +683,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		$sql_count = 0;
 
@@ -690,7 +696,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 
 		if ( null === $wpsc_haystack ) {
-			//$loc = plugins_url("/dict/" . $wpsc_settings[11]->option_value . ".pws", __FILE__ );
+			// $loc = plugins_url("/dict/" . $wpsc_settings[11]->option_value . ".pws", __FILE__ );
 			$loc = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 
 			$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -716,8 +722,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$start_time = time();
 		}
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
+		++$sql_count;
 
 		if ( 'true' === $wpsc_settings[136]->option_value ) {
 			$post_status = array( 'publish', 'draft' ); } else {
@@ -732,7 +739,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					)
 				)
 			);
-		$sql_count++;
+		++$sql_count;
 
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -748,7 +755,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 			if ( 'true' === $ignore_flag ) {
 				continue; }
-			$post_count++;
+			++$post_count;
 			$words_list             = $posts_list[ $x ]->post_content;
 						$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
 						$words_list = $words_list[0];
@@ -756,91 +763,93 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$words                  = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$total_words++;
+				++$total_words;
 				$word = trim( $word, "'`”“#" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							// $word = addslashes($word);
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold                                = new SplFixedArray( 4 );
 							$hold[0]                             = $word;
 							$hold[1]                             = $posts_list[ $x ]->post_title;
 							$hold[2]                             = $posts_list[ $x ]->ID;
 														$hold[3] = 'Contact Form 7 Form';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
 
-							$error_count++;
+							++$error_count;
 				}
 			}
 
-						//Email Notification
-						$words_list = $posts_list[ $x ]->post_content;
-						$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
-						$words_list = $words_list[1];
+					// Email Notification
+					$words_list = $posts_list[ $x ]->post_content;
+					$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
+			if ( isset( $words_list[1] ) ) {
+				$words_list = $words_list[1];
 
-						$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 3 );
-						$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
-						$words      = explode( ' ', $words_list );
+				$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 3 );
+				$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
+				$words      = explode( ' ', $words_list );
 
-			foreach ( $words as $word ) {
-				$total_words++;
-				$word = trim( $word, "'`”“#" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							//$word = addslashes($word);
+				foreach ( $words as $word ) {
+						++$total_words;
+						$word = trim( $word, "'`”“#" );
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						// $word = addslashes($word);
 
-							//Add the error to a new fixed holding array
-							$hold                                = new SplFixedArray( 4 );
-							$hold[0]                             = $word;
-							$hold[1]                             = $posts_list[ $x ]->post_title;
-							$hold[2]                             = $posts_list[ $x ]->ID;
-														$hold[3] = 'Contact Form 7 Email Notification';
+						// Add the error to a new fixed holding array
+						$hold                            = new SplFixedArray( 4 );
+						$hold[0]                         = $word;
+						$hold[1]                         = $posts_list[ $x ]->post_title;
+						$hold[2]                         = $posts_list[ $x ]->ID;
+												$hold[3] = 'Contact Form 7 Email Notification';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+						$error_list[ $error_count ] = $hold;
 
-							$error_count++;
+						++$error_count;
+					}
 				}
 			}
 
-						//Email Auto Response
+					// Email Auto Response
 						$words_list = $posts_list[ $x ]->post_content;
 						$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
-                                                if ( isset( $words_list[2] ) ) {
-						$words_list = $words_list[2];
+			if ( isset( $words_list[2] ) ) {
+				$words_list = $words_list[2];
 
-						$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 2 );
-						$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
-						$words      = explode( ' ', $words_list );
+				$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 2 );
+				$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
+				$words      = explode( ' ', $words_list );
 
-			foreach ( $words as $word ) {
-				$total_words++;
-				$word = trim( $word, "'`”“#" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							//$word = addslashes($word);
+				foreach ( $words as $word ) {
+					++$total_words;
+					$word = trim( $word, "'`”“#" );
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							// $word = addslashes($word);
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold                                = new SplFixedArray( 4 );
 							$hold[0]                             = $word;
 							$hold[1]                             = $posts_list[ $x ]->post_title;
 							$hold[2]                             = $posts_list[ $x ]->ID;
 														$hold[3] = 'Contact Form 7 Auto Response';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
 
-							$error_count++;
+							++$error_count;
+					}
 				}
 			}
-                                                }
 		}
 
 		$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count';" );
-		$sql_count++;
+		++$sql_count;
 		$total_words = $total_words + intval( $counter[0]->option_value );
 		$wpdb->update( $options_table, array( 'option_value' => $total_words ), array( 'option_name' => 'total_word_count' ) );
-		$sql_count++;
+		++$sql_count;
 
 		$word_count = $word_count + intval( $counter[0]->option_value );
 
@@ -848,14 +857,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$end_time   = time();
 			$total_time = wpscx_time_elapsed( $end_time - $start_time + 6 );
 			$wpdb->update( $options_table, array( 'option_value' => $total_time ), array( 'option_name' => 'last_scan_finished' ) );
-			$sql_count++;
+			++$sql_count;
 		}
 		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cf7_sip' ) );
-		$sql_count++;
+		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
 		wpscx_print_debug( 'Contact Form 7', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
@@ -877,7 +886,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
 		set_time_limit( 600 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		$sql_count = 0;
 
 		$max_pages = PHP_INT_MAX;
@@ -910,7 +919,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_time    = ini_get( 'max_execution_time' );
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -921,11 +930,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$ind_start_time = time();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
+		++$sql_count;
 
 		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key='wpseo_title';" );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
 			array_shift( $posts_list );
@@ -936,12 +946,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				++$word_count;
+				++$total_words;
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//$word = addslashes($word);
-								$error_count++;
+								// $word = addslashes($word);
+								++$error_count;
 								array_push(
 									$error_list,
 									array(
@@ -977,11 +987,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
 		set_time_limit( 600 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		$sql_count = 0;
 
-		$max_pages = PHP_INT_MAX;
-                $total_posts = $max_pages;
+		$max_pages           = PHP_INT_MAX;
+				$total_posts = $max_pages;
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -1012,7 +1022,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_time    = ini_get( 'max_execution_time' );
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -1023,11 +1033,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$ind_start_time = time();
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
+		++$sql_count;
 
 		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key = 'wpseo_metadesc';" );
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
 			array_shift( $posts_list );
@@ -1038,23 +1049,23 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							if ( $post_count <= $total_posts ) {
-								//$word = addslashes($word);
-								$error_count++;
-								array_push(
-									$error_list,
-									array(
-										'word'      => $word,
-										'page_name' => '',
-										'page_id'   => '',
-										'page_type' => 'Author SEO Description',
-									)
-								);
-							}
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $post_count <= $total_posts ) {
+						// $word = addslashes($word);
+						++$error_count;
+						array_push(
+							$error_list,
+							array(
+								'word'      => $word,
+								'page_name' => '',
+								'page_id'   => '',
+								'page_type' => 'Author SEO Description',
+							)
+						);
+					}
 				}
 			}
 		}
@@ -1071,18 +1082,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$total_words = 0;
 		$error_count = 0;
 
-		//Set memory/timeout
+		// Set memory/timeout
 		set_time_limit( 6000 );
 		ini_set( 'memory_limit', '512M' );
 
-		//Set global variables
+		// Set global variables
 		global $wpdb;
 		global $wpscx_ignore_list;
 		global $wpsc_settings;
 		global $wpscx_ent_included;
 		wpscx_set_global_vars();
 
-		//Set database tablenames
+		// Set database tablenames
 		$table_name    = $wpdb->prefix . 'spellcheck_words';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1092,7 +1103,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$widget_instances = get_option( 'widget_text' );
 		foreach ( $widget_instances as $widget ) {
-                        if ( !isset($widget['text']) ) continue;
+			if ( ! isset( $widget['text'] ) ) {
+				continue;
+			}
 				$text = $widget['text'];
 
 				$text  = do_shortcode( $text );
@@ -1100,20 +1113,20 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $text );
 
 			foreach ( $words as $word ) {
-					$total_words++;
+					++$total_words;
 					$word = trim( $word, "'`”“" );
 
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-					//Add the error to a new fixed holding array
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					// Add the error to a new fixed holding array
 					$hold    = new SplFixedArray( 4 );
 					$hold[0] = $word;
 					$hold[1] = $widget['title'];
 					$hold[2] = 0;
 					$hold[3] = 'Widget Content';
 
-					$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+					$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 					$error_list[ $error_count ] = $hold;
-					$error_count++;
+					++$error_count;
 				}
 			}
 		}
@@ -1142,7 +1155,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		global $wpsc_settings;
 		wpscx_set_global_vars();
@@ -1156,28 +1169,29 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$error_list = new SplFixedArray( 1 );
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'posts', $max_pages is sanitized with intval(), query contains only hardcoded values
 		$menus = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_title, ID FROM ' . $table_name . ' WHERE post_type ="nav_menu_item" LIMIT ' . $max_pages . ';' ) );
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0; $x < $menus->getSize(); $x++ ) {
-			$word_list = html_entity_decode( strip_tags( $menus[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
+			$word_list = html_entity_decode( wp_strip_all_tags( $menus[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 3 );
 							$hold[0] = $word;
 							$hold[1] = $menus[ $x ]->post_title;
 							$hold[2] = $menus[ $x ]->ID;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 			unset( $menus[ $x ] );
@@ -1192,31 +1206,27 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 	function check_page_title_free( $is_running = false, $haystack = null, $log_debug = true ) {
 		$end = round( microtime( true ), 5 );
-		////$loc = dirname(__FILE__)."/../../../../debug.log";
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Page Content Start Time: " . date("g:i:sA") . "\r\n" );
-		//fclose($debug_file);
 
 		$start       = round( microtime( true ), 5 );
 		$start_debug = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		global $wpdb;
-		//global $wpsc_haystack;
+		// global $wpsc_haystack;
 		global $wpscx_ignore_list;
 		global $wpsc_settings;
-		$timer_init       = 0; //Initialization
-		$timer_ignore     = 0; //Ignore Page
-		$timer_email      = 0; //Ignore Emails if needed
-		$timer_website    = 0; //Ignore websites if needed
-		$timer_upper      = 0; //Ignore uppercase words if needed
-		$timer_spellcheck = 0; //Spellcheck the word
-		$timer_cleanup    = 0; //Cleanup words before checking them
-		$timer_errors     = 0; //Add errors to database
-		$timer_final      = 0; //Finalization
+		$timer_init       = 0; // Initialization
+		$timer_ignore     = 0; // Ignore Page
+		$timer_email      = 0; // Ignore Emails if needed
+		$timer_website    = 0; // Ignore websites if needed
+		$timer_upper      = 0; // Ignore uppercase words if needed
+		$timer_spellcheck = 0; // Spellcheck the word
+		$timer_cleanup    = 0; // Cleanup words before checking them
+		$timer_errors     = 0; // Add errors to database
+		$timer_final      = 0; // Finalization
 
 		$start_time = time();
 		wpscx_set_global_vars();
@@ -1227,9 +1237,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$page_table    = $wpdb->prefix . 'posts';
 
-		//$language_setting = $wpdb->get_results('SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";');
+		// $language_setting = $wpdb->get_results('SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";');
 
-		//$max_pages = $wpdb->get_results("SELECT option_value FROM $options_table WHERE option_name = 'pro_max_pages'");
+		// $max_pages = $wpdb->get_results("SELECT option_value FROM $options_table WHERE option_name = 'pro_max_pages'");
 		$max_pages = intval( $wpsc_settings[138]->option_value );
 
 		$loc          = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
@@ -1251,7 +1261,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$post_status = " AND post_status='publish'"; }
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $page_table WHERE post_type='page'$post_status" ) );
-			$sql_count++;
+			++$sql_count;
 
 			if ( ! $is_running ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
@@ -1260,8 +1270,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			$max_time = ini_get( 'max_execution_time' );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-			$sql_count++;
+			++$sql_count;
 
 			global $wpscx_ignore_list;
 			global $wpsc_settings;
@@ -1278,35 +1289,35 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 				if ( 'true' === $ignore_flag ) {
 					continue; }
-				$page_count++;
+				++$page_count;
 
-				//Page Title
-				$word_list = html_entity_decode( strip_tags( $page_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
+				// Page Title
+				$word_list = html_entity_decode( wp_strip_all_tags( $page_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
 
 				$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 
 				$words = explode( ' ', $word_list );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = trim( $word, "'`”“" );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $page_list[ $x ]->post_title;
 								$hold[2] = $page_list[ $x ]->ID;
 								$hold[3] = 'Page Title';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 
-				//Page Slug
+				// Page Slug
 				$desc_title = $page_list[ $x ]->post_title;
 				$desc_id    = $page_list[ $x ]->ID;
 				$desc       = $page_list[ $x ]->post_name;
@@ -1316,8 +1327,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $desc );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = str_replace( ' ', '', $word );
 					$word = str_replace( '=', '', $word );
 					$word = str_replace( ',', '', $word );
@@ -1326,28 +1337,30 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$word = trim( $word );
 					$word = preg_replace( '/[0-9]/', '', $word );
 					$word = preg_replace( "/[^a-zA-z'’`éèùâêîôûçëïü]/i", '', $word );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $desc_title;
 								$hold[2] = $desc_id;
 								$hold[3] = 'Page Slug';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 
 				unset( $page_list[ $x ] );
 			}
 
-			//Widgets
+			// Widgets
 			$widget_instances = get_option( 'widget_text' );
 			foreach ( $widget_instances as $widget ) {
-                            if ( !isset($widget['text']) ) continue;
+				if ( ! isset( $widget['text'] ) ) {
+					continue;
+				}
 				$text = $widget['text'];
 
 				$text  = do_shortcode( $text );
@@ -1355,20 +1368,20 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $text );
 
 				foreach ( $words as $word ) {
-					$total_words++;
+					++$total_words;
 					$word = trim( $word, "'`”“" );
 
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-						//Add the error to a new fixed holding array
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						// Add the error to a new fixed holding array
 						$hold    = new SplFixedArray( 4 );
 						$hold[0] = $word;
 						$hold[1] = $widget['title'];
 						$hold[2] = 0;
 						$hold[3] = 'Widget Content';
 
-						$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 						$error_list[ $error_count ] = $hold;
-						$error_count++;
+						++$error_count;
 					}
 				}
 			}
@@ -1404,28 +1417,28 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 					$word = trim( $word, "'`”“" );
 
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
 							$hold[1] = '';
 							$hold[2] = '';
 							$hold[3] = ' Custom Field';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
 		return $error_list;
 	}
-        
-        function check_custom_fields( $type, $wpsc_haystack ) {
+
+	function check_custom_fields( $type, $wpsc_haystack ) {
 		global $wpsc_settings;
 		global $wpdb;
-		$meta_table = $wpdb->prefix . 'postmeta';
-		$post_table = $wpdb->prefix . 'posts';
-		$error_list = new SplFixedArray( 1 );
+		$meta_table  = $wpdb->prefix . 'postmeta';
+		$post_table  = $wpdb->prefix . 'posts';
+		$error_list  = new SplFixedArray( 1 );
 		$error_count = 0;
 
 		$results = $wpdb->get_results( "SELECT a.meta_id, a.meta_key, a.meta_value, b.post_title FROM $meta_table a JOIN $post_table b ON a.post_id = b.ID WHERE b.post_type='$type';" );
@@ -1438,21 +1451,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 
 			$words_content = wpscx_clean_all( $row->meta_value, $wpsc_settings, false );
-			$words = explode( ' ', $words_content );
+			$words         = explode( ' ', $words_content );
 
 			foreach ( $words as $word ) {
 				$word = trim( $word, "'`”“" );
 
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							$hold = new SplFixedArray( 4 );
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
 							$hold[1] = $row->post_title;
 							$hold[2] = $row->meta_id;
 							$hold[3] = $type . ' Custom Field';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
@@ -1463,31 +1476,27 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 	function check_post_title_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
 		$end = round( microtime( true ), 5 );
-		////$loc = dirname(__FILE__)."/../../../../debug.log";
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Start Time: " . date("g:i:sA") . "\r\n" );
-		//fclose($debug_file);
 
 		$start       = round( microtime( true ), 5 );
 		$start_debug = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		global $wpdb;
-		//global $wpsc_haystack;
+		// global $wpsc_haystack;
 		global $wpscx_ignore_list;
 		global $wpsc_settings;
-		$timer_init       = 0; //Initialization
-		$timer_ignore     = 0; //Ignore Page
-		$timer_email      = 0; //Ignore Emails if needed
-		$timer_website    = 0; //Ignore websites if needed
-		$timer_upper      = 0; //Ignore uppercase words if needed
-		$timer_spellcheck = 0; //Spellcheck the word
-		$timer_cleanup    = 0; //Cleanup words before checking them
-		$timer_errors     = 0; //Add errors to database
-		$timer_final      = 0; //Finalization
+		$timer_init       = 0; // Initialization
+		$timer_ignore     = 0; // Ignore Page
+		$timer_email      = 0; // Ignore Emails if needed
+		$timer_website    = 0; // Ignore websites if needed
+		$timer_upper      = 0; // Ignore uppercase words if needed
+		$timer_spellcheck = 0; // Spellcheck the word
+		$timer_cleanup    = 0; // Cleanup words before checking them
+		$timer_errors     = 0; // Add errors to database
+		$timer_final      = 0; // Finalization
 
 		$start_time = time();
 		wpscx_set_global_vars();
@@ -1498,17 +1507,17 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$page_table    = $wpdb->prefix . 'posts';
 
-		//$language_setting = $wpdb->get_results('SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";');
+		// $language_setting = $wpdb->get_results('SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";');
 
-		//$max_pages = $wpdb->get_results("SELECT option_value FROM $options_table WHERE option_name = 'pro_max_pages'");
+		// $max_pages = $wpdb->get_results("SELECT option_value FROM $options_table WHERE option_name = 'pro_max_pages'");
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -1526,14 +1535,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		$error_count = 0;
 
-		$post_types = get_post_types( array( 'publicly_queryable' => true ) );
+		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
 		foreach ( $post_types as $type ) {
 			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpsc-product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 				$post_type_list .= "post_type='$type' OR ";
 			}
 		}
-			$post_type_list = trim( $post_type_list, ' OR ' );
+			$post_type_list  = trim( $post_type_list, ' OR ' );
 			$post_type_list .= ')';
 
 		if ( 'true' === $wpsc_settings[137]->option_value ) {
@@ -1541,7 +1550,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$post_status = " AND post_status='publish'"; }
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID, post_type FROM $page_table WHERE $post_type_list$post_status" ) );
-			$sql_count++;
+			++$sql_count;
 
 			if ( ! $is_running ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
@@ -1550,21 +1559,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			$max_time = ini_get( 'max_execution_time' );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-			$sql_count++;
+			++$sql_count;
 
 			global $wpscx_ignore_list;
 			global $wpsc_settings;
 			$error_list = new SplFixedArray( 1 );
 
 			$timer_init = round( microtime( true ), 5 ) - $start;
-                        
-                        //custom fields
-                        $custom = $this->check_custom_fields( 'Post', $wpsc_haystack );
+
+						// custom fields
+						$custom = $this->check_custom_fields( 'Post', $wpsc_haystack );
 			for ( $y = 0; $y < $custom->getSize(); $y++ ) {
 				$error_list->setSize( $error_list->getSize() + 1 );
 				$error_list[ $error_count ] = $custom[ $y ];
-				$error_count++;
+				++$error_count;
 			}
 
 			for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
@@ -1578,47 +1588,47 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 				if ( 'true' === $ignore_flag ) {
 					continue; }
-				$page_count++;
+				++$page_count;
 
 				$timer_ignore += round( microtime( true ), 5 ) - $start_timer;
 
-				//Post Titles
+				// Post Titles
 				if ( 'true' === $wpsc_settings[13]->option_value ) {
-					$word_list = html_entity_decode( strip_tags( $page_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
+					$word_list = html_entity_decode( wp_strip_all_tags( $page_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
 					$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
-					$words = explode( ' ', $word_list );
+					$words     = explode( ' ', $word_list );
 
 					foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = trim( $word, "'`”“" );
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-									//Add the error to a new fixed holding array
-									$hold = new SplFixedArray( 4 );
+									// Add the error to a new fixed holding array
+									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $page_list[ $x ]->post_title;
 									$hold[2] = $page_list[ $x ]->ID;
 									$hold[3] = 'Post Title';
 
-									$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
-									$error_count++;
-								}
+									++$error_count;
+						}
 					}
 				}
 
-				//Post Slugs
+				// Post Slugs
 				if ( 'true' === $wpsc_settings[19]->option_value ) {
 					$desc_title = $page_list[ $x ]->post_title;
-					$desc_id = $page_list[ $x ]->ID;
-					$desc = $page_list[ $x ]->post_name;
-					//$desc = wpscx_clean_slug($desc);
+					$desc_id    = $page_list[ $x ]->ID;
+					$desc       = $page_list[ $x ]->post_name;
+					// $desc = wpscx_clean_slug($desc);
 					$words = explode( '-', $desc );
 
 					foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = str_replace( ' ', '', $word );
 						$word = str_replace( '=', '', $word );
 						$word = str_replace( ',', '', $word );
@@ -1627,19 +1637,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						$word = trim( $word );
 						$word = preg_replace( '/[0-9]/', '', $word );
 						$word = preg_replace( "/[^a-zA-z'’`éèùâêîôûçëïü]/i", '', $word );
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-									//Add the error to a new fixed holding array
-									$hold = new SplFixedArray( 4 );
+									// Add the error to a new fixed holding array
+									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $desc_title;
 									$hold[2] = $desc_id;
 									$hold[3] = 'Post Slug';
 
-									$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
-									$error_count++;
-								}
+									++$error_count;
+						}
 					}
 				}
 				unset( $page_list[ $x ] );
@@ -1669,19 +1679,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -1692,7 +1702,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -1702,81 +1712,81 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_list = new SplFixedArray( 1 );
 
 		$tags_list = SplFixedArray::fromArray( get_tags() );
-		$sql_count++;
+		++$sql_count;
 
-		$loc = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Options Array: " . print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$loc = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Options Array: " . print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 			$words = array();
 
 			if ( 'true' === $wpsc_settings[14]->option_value ) {
-				$words = wpscx_clean_text( strip_tags( html_entity_decode( $tags_list[ $x ]->name ) ) );
+				$words = wpscx_clean_text( wp_strip_all_tags( html_entity_decode( $tags_list[ $x ]->name ) ) );
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 
 				$words = explode( ' ', $words );
 
-				//Tag Titles
+				// Tag Titles
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = trim( $word, '"' );
 					$word = trim( $word );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $tags_list[ $x ]->post_title;
 								$hold[2] = $tags_list[ $x ]->term_id;
 								$hold[3] = 'Tag Title';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 			}
 
 			if ( 'true' === $wpsc_settings[38]->option_value ) {
-				//Tag Descriptions
-				$words = wpscx_clean_text( strip_tags( html_entity_decode( $tags_list[ $x ]->description ) ) );
+				// Tag Descriptions
+				$words = wpscx_clean_text( wp_strip_all_tags( html_entity_decode( $tags_list[ $x ]->description ) ) );
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 				$words = explode( ' ', $words );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = trim( $word, "?!.,'()`”:“@$#-%\=/" );
 					$word = trim( $word, '"' );
 					$word = trim( $word );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $tags_list[ $x ]->post_title;
 								$hold[2] = $tags_list[ $x ]->term_id;
 								$hold[3] = 'Tag Description';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 			}
 
 			if ( 'true' === $wpsc_settings[39]->option_value ) {
-				//Tag Slugs
+				// Tag Slugs
 				$words = wpscx_clean_slug( $tags_list[ $x ]->slug );
 
 				$words = explode( ' ', $words );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = str_replace( ' ', '', $word );
 					$word = str_replace( '=', '', $word );
 					$word = str_replace( ',', '', $word );
@@ -1785,18 +1795,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$word = trim( $word );
 					$word = preg_replace( '/[0-9]/', '', $word );
 					$word = preg_replace( "/[^a-zA-z'’`éèùâêîôûçëïü]/i", '', $word );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $tags_list[ $x ]->post_title;
 								$hold[2] = $tags_list[ $x ]->term_id;
 								$hold[3] = 'Tag Slug';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 			}
@@ -1827,19 +1837,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -1850,7 +1860,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -1860,39 +1870,39 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_list = new SplFixedArray( 1 );
 
 		$cats_list = SplFixedArray::fromArray( get_categories() );
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 			$words = array();
 
 			if ( 'true' === $wpsc_settings[15]->option_value && isset( $cats_list[ $x ]->name ) ) {
-				//Cat Titles
-				$words = strip_tags( html_entity_decode( $cats_list[ $x ]->name ) );
+				// Cat Titles
+				$words = wp_strip_all_tags( html_entity_decode( $cats_list[ $x ]->name ) );
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 				$words = explode( ' ', $words );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = trim( $word, "'`”“" );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $cats_list[ $x ]->post_title;
 								$hold[2] = $cats_list[ $x ]->term_id;
 								$hold[3] = 'Category Title';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 					}
 				}
 			}
 
 			if ( 'true' === $wpsc_settings[40]->option_value && isset( $cats_list[ $x ]->description ) ) {
-				//Cat Descriptions
+				// Cat Descriptions
 				$words = array();
 				$words = $cats_list[ $x ]->description;
 
@@ -1901,34 +1911,34 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $words );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = trim( $word, "'`”“" );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $cats_list[ $x ]->post_title;
 								$hold[2] = $cats_list[ $x ]->term_id;
 								$hold[3] = 'Category Description';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							}
+								++$error_count;
+					}
 				}
 			}
 
 			if ( 'true' === $wpsc_settings[41]->option_value && isset( $cats_list[ $x ]->slug ) ) {
-				//Cat Slugs
+				// Cat Slugs
 				$words = wpscx_clean_slug( $cats_list[ $x ]->slug );
 
 				$words = explode( ' ', $words );
 
 				foreach ( $words as $word ) {
-					$word_count++;
-					$total_words++;
+					++$word_count;
+					++$total_words;
 					$word = str_replace( ' ', '', $word );
 					$word = str_replace( '=', '', $word );
 					$word = str_replace( ',', '', $word );
@@ -1937,19 +1947,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$word = trim( $word );
 					$word = preg_replace( '/[0-9]/', '', $word );
 					$word = preg_replace( "/[^a-zA-z'’`éèùâêîôûçëïü]/i", '', $word );
-					if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $cats_list[ $x ]->post_title;
 								$hold[2] = $cats_list[ $x ]->term_id;
 								$hold[3] = 'Category Slug';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							}
+								++$error_count;
+					}
 				}
 			}
 
@@ -1980,7 +1990,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
@@ -2007,15 +2017,17 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description" LIMIT ' . $max_pages ) );
-				$sql_count++;
+				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
-					$desc         = $results[ $x ];
-					$post_store   = $desc;
+					$desc       = $results[ $x ];
+					$post_store = $desc;
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'posts', WHERE value from prior database query
 					$page_results = $wpdb->get_results( 'SELECT * FROM ' . $posts_table . ' WHERE ID=' . $desc->post_id );
 
-					if ( !isset( $page_results[0]->post_title ) ) {
+					if ( ! isset( $page_results[0]->post_title ) ) {
 						continue;
 					}
 					if ( 'draft' === $page_results[0]->post_status && 'page' === $page_results[0]->post_type && ! $page_status ) {
@@ -2026,33 +2038,33 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					}
 
 					$desc_type = $desc->meta_key;
-					$desc      = html_entity_decode( strip_tags( $desc->meta_value ), ENT_QUOTES, 'utf-8' );
+					$desc      = html_entity_decode( wp_strip_all_tags( $desc->meta_value ), ENT_QUOTES, 'utf-8' );
 					$desc      = wpscx_clean_all( $desc, $wpsc_settings );
 					$words     = explode( ' ', $desc );
 
 					foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = trim( $word, "'`”“" );
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-									//Add the error to a new fixed holding array
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+									// Add the error to a new fixed holding array
 									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $page_results[0]->post_title;
 									$hold[2] = $page_results[0]->ID;
 
-									$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
-									if ( '_yoast_wpseo_metadesc' === $desc_type && $yoast_active ) {
-										$hold[3] = 'Yoast SEO Description';
-									} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
-										$hold[3] = 'All in One SEO Description';
-									} elseif ( '_su_description' === $desc_type && $su_active ) {
-										$hold[3] = 'Ultimate SEO Description';
-									} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
-										$hold[3] = 'Rank Math SEO Description';
-									}
-									$error_count++;
+							if ( '_yoast_wpseo_metadesc' === $desc_type && $yoast_active ) {
+								$hold[3] = 'Yoast SEO Description';
+							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
+								$hold[3] = 'All in One SEO Description';
+							} elseif ( '_su_description' === $desc_type && $su_active ) {
+								$hold[3] = 'Ultimate SEO Description';
+							} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
+								$hold[3] = 'Rank Math SEO Description';
+							}
+									++$error_count;
 						}
 					}
 					unset( $results[ $x ] );
@@ -2083,7 +2095,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 
 		$max_pages = intval( $wpsc_settings[138]->option_value );
@@ -2092,11 +2104,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 				$wpscx_dict_list = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list       = $wpdb->get_results( "SELECT * FROM $words_table WHERE ignore_word=true;" );
-		$loc                     = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$loc                     = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		if ( null === $wpsc_haystack ) {
 			$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
@@ -2112,7 +2124,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 		}
 		global $wpscx_ignore_list;
@@ -2133,15 +2145,17 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title" LIMIT ' . $max_pages ) );
-				$sql_count++;
+				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
-					$desc         = $results[ $x ];
-					$post_store   = $desc;
+					$desc       = $results[ $x ];
+					$post_store = $desc;
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'posts', WHERE value from prior database query
 					$page_results = $wpdb->get_results( 'SELECT ID, post_title, post_status FROM ' . $posts_table . ' WHERE ID=' . $desc->post_id );
 
-					if ( !isset( $page_results[0]->post_title ) ) {
+					if ( ! isset( $page_results[0]->post_title ) ) {
 						continue;
 					}
 					if ( 'draft' === $page_results[0]->post_status && ! $page_status ) {
@@ -2159,31 +2173,31 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$words = explode( ' ', $desc );
 
 					foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = trim( $word, "'`”“" );
-						if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-									//Add the error to a new fixed holding array
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+									// Add the error to a new fixed holding array
 									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $page_results[0]->post_title;
 									$hold[2] = $page_results[0]->ID;
 
-									if ( '_yoast_wpseo_title' === $desc_type && $yoast_active ) {
-										$hold[3] = 'Yoast SEO Title';
-									} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
-										$hold[3] = 'All in One SEO Title';
-									} elseif ( '_su_title' === $desc_type && $su_active ) {
-										$hold[3] = 'Ultimate SEO Title';
-									} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
-										$hold[3] = 'Rank Math SEO Title';
-									} else {
-										break;
-									}
+							if ( '_yoast_wpseo_title' === $desc_type && $yoast_active ) {
+								$hold[3] = 'Yoast SEO Title';
+							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
+								$hold[3] = 'All in One SEO Title';
+							} elseif ( '_su_title' === $desc_type && $su_active ) {
+								$hold[3] = 'Ultimate SEO Title';
+							} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
+								$hold[3] = 'Rank Math SEO Title';
+							} else {
+								break;
+							}
 
-									$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
-									$error_count++;
+									++$error_count;
 						}
 					}
 					unset( $results[ $x ] );
@@ -2193,7 +2207,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				wpscx_print_debug( 'SEO Title EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
 
 				return $error_list->getSize();
-
 	}
 
 
@@ -2214,18 +2227,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2237,7 +2250,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -2258,28 +2271,28 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				)
 			)
 		);
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 3 );
 							$hold[0] = $word;
 							$hold[1] = $posts_list[ $x ]->post_title;
 							$hold[2] = $posts_list[ $x ]->ID;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
@@ -2305,19 +2318,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count    = 0;
 		$error_count   = 0;
 		$total_words   = 0;
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2329,7 +2342,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -2350,29 +2363,29 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				)
 			)
 		);
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
 			$word_list = get_post_meta( $posts_list[ $x ]->ID, 'my_slider_caption', true );
-			$word_list = html_entity_decode( strip_tags( $word_list ), ENT_QUOTES, 'utf-8' );
+			$word_list = html_entity_decode( wp_strip_all_tags( $word_list ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 3 );
 							$hold[0] = $word;
 							$hold[1] = $posts_list[ $x ]->post_title;
 							$hold[2] = $posts_list[ $x ]->ID;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
@@ -2404,18 +2417,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2435,28 +2448,28 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT slider, title FROM $table_name" ) );
+		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT slider, title FROM ' . esc_sql( $table_name ) ) );
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->title ), ENT_QUOTES, 'utf-8' );
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->title ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 3 );
 							$hold[0] = $word;
 							$hold[1] = $posts_list[ $x ]->post_title;
 							$hold[2] = $posts_list[ $x ]->ID;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 		}
@@ -2481,18 +2494,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count   = 0;
 		$total_words   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2512,29 +2525,29 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT slider, slide, title FROM $table_name" ) );
+		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT slider, slide, title FROM ' . esc_sql( $table_name ) ) );
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->slide ), ENT_QUOTES, 'utf-8' );
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->slide ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-							//Add the error to a new fixed holding array
+							// Add the error to a new fixed holding array
 							$hold    = new SplFixedArray( 3 );
 							$hold[0] = $word;
 							$hold[1] = $posts_list[ $x ]->post_title;
 							$hold[2] = $posts_list[ $x ]->ID;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
-						}
+							++$error_count;
+				}
 			}
 		}
 
@@ -2560,13 +2573,13 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$media_count   = 0;
 		$error_count   = 0;
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
 
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2574,21 +2587,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_list = new SplFixedArray( 1 );
 
 		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_excerpt, ID from $post_table WHERE post_type='attachment'" ) );
-		$sql_count++;
+		++$sql_count;
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$media_count++;
+			++$media_count;
 
-			//******CHECK MEDIA TITLES******
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
+			// ******CHECK MEDIA TITLES******
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
@@ -2596,22 +2609,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							$hold[2] = $posts_list[ $x ]->ID;
 							$hold[3] = 'Media Title';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
+							++$error_count;
 				}
 			}
 
-			//******CHECK MEDIA DESCRIPTION******
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->post_content ), ENT_QUOTES, 'utf-8' );
+			// ******CHECK MEDIA DESCRIPTION******
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->post_content ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
@@ -2619,22 +2632,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							$hold[2] = $posts_list[ $x ]->ID;
 							$hold[3] = 'Media Description';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
-						}
+							++$error_count;
+				}
 			}
 
-			//******CHECK MEDIA CAPTION******
-			$word_list = html_entity_decode( strip_tags( $posts_list[ $x ]->post_excerpt ), ENT_QUOTES, 'utf-8' );
+			// ******CHECK MEDIA CAPTION******
+			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->post_excerpt ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
@@ -2642,22 +2655,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							$hold[2] = $posts_list[ $x ]->ID;
 							$hold[3] = 'Media Caption';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
-						}
+							++$error_count;
+				}
 			}
 
-			//******CHECK MEDIA ALT TEXT******
-			$word_list = html_entity_decode( strip_tags( get_post_meta( $posts_list[ $x ]->ID, '_wp_attachment_image_alt', true ) ), ENT_QUOTES, 'utf-8' );
+			// ******CHECK MEDIA ALT TEXT******
+			$word_list = html_entity_decode( wp_strip_all_tags( get_post_meta( $posts_list[ $x ]->ID, '_wp_attachment_image_alt', true ) ), ENT_QUOTES, 'utf-8' );
 			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
 			$words     = explode( ' ', $word_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 							$hold    = new SplFixedArray( 4 );
 							$hold[0] = $word;
@@ -2665,10 +2678,10 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							$hold[2] = $posts_list[ $x ]->ID;
 							$hold[3] = 'Media Alternate Text';
 
-							$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 							$error_list[ $error_count ] = $hold;
-							$error_count++;
-						}
+							++$error_count;
+				}
 			}
 			unset( $posts_list[ $x ] );
 		}
@@ -2694,18 +2707,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2724,7 +2737,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -2733,8 +2746,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
+		++$sql_count;
 
 		$posts_list = get_posts(
 			array(
@@ -2746,7 +2760,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				),
 			)
 		);
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
 			array_shift( $posts_list );
@@ -2758,100 +2772,100 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 			if ( 'true' === $ignore_flag ) {
 				continue; }
-			$post_count++;
+			++$post_count;
 						$words_list = $post->post_content;
 
-						//Product Description
+						// Product Description
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							if ( $post_count <= $total_posts ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $post_count <= $total_posts ) {
+						// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
-								$hold                            = new SplFixedArray( 4 );
-								$hold[0]                         = $word;
-								$hold[1]                         = $post->post_title;
-								$hold[2]                         = $post->ID;
-														$hold[3] = 'WooCommerce Product';
+						// Add the error to a new fixed holding array
+						$hold                            = new SplFixedArray( 4 );
+						$hold[0]                         = $word;
+						$hold[1]                         = $post->post_title;
+						$hold[2]                         = $post->ID;
+												$hold[3] = 'WooCommerce Product';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							} else {
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					} else {
 
-							}
+					}
 				}
 			}
 
-						//Product Excerpt
+						// Product Excerpt
 						$words_list = $post->post_excerpt;
 			$words_list             = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words                  = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							if ( $post_count <= $total_posts ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $post_count <= $total_posts ) {
+						// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
-								$hold                            = new SplFixedArray( 4 );
-								$hold[0]                         = $word;
-								$hold[1]                         = $post->post_title;
-								$hold[2]                         = $post->ID;
-														$hold[3] = 'WooCommerce Short Description';
+						// Add the error to a new fixed holding array
+						$hold                            = new SplFixedArray( 4 );
+						$hold[0]                         = $word;
+						$hold[1]                         = $post->post_title;
+						$hold[2]                         = $post->ID;
+												$hold[3] = 'WooCommerce Short Description';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							} else {
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					} else {
 
-							}
+					}
 				}
 			}
 
-						//Product Title
+						// Product Title
 						$words_list = $post->post_title;
 			$words_list             = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words                  = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							if ( $post_count <= $total_posts ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $post_count <= $total_posts ) {
+						// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
-								$hold                            = new SplFixedArray( 4 );
-								$hold[0]                         = $word;
-								$hold[1]                         = $post->post_title;
-								$hold[2]                         = $post->ID;
-														$hold[3] = 'WooCommerce Title';
+						// Add the error to a new fixed holding array
+						$hold                            = new SplFixedArray( 4 );
+						$hold[0]                         = $word;
+						$hold[1]                         = $post->post_title;
+						$hold[2]                         = $post->ID;
+												$hold[3] = 'WooCommerce Title';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							} else {
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					} else {
 
-							}
+					}
 				}
 			}
 		}
 
-				//Check Categories
+				// Check Categories
 				$args      = array( 'taxonomy', 'product_cat' );
 				$cats_list = SplFixedArray::fromArray( get_categories() );
 
@@ -2864,21 +2878,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $words );
 
 			foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-										//Add the error to a new fixed holding array
+										// Add the error to a new fixed holding array
 										$hold    = new SplFixedArray( 4 );
 										$hold[0] = $word;
 										$hold[1] = $cats_list[ $x ]->post_title;
 										$hold[2] = $cats_list[ $x ]->term_id;
 										$hold[3] = 'WooCommerce Category Title';
 
-										$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+										$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 										$error_list[ $error_count ] = $hold;
-										$error_count++;
+										++$error_count;
 				}
 			}
 
@@ -2889,26 +2903,26 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $words );
 
 			foreach ( $words as $word ) {
-							$word_count++;
-							$total_words++;
+							++$word_count;
+							++$total_words;
 							$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $cats_list[ $x ]->post_title;
 								$hold[2] = $cats_list[ $x ]->term_id;
 								$hold[3] = 'WooCommerce Category Description';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 				}
 			}
 		}
 
-				//Check Tags
+				// Check Tags
 				$title_table = $wpdb->prefix . 'terms';
 				$desc_table  = $wpdb->prefix . 'taxonomy_terms';
 				$tags_list   = SplFixedArray::fromArray( $wpdb->get_result( 'SELECT a.term_id, a.description, b.name FROM ' . $desc_table . ' a, ' . $title_table . ' b WHERE a.taxonomy="product_tag" AND a.term_id = b.term_id;' ) );
@@ -2922,21 +2936,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $words );
 
 			foreach ( $words as $word ) {
-						$word_count++;
-						$total_words++;
+						++$word_count;
+						++$total_words;
 						$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-										//Add the error to a new fixed holding array
+										// Add the error to a new fixed holding array
 										$hold    = new SplFixedArray( 4 );
 										$hold[0] = $word;
 										$hold[1] = $tags_list[ $x ]->name;
 										$hold[2] = $tags_list[ $x ]->term_id;
 										$hold[3] = 'WooCommerce Tag Title';
 
-										$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+										$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 										$error_list[ $error_count ] = $hold;
-										$error_count++;
+										++$error_count;
 				}
 			}
 
@@ -2947,21 +2961,21 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$words = explode( ' ', $words );
 
 			foreach ( $words as $word ) {
-							$word_count++;
-							$total_words++;
+							++$word_count;
+							++$total_words;
 							$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
 								$hold[1] = $tags_list[ $x ]->name;
 								$hold[2] = $tags_list[ $x ]->term_id;
 								$hold[3] = 'WooCommerce Tag Description';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 				}
 			}
 		}
@@ -2986,19 +3000,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -3016,7 +3030,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$sql_count++;
+			++$sql_count;
 			$start_time = time();
 			wpscx_set_global_vars();
 		}
@@ -3025,8 +3039,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$sql_count++;
+		++$sql_count;
 
 		$posts_list = get_posts(
 			array(
@@ -3038,7 +3053,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				),
 			)
 		);
-		$sql_count++;
+		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
 			array_shift( $posts_list );
@@ -3050,37 +3065,36 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 			if ( 'true' === $ignore_flag ) {
 				continue; }
-			$post_count++;
+			++$post_count;
 			$words_list = $post->post_excerpt;
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-							if ( $post_count <= $total_posts ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $post_count <= $total_posts ) {
+						// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
-								$hold    = new SplFixedArray( 3 );
-								$hold[0] = $word;
-								$hold[1] = $post->post_title;
-								$hold[2] = $post->ID;
+						// Add the error to a new fixed holding array
+						$hold    = new SplFixedArray( 3 );
+						$hold[0] = $word;
+						$hold[1] = $post->post_title;
+						$hold[2] = $post->ID;
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-								$error_list[ $error_count ] = $hold;
-								$error_count++;
-							} else {
+						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					} else {
 
-							}
+					}
 				}
 			}
 		}
 
 		return $error_count;
-
 	}
 
 	function check_woocommerce_excerpt_free( $is_running = false, $wpscx_haystack = null ) {
@@ -3097,16 +3111,16 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -3134,6 +3148,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = get_posts(
@@ -3157,27 +3172,27 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 			if ( 'true' === $ignore_flag ) {
 				continue; }
-			$post_count++;
+			++$post_count;
 			$words_list = $post->post_excerpt;
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+								// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 3 );
 								$hold[0] = $word;
 								$hold[1] = $post->post_title;
 								$hold[2] = $post->ID;
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 				}
 			}
 		}
@@ -3200,16 +3215,16 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( "SELECT * FROM $table_name WHERE ignore_word=true;" );
-		$loc               = dirname( __FILE__ ) . WPSCX_DEBUG_LOC;
-		//$debug_file = fopen($loc, 'a');
-		//$debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		//$debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		//fclose($debug_file);
+		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
+		// $debug_file = fopen($loc, 'a');
+		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
+		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
+		// fclose($debug_file);
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -3237,6 +3252,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		global $wpsc_settings;
 		$error_list = new SplFixedArray( 1 );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 		$posts_list = get_posts(
@@ -3260,27 +3276,27 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 			if ( 'true' === $ignore_flag ) {
 				continue; }
-			$post_count++;
+			++$post_count;
 			$words_list = $post->post_content;
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
 			foreach ( $words as $word ) {
-				$word_count++;
-				$total_words++;
+				++$word_count;
+				++$total_words;
 				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
-								//$word = addslashes($word);
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+								// $word = addslashes($word);
 
-								//Add the error to a new fixed holding array
+								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 3 );
 								$hold[0] = $word;
 								$hold[1] = $post->post_title;
 								$hold[2] = $post->ID;
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
-								$error_count++;
+								++$error_count;
 				}
 			}
 		}
@@ -3295,10 +3311,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		set_time_limit( 600 );
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', query contains no WHERE clause
 		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table );
 
 		$wpdb->update( $options_table, array( 'option_value' => '0' ), array( 'option_name' => 'pro_word_count' ) );
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', query contains only hardcoded value "language_setting"
 		$language_setting = $wpdb->get_results( 'SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";' );
 
 		$error_count = 0;
@@ -3351,42 +3369,43 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 	}
 
 	function scan_single( $post_id ) {
-		//Initialization
-		ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
+		// Initialization
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		global $wpdb;
-                global $wpscx_ent_included;
+				global $wpscx_ent_included;
 		wpscx_set_global_vars();
 		global $wpsc_settings;
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$error_list    = array();
 
-		//Set up Dictionary haystack based on language settings
+		// Set up Dictionary haystack based on language settings
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', query contains only hardcoded value "language_setting"
 		$language_setting = $wpdb->get_results( 'SELECT option_value from ' . $options_table . ' WHERE option_name="language_setting";' );
-                
-                if ($wpscx_ent_included) {
-                    global $wpscx_ent_loc;
-                    //echo "Location: " . plugins_url( '/admin/dict/' . $wpsc_settings[11]->option_value . '.pws', $wpscx_ent_loc) . '<br>';
-                    //echo "Base Location: " . plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ ) . "<br>";
-                    $loc       = plugins_url( '/admin/dict/' . $wpsc_settings[11]->option_value . '.pws', $wpscx_ent_loc);
-                    //$loc       = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-                    $contents  = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-                    $contents  = str_replace( "\r\n", "\n", $contents );
-                    $dict_file = explode( "\n", $contents );
-                } else { 
-                    echo "Ent Included: false <br>";
-                    $loc       = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-                    $contents  = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-                    $contents  = str_replace( "\r\n", "\n", $contents );
-                    $dict_file = explode( "\n", $contents );
-                }
+
+		if ( $wpscx_ent_included ) {
+			global $wpscx_ent_loc;
+			// echo "Location: " . plugins_url( '/admin/dict/' . $wpsc_settings[11]->option_value . '.pws', $wpscx_ent_loc) . '<br>';
+			// echo "Base Location: " . plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ ) . "<br>";
+			$loc = plugins_url( '/admin/dict/' . $wpsc_settings[11]->option_value . '.pws', $wpscx_ent_loc );
+			// $loc       = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+			$contents  = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+			$contents  = str_replace( "\r\n", "\n", $contents );
+			$dict_file = explode( "\n", $contents );
+		} else {
+			// echo 'Ent Included: false <br>';
+			$loc       = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+			$contents  = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+			$contents  = str_replace( "\r\n", "\n", $contents );
+			$dict_file = explode( "\n", $contents );
+		}
 
 		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 
-                $page = get_page( $post_id ); //Get the page/post
+				$page = get_page( $post_id ); // Get the page/post
 
-		$page_content = $page->post_content; //Get the content from the page/post
+		$page_content = $page->post_content; // Get the content from the page/post
 
-		//Cleanup the content for scanning
+		// Cleanup the content for scanning
 		$page_content = do_shortcode( $page_content );
 		$page_content = wpscx_content_filter( $page_content );
 		$page_content = wpscx_clean_all( $page_content, $wpsc_settings );
@@ -3394,10 +3413,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		foreach ( $words as $word ) {
 			$word = trim( $word, "'`”“" );
-                        if ( '' === $word || preg_match( '/^[^a-zA-ZÀÂÆÈÉÊËÎÏÔŒÙÛÜŸÁÉÍÑÓÚÜ]+$/', $word) ) continue;
+			if ( '' === $word || preg_match( '/^[^a-zA-ZÀÂÆÈÉÊËÎÏÔŒÙÛÜŸÁÉÍÑÓÚÜ]+$/', $word ) ) {
+				continue;
+			}
 
-			//Check the word against the dictionary haystack
-			if ( wpscx_check_word($word, $wpsc_haystack, $wpsc_settings) ) {
+			// Check the word against the dictionary haystack
+			if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 					array_push(
 						$error_list,
 						array(
@@ -3408,6 +3429,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 		}
 
-		return $error_list; //Return the error list to the on page editor for highlighting
+		return $error_list; // Return the error list to the on page editor for highlighting
 	}
 }

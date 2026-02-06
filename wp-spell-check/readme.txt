@@ -1,11 +1,11 @@
 === WP Spell Check ===
 Contributors: wpspellcheck 
-License: GPLv3
-Donate link: www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=donationlink&utm_content=9.21
+License: GPLv2 or later
+Donate link: https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=donationlink&utm_content=9.22
 Tags: spell check, SEO, grammar, proofreading, shortcode
-Requires at least: 5.7
-Tested up to: 6.6
-Stable tag: 9.21
+Requires at least: 6.3
+Tested up to: 6.9
+Stable tag: 9.22
 Requires PHP: 7.4
 
 Proofread & Audit your WordPress website with One Click! Find & fix the errors and build a professional image for your business.
@@ -15,7 +15,7 @@ Proofread & Audit your WordPress website with One Click! Find & fix the errors a
 
 Proofread & audit your WordPress website with One Click! 
 
-Find & fix Spelling errors, Punctuation errors, Grammar errors, SEO, Broken Shortcodes & HTML, and Create a professional image with [WP Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=9.21)
+Find & fix Spelling errors, Punctuation errors, Grammar errors, SEO, Broken Shortcodes & HTML, and Create a professional image with [WP Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=9.22)
 
 
 **Did you know?**
@@ -56,7 +56,7 @@ By using WP Spell Check you will be able to:
 
 
 > <strong>WP Spell Check Pro</strong><br />
->This is the lite version of WP Spell Check. Additional features are included in the Premium Version. [Click here to get the fastest WordPress spell check plugin and unlock Premium Features](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=9.21)!
+>This is the lite version of WP Spell Check. Additional features are included in the Premium Version. [Click here to get the fastest WordPress spell check plugin and unlock Premium Features](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=9.22)!
 
 
 **WP Spell Check is for you if you want to...**
@@ -163,11 +163,11 @@ Nigel Coates, Gold Coast, Australia
 
 For more info on Proofreading and Auditing your WordPress blog, check out the following:
 
-* [An Overview of WP Spell Check](https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
-* [How to Fix WordPress Spelling Errors](https://www.wpspellcheck.com/plugin-support/how-to-fix-wordpress-spelling-errors/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
-* [How to Improve WordPress SEO](https://www.wpspellcheck.com/plugin-support/how-to-improve-wordpress-seo/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
-* [How to Grammar Check on WordPress](https://www.wpspellcheck.com/plugin-support/grammar-check-video-guide/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
-* [Official WP Spell Check Plugin Blog](https://www.wpspellcheck.com/blog/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
+* [An Overview of WP Spell Check](https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
+* [How to Fix WordPress Spelling Errors](https://www.wpspellcheck.com/plugin-support/how-to-fix-wordpress-spelling-errors/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
+* [How to Improve WordPress SEO](https://www.wpspellcheck.com/plugin-support/how-to-improve-wordpress-seo/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
+* [How to Grammar Check on WordPress](https://www.wpspellcheck.com/plugin-support/grammar-check-video-guide/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
+* [Official WP Spell Check Plugin Blog](https://www.wpspellcheck.com/blog/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
 
 
 
@@ -177,7 +177,7 @@ Notes:
 
 == Frequently Asked Questions ==
 
-You will find answers to many of your questions on [www.wpspellcheck.com/support/](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21).
+You will find answers to many of your questions on [www.wpspellcheck.com/support/](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22).
 
 = How does this plugin work? =
 
@@ -204,7 +204,7 @@ If you have a website with 500 pages and 500 posts, it takes a long time to go t
 
 WP Spell Check Scans your entire site in seconds and prints out a comprehensive list of errors. 
 
-You can save a lot of time and embarrassment by using our [WordPress Spell Check plugin](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21).
+You can save a lot of time and embarrassment by using our [WordPress Spell Check plugin](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22).
 
 
 = Can I spell check entire website for free? =
@@ -259,7 +259,7 @@ Our plugin helps you find these empty places with one click. And with the help o
 
 The FREE plugin only checks the contents of pages and posts on your website. 
 
-For a more extensive check on everything on your website, you can purchase our [premium version](www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21). 
+For a more extensive check on everything on your website, you can purchase our [premium version](www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22). 
 
 The premium version checks your entire website
 
@@ -295,21 +295,21 @@ WP Spell Check is designed to handle websites with tens of thousands of pages an
 
 You can proofread and audit the entire website/blog in a few seconds and save thousands of hours of work for users and site admins. 
 
-To learn more about the packages available for large websites, please [visit our website](https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
+To learn more about the packages available for large websites, please [visit our website](https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
 
 
 
 = Which parts of my website get checked for spelling? =
 
 
-[Visit our website](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21) for a complete list of features and what is included. 
+[Visit our website](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22) for a complete list of features and what is included. 
 
 New website components will be added in our future releases. Visit our Facebook and Twitter pages for updates.
 
 
 = Do you provide support for the WP Spell Check plugin? =
 
-Yes, for additional support please [visit our support center](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
+Yes, for additional support please [visit our support center](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
 
 
 = Which web browsers are supported with WP Spell Check? =
@@ -317,17 +317,33 @@ We test our plugin on the major web browsers so you can do a spell check and gra
 
 =Do you offer support for this plugin?=
 
-For additional support, please visit [our support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
+For additional support, please visit [our support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
 
 =Bug reports=
 
-Bug reports are welcomed on our [Support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21).
+Bug reports are welcomed on our [Support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22).
+
+
+= What external services does this plugin connect to and what data is shared? =
+
+This plugin connects to the following external services:
+
+**OpenAI API (Pro feature, optional):** When you use the SEO title/description generation feature, your page/post content is sent to OpenAI using your own API key. This only occurs when you actively click the generate button. See OpenAI's privacy policy: https://openai.com/policies/privacy-policy
+
+**Deactivation Survey (optional):** When deactivating the plugin, you may optionally provide feedback. If submitted, the following data is sent to wpspellcheck.com and Zapier: deactivation reason, site URL, WordPress version, PHP version, theme name, and any optional details you provide. You can skip this survey. Zapier privacy policy: https://zapier.com/privacy
+
+**Dictionary Files:** The plugin loads spell-check dictionary files from its own servers for offline use.
+
+All spell checking and grammar checking is performed locally on your server - no content is sent externally for these core features.
+
+For more information, see our [Privacy Policy](https://www.wpspellcheck.com/privacy-policy/) and [Terms of Service](https://www.wpspellcheck.com/terms-of-service/).
+
 
 = Reasons to upgrade to "WP Spell Check Pro" =
 
 The plugin is designed for people who care about building and protecting their image and brand while saving time and embarrassment. 
 
-If you are looking for a [WordPress Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21) plugin to save time, and embarrassment and build your professional image, then upgrade and get access to all the Pro features and benefits. 
+If you are looking for a [WordPress Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22) plugin to save time, and embarrassment and build your professional image, then upgrade and get access to all the Pro features and benefits. 
 
 - Find and fix spelling and grammar errors
 - Get AI suggestions for SEO titles and descriptions for your pages and posts
@@ -370,10 +386,19 @@ There are two simple ways to install WP Spell Check
 **3- Setup the options**
 Navigate to the Options page for WP Spell Check to configure your desired settings and start checking and fixing errors on your website.
 
-**Want more features and audit power?**  [Upgrade to WP Spell Check Pro](https://wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
+**Want more features and audit power?**  [Upgrade to WP Spell Check Pro](https://wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.22)
 
 
 == Changelog ==
+
+= 9.22 =
+
+- security fixes and Improvements
+- performance improvements
+- fixed the uninstall functions to completely remove all the plugin data
+- Other bug fixes
+
+
 = 9.21 =
 - Fixed an issue with the OpenAI integration for generating SEO titles or descriptions
 - Other bug fixes and improvements
@@ -390,240 +415,3 @@ Navigate to the Options page for WP Spell Check to configure your desired settin
 - Fixed an issue with Contact Form 7 integration where updating the words with the autoresponder was not going through.
 - Fixed an issue with the "Ignore URLs" feature for the spell check scan
 - Other bug fixes and improvements
-
-
-= 9.18 =
-- Security improvements
-- Fixed an issue with some crossed words between the UK, US, and Canadian dictionaries. If you find any additional words please let us know and we will fix it ASAP. 
-
-= 9.17 =
-- Bug fixes and improvements
-- Checked compatibility with WordPress 6.3
-
-= 9.16 =
-- PRO: Updated OpenAI (ChatGPT) integration to use the gpt-3.5-turbo-0613 engine. This engine will produce better SEO Titles and Descriptions. According to OpenAI, this engine has 10x reduced price compared to other engines.
-
-= 9.15 =
-- PRO: Added OpenAI (ChatGPT) integration to the SEO Empty Fields scan providing AI generated SEO Titles and Descriptions for Pages and Posts. [See the tutorial here:](https://www.wpspellcheck.com/open-ai-setup/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=9.21)
-- This integration is in the Beta phase. We are looking for feedback to improve and optimize it further
-
-= 9.14 =
-- Bug fixes and improvements
-
-= 9.13 =
-- Fixed an issue where the SEO empty field would not update a word when using the edit function
-- Fixed an issue where the suggested words were not showing up when clicking on highlighted words on the classic editor
-- Fixed an issue where the SEO empty field would not ignore fields correctly
-- PRO: Fixed an issue where the Broken Code Entire Site scan would sometimes not pick up HTML broken code
-- PRO: Fixed an issue where the Custom Fields scan could report HTML tags as errors
-- PRO: Fixed an issue where showing highlights on the page for logged in admin could conflict with shortcodes.
-- Security improvements
-- Bug fixes and improvements
-
-= 9.12 =
-- Bug fixes and improvements
-- Fixed an issue with Contact Form 7 integration for word updates
-- Fixed an error with the dictionary where words such as I've, you'd show up as errors
-- Our dictionary was updated
-
-= 9.11 =
-- Fixed an issue where certain special characters,  such as & or |, could prevent spell check errors from showing up on the spell check results page
-- Fixed an issue where editing a word from the spell check results page would not work if the word started with & or | characters
-- Fixed an issue where some words would not be highlighted on the Classic Editor page
-- PRO: Fixed an issue where the Classic Editor page spell check wouldn't use the WP Spell Check Pro dictionary files
-- PRO: Fixed an issue where the second page of spelling errors on the spell check results page would not be sorted by the Count column
-- Other bug fixes and improvements
-
-- Reach out to us if you find issues with the plugin to get one year of the Pro version for Free!
-
-= 9.10 =
-- Security improvements
-- Other bug fixes and improvements
-
-= 9.9 =
-- Security improvements
-- Improved scan times for all scans
-- Fixed an issue where Classic Editor individual page scan buttons did not work
-- Other bug fixes and improvements
-
-= 9.8 =
-- Security improvements
-- Other bug fixes and improvements
-
-= 9.7 =
-- Security improvements
-- Other bug fixes and improvements
-
-= 9.6 =
-- Security improvements
-- Other bug fixes and improvements
-
-= 9.5 =
-- Security improvements
-- Other bug fixes and improvements
-
-= 9.4 =
-- Bug fixes and improvements
-
-= 9.3 =
-- Bug fixes and security improvements
-
-= 9.2 =
-- Fixed an issue where a scan could be initiated while another scan was already in progress
-- Fixed an issue where the next page arrow on the results page would not work properly
-- Other bug fixes and performance improvements
-
-= 9.1 =
-- Improved scan times for the Grammar, SEO, and Broken Code scans by more than 30%
-- Fixed the view link for sitename spelling errors not linking to the WordPress options page
-- Fixed an issue where Grammar errors would not be highlighted on the Classic Editor edit page
-- Fixed a database error that could occur during the first installation
-- Other bug fixes and improvements
-
-= 9.0 =
-- Improved scan times for the Spell Check scan by more than 30%
-- Fixed the view link on Category Titles not linking to the edit category page
-- Fixed issue with selecting multiple actions (Ignore, Add to Dictionary, Edit, Suggested Spelling) on the same word
-- Other bug fixes and performance improvements
-
-= 8.7 =
-- Improved scan times and time estimates of all scans
-- Bug fixes and improvements
-- PRO: Fixed an issue where Woo Commerce Titles would not be updated when editing them from the Spell Check results page
-
-= 8.6 =
-- Improved response time of results pages when starting a new scan
-- PRO: Fixed an issue where the Broken HTML scan would not show all errors found on a page.
-- Bug fixes and improvements
-
-= 8.5 =
-- Bug fixes and improvements
-
-= 8.4 =
-- Added support for WP Bakery
-- Added support for Rank Math SEO
-- Bug fixes and improvements
-
-= 8.3 =
-- Fixed support for Page Builder by SiteOrigin
-- Added support for Elementor and SeedProd
-- Bug fixes and improvements
-
-= 8.2.3 =
-- Fixed the issue where statistics were not showing properly after the scan was finished.
-- Happy New Year!
-
-= 8.2.2 =
-- Fixed the issue where the plugin could cause icons on the top admin dashboard to not display properly
-- Fixed the results page displaying the pending changes message when attempting to go to the next page with no changes
-- Fixed an issue where the results page displayed a message saying words have been updated when no updates were saved
-- Fixed the issue where the options logo did not show on the results pages
-- Fixed error where the Export Plugin Data feature did not work
-- Other bug fixes and improvements
-- Compatibility check with WordPress 5.6
-- If you see any errors on the plugin please submit a ticket here https://www.wpspellcheck.com/support/
-- Have a great Holiday Season and Happy New Year
-
-= 8.2.1 =
-- Fixed an issue where the message that an update was available for WP Spell Check Pro would not show
-
-= 8.2 =
-- The results page no longer needs to refresh to display errors when scanning
-- Fixed an error where Ignore, Add to Dictionary, Edit, and Suggested Spelling did not work
-- Fixed an error where editing a word from the results page would sometimes update the wrong words
-- Bug fixes and improvements
-
-= 8.1.1 =
-- April 20, 2021
-
-= 8.1 = 
-- Improved Grammar, SEO Empty Fields, and Broken Code performance and scan time by 30-40%.
-
-= 8.0 =
-- Improved Spellcheck performance and scan time by 30-40%.
-
-= 7.1.23 =
-- Improved plugin performance and load times
-- Bug fixes and improvements
-
-= 7.1.22 =
-- Contact Form 7 spellcheck scan will now scan email notifications and email autoresponders
-
-= 7.1.21 =
-- Fixed a PHP error that could occur when activating the pro version for the first time
-- Bug fixes and improvements
-
-= 7.1.20 =
-- Fixed an error where eCommerce scans were not showing errors from WooCommerce products
-- Fixed a PHP warning that could occur when activating both the base and pro version at the same time
-
-= 7.1.19 =
-- Fixed an error where the scan scheduler on the options page could schedule a Broken Code scan without the pro version active
-
-= 7.1.18 =
-- When the spell check scan runs into an error, it will now attempt to restart the scan and give the option to report the error to us so we can work on fixing it
-
-= 7.1.17 =
-- Fixed an issue with Broken Code scan conflicting with other plugins
-
-= 7.1.16 =
-- Fixed an issue where updating words on custom post types may not update the post itself
-- Fixed an issue where errors in shortcodes could cause a spellcheck scan to not finish
-
-= 7.1.15 =
-- Fixed an issue that caused an error on install for some PHP configurations
-
-= 7.1.14 =
-- Added a link to the settings page from each of the results pages
-
-= 7.1.13 =
-- PRO: Added support for spell checking custom fields on Pages and Posts
-- Fixed editor highlights causing code injection in certain cases
-- Fixed slug scans showing multiple words as a single spelling error
-- Fixed an issue with the search bar on the Grammar results page not working
-- Fixed an issue where a JavaScript error on the media edit page could interfere with other plugins
-- Fixed an issue where a single number would show up as a spelling error
-
-= 7.1.12 =
-- Fixed an issue where Highlights from miss-spelled words and grammar suggestions would show on the Preview page when you click on the preview button on classic editor
-
-= 7.1.11 =
-- Fixed an issue where the SAVE DRAFT button was saving the Highlight code on the page. 
-
-= 7.1.10 =
-- Stability and performance improvements for JavaScript to avoid conflicts with other plugins
-- Improved security of forms on the Dictionary page and the Ignore list page, to avoid code injection from hackers
-
-= 7.1.9 =
-- Updated Post scan to only check custom post types used for front-end content of the website
-- Bug Fixes
-
-= 7.1.8 =
-- Fixed a PHP Warning caused when the plugin was checking for the pro version
-
-= 7.1.7 =
-- Fix an issue where our banners were showing on top of the Gutenberg editor
-- Fixed an issue where the update message would appear on top of the page 
-- Fixed an issue where Custom Post Types were not getting scanned.
-- Bug fixes 
-
-= 7.1.6 =
-- Important update: Further stability and performance improvements for the plugin
-
-= 7.1.5 =
-- Stability and performance improvements for the Spell Check Scan and the SEO Empty Fields Scan
-
-= 7.1.4 =
-- Stability and performance improvements for the Broken Code Scan and the Grammar Check Scan
-- Spell check: Fixed an issue when edits for words such as tip#5 and &words, would not go through
-- Other bug fixes and performance improvements
-
-= 7.1.3 =
-- Important change: Optimized loading times for CSS, PHP and Java Script files.
-
-= 7.1.2 =
-- Fixed a fatal error caused by an array index out of range
-- Fixed a bug where a word containing 's and some other characters would not get updated. 
-- PRO: Updated the word Count on Spell Check results page to group errors with Case Sensitivity
-- Improvements to the editor page highlight code
-- other bug fixes and improvements

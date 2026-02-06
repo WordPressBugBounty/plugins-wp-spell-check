@@ -1,0 +1,119 @@
+/* WP Spell Check - Sidebar Inline Styles */
+/* Styles moved from inline style attributes in admin/sidebar.php */
+
+/* Outer sidebar container */
+.wpsc-sidebar-container {
+	float: right;
+	width: 23%;
+	margin-left: 2%;
+	margin-top: 50px;
+}
+
+/* Tutorial box */
+.wpsc-sidebar-tutorial-box {
+	padding: 5px 5px 10px 5px;
+	border-radius: 5px;
+	background: white;
+	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+	text-align: center;
+}
+
+/* Tutorial image */
+.wpsc-sidebar-tutorial-box img {
+	max-width: 99%;
+}
+
+/* Sidebar HR separators */
+.wpsc-sidebar-container hr {
+	margin: 1em 0;
+}
+
+/* Social media box */
+.wpsc-sidebar-social-box {
+	padding: 15px 10px;
+	border-radius: 5px;
+	background: white;
+	text-align: center;
+	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+}
+
+.wpsc-sidebar-social-box h2 {
+	margin: 0 0 15px 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #333;
+}
+
+.wpsc-social-links {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	align-items: center;
+}
+
+.wpsc-social-link {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 15px;
+	width: 100%;
+	max-width: 180px;
+	border-radius: 6px;
+	text-decoration: none;
+	font-size: 14px;
+	font-weight: 500;
+	transition: all 0.2s ease;
+	color: #fff;
+}
+
+.wpsc-social-link:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+	text-decoration: none;
+}
+
+.wpsc-social-link:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+.wpsc-social-link svg {
+	flex-shrink: 0;
+}
+
+.wpsc-social-link span {
+	line-height: 1;
+}
+
+.wpsc-social-facebook {
+	background-color: #1877f2;
+}
+
+.wpsc-social-facebook:hover {
+	background-color: #166fe5;
+	color: #fff;
+}
+
+.wpsc-social-x {
+	background-color: #000;
+}
+
+.wpsc-social-x:hover {
+	background-color: #333;
+	color: #fff;
+}
+
+/* Newsletter box - scoped to sidebar container */
+.wpsc-sidebar-container .newsletter.newsletter-subscription {
+	padding: 5px 5px 10px 5px;
+	border-radius: 5px;
+	background: white;
+	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+}
+
+/* Inner sidebar div */
+.wpsc-sidebar-container .wpsc-sidebar {
+	margin-bottom: 15px;
+	text-align: center;
+}

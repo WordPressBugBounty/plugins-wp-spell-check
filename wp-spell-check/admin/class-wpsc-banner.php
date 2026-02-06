@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class Wpscx_Banner {
 
@@ -17,7 +20,6 @@ class Wpscx_Banner {
 		$second_notice = ( time() + ( 60 * 60 * 24 * 20 ) );
 		$third_notice  = ( time() + ( 60 * 60 * 24 * 30 ) );
 		$last_notices  = ( time() + ( 60 * 60 * 24 * 30 ) );
-
 	}
 
 
@@ -30,13 +32,13 @@ class Wpscx_Banner {
 		if ( ! isset( $_GET['page'] ) ) {
 			$_GET['page'] = '';
 		}
-		$page = sanitize_text_field( sanitize_text_field( $_GET['page'] ) );
+		$page = sanitize_text_field( wp_unslash( $_GET['page'] ) );
 
 		if ( '' !== $page ) {
 			$page = '&page=' . $page;
 		}
 			$output = '';
-		if ( !preg_match( '/hide-message/m', $output ) && !$wpsc_upgrade_show ) {
+		if ( ! preg_match( '/hide-message/m', $output ) && ! $wpsc_upgrade_show ) {
 			echo esc_html( $output );
 		}
 	}
@@ -166,7 +168,6 @@ class Wpscx_Banner {
 		} elseif ( $last_notices > $time ) {
 			$show_notice = true;
 		}
-
 	}
 
 
@@ -210,29 +211,28 @@ class Wpscx_Banner {
 		?>
 		<div class="wpsc-install-notice">
 					<img src="<?php echo esc_url( plugin_dir_url( __DIR__ ) ); ?>images/logo.png" alt="WP Spell Check">
-					<img src="<?php echo esc_url( plugin_dir_url( __DIR__ ) ); ?>images/install-character.png" alt="WP Spell Check" style="position: absolute; left: 5px; bottom: 10px; width: 125px;">
-					<div style="text-align: center; font-weight: bold; font-size: 28px; margin: 5px 0 25px 0;">Thank you for activating WP Spell Check</div>
-					<div style="position: absolute; top: 40%; width: 45%; left: 30%; text-align: left;">
-						<ul style="list-style: disc;">
-							<li style="font-size: 18px;"><a class="wpsc-install-link-delay" href="/wp-admin/admin.php?page=wp-spellcheck.php">Spell Check my website</a></li>
-							<li style="list-style-type: none; text-align: center; padding-right: 25%;">Or</li>
-							<li style="font-size: 18px;"><a class="wpsc-install-link" href="https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( $wpsc_version ); ?>" target="_blank">Watch a brief Video tutorial</a></li>
+					<img src="<?php echo esc_url( plugin_dir_url( __DIR__ ) ); ?>images/install-character.png" alt="WP Spell Check">
+					<div>Thank you for activating WP Spell Check</div>
+					<div>
+						<ul>
+							<li><a class="wpsc-install-link-delay" href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck.php' ) ); ?>">Spell Check my website</a></li>
+							<li>Or</li>
+							<li><a class="wpsc-install-link" href="https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( $wpsc_version ); ?>" target="_blank">Watch a brief Video tutorial</a></li>
 						</ul>
 					</div>
-					<div style="text-align: center; position: absolute; bottom: 17px; width: 100%;"><a href="#" style="text-decoration: none; font-size: 16px;" class="wpsc-install-notice-dismiss">Dismiss this message</a></div>
+					<div><a href="#" class="wpsc-install-notice-dismiss">Dismiss this message</a></div>
 				</div>
 			<script type="text/javascript">
 				jQuery(document).ready( function($) {
-										//$( "#wp-admin-bar-WP_Spell_Check").prepend('<div class="wpsc-install-notice"><div><span style="color: #013c68;">Thank you for activating WP Spell Check.</span><span style="color: green;">Click Up Here!</span><a class="wpsc-install-notice-dismiss" href="<?php echo esc_url( add_query_arg( array( 'wpsc_ignore_install_notice' => '1' ) ) ); ?>">Dismiss<span style="display: inline-block!important; font-size: 10px!important; position: relative; top: -7px; left: 2px;">X</span></a></div><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/install-notice.png'; ?>" /></div>');
-					
 					$('.wpsc-install-notice-dismiss').click(function(e) {
 						e.preventDefault();
 						
 						jQuery.ajax({
-							url: '<?php echo esc_url( admin_url( WPSC_ADMIN_AJAX ) ); ?>',
+							url: '<?php echo esc_js( esc_url( admin_url( WPSC_ADMIN_AJAX ) ) ); ?>',
 							type: "POST",
 							data: {
 								action: 'wpsc_dismiss',
+								nonce: '<?php echo esc_js( wp_create_nonce( 'wpsc_dismiss_notice' ) ); ?>'
 							},
 							dataType: 'html'
 						});
@@ -241,10 +241,11 @@ class Wpscx_Banner {
 					});
 										$('.wpsc-install-link').click(function(e) {
 						jQuery.ajax({
-							url: '<?php echo esc_url( admin_url( WPSC_ADMIN_AJAX ) ); ?>',
+							url: '<?php echo esc_js( esc_url( admin_url( WPSC_ADMIN_AJAX ) ) ); ?>',
 							type: "POST",
 							data: {
 								action: 'wpsc_dismiss',
+								nonce: '<?php echo esc_js( wp_create_nonce( 'wpsc_dismiss_notice' ) ); ?>'
 							},
 							dataType: 'html'
 						});
@@ -255,16 +256,18 @@ class Wpscx_Banner {
 												e.preventDefault();
 										
 						jQuery.ajax({
-							url: '<?php echo esc_url( admin_url( WPSC_ADMIN_AJAX ) ); ?>',
+							url: '<?php echo esc_js( esc_url( admin_url( WPSC_ADMIN_AJAX ) ) ); ?>',
 							type: "POST",
 							data: {
 								action: 'wpsc_dismiss',
+								nonce: '<?php echo esc_js( wp_create_nonce( 'wpsc_dismiss_notice' ) ); ?>'
 							},
-							dataType: 'html'
+							dataType: 'html',
+							success: function() {
+								$('.wpsc-install-notice').hide();
+								window.location.href = "<?php echo esc_js( esc_url( admin_url( 'admin.php?page=wp-spellcheck.php&install=hide' ) ) ); ?>";
+							}
 						});
-						
-						$('.wpsc-install-notice').hide();
-												window.location.href = "/wp-admin/admin.php?page=wp-spellcheck.php&install=hide";
 					});
 				});
 			</script>
@@ -272,6 +275,7 @@ class Wpscx_Banner {
 	}
 
 	function ignore_install_notice() {
+		check_ajax_referer( 'wpsc_dismiss_notice', 'nonce' );
 		global $current_user;
 		$user_id   = $current_user->ID;
 		$dismissed = get_user_meta( $user_id, 'wpsc_ignore_install_notice', true );
@@ -283,15 +287,8 @@ class Wpscx_Banner {
 	}
 
 	function check_install_notice() {
-		global $current_user;
-		$user_id   = $current_user->ID;
-		$dismissed = get_user_meta( $user_id, 'wpsc_ignore_install_notice', true );
-
-                if ( isset ( $_GET['page'] ) ) { $cur_page = sanitize_text_field( $_GET['page'] ); } else { $cur_page = ''; }
-		if ( ( current_user_can( 'manage_options' ) ) && 'true' !== $dismissed && ( 'wp-spellcheck.php' === $cur_page || 'wp-spellcheck-grammar.php' === $cur_page || 'wp-spellcheck-seo.php' === $cur_page || 'wp-spellcheck-html.php' === $cur_page || 'wp-spellcheck-options.php' === $cur_page || 'wp-spellcheck-dictionary.php' === $cur_page || 'wp-spellcheck-ignore.php' === $cur_page ) ) {
-						$banner = new Wpscx_Banner;
-						$banner::show_install_notice();
-		}
+		// Activation "Thank you for activating" notice is shown only on the Plugins page (see wpspellcheck.php).
+		// Do not show it on Spell Check pages here.
 	}
 
 	function ignore_upgrade_notice() {
@@ -309,7 +306,7 @@ class Wpscx_Banner {
 		if ( ! isset( $_GET['page'] ) ) {
 			$_GET['page'] = '';
 		}
-		$page   = sanitize_text_field( $_GET['page'] );
+		$page   = sanitize_text_field( wp_unslash( $_GET['page'] ) );
 		$output = '';
 		echo esc_html( $output );
 	}

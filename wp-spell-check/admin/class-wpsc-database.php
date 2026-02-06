@@ -1,7 +1,11 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 	const WPSCX_DEFAULT_TIME = '0 seconds';
 class Wpscx_Database {
-    
+
 	public static function wpgc_database_init() {
 		global $wpdb;
 
@@ -50,6 +54,7 @@ class Wpscx_Database {
 
 		dbDelta( $sql );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
 		$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
 
 		if ( sizeof( $check ) < 1 ) {
@@ -195,6 +200,7 @@ class Wpscx_Database {
 
 			dbDelta( $sql );
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
 		$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
 
 		if ( sizeof( $check ) < 1 ) {
@@ -435,18 +441,19 @@ class Wpscx_Database {
 
 		dbDelta( $sql );
 
-			$database = new Wpscx_Database;
-		$database::wpgc_database_init(); //Initialize the grammar database
+			$database = new Wpscx_Database();
+		$database::wpgc_database_init(); // Initialize the grammar database
 	}
 
 	public static function wpsc_install_spellcheck_main() {
 		global $wpdb;
-                
-                $database = new Wpscx_Database;
+
+				$database = new Wpscx_Database();
 		$database::wpsc_install_spellcheck();
 	}
 
 	function wpsc_update_db_check() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Conditional check only, not processing form data
 		if ( isset( $_POST['uninstall'] ) && 'Clean up Database and Deactivate Plugin' === $_POST['uninstall'] ) {
 			return;
 		}
@@ -544,106 +551,106 @@ class Wpscx_Database {
 
 			dbDelta( $sql );
 
-                
-                if ( sizeof( $options_check ) !== 0 ) {
-                        
-                $check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
+		if ( sizeof( $options_check ) !== 0 ) {
 
-		if ( sizeof( $check ) < 1 ) {
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'check_pages',
-					'option_value' => 'true',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'check_posts',
-					'option_value' => 'true',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'scan_running',
-					'option_value' => 'false',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'last_scan_time',
-					'option_value' => '0 Seconds',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'pages_scanned',
-					'option_value' => '0',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'posts_scanned',
-					'option_value' => '0',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'last_scan_errors',
-					'option_value' => '0',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'last_scan_type',
-					'option_value' => '0',
-				)
-			);
-		} elseif ( sizeof( $check ) < 9 ) {
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'page_running',
-					'option_value' => 'false',
-				)
-			);
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'post_running',
-					'option_value' => 'false',
-				)
-			);
-		} elseif ( sizeof( $check ) < 11 ) {
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'scan_start_time',
-					'option_value' => '0',
-				)
-			);
-		} elseif ( sizeof( $check ) < 12 ) {
-			$wpdb->insert(
-				$options_table,
-				array(
-					'option_name'  => 'pro_error_count',
-					'option_value' => '0',
-				)
-			);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
+			$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
+
+			if ( sizeof( $check ) < 1 ) {
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'check_pages',
+						'option_value' => 'true',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'check_posts',
+						'option_value' => 'true',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'scan_running',
+						'option_value' => 'false',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'last_scan_time',
+						'option_value' => '0 Seconds',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'pages_scanned',
+						'option_value' => '0',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'posts_scanned',
+						'option_value' => '0',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'last_scan_errors',
+						'option_value' => '0',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'last_scan_type',
+						'option_value' => '0',
+					)
+				);
+			} elseif ( sizeof( $check ) < 9 ) {
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'page_running',
+						'option_value' => 'false',
+					)
+				);
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'post_running',
+						'option_value' => 'false',
+					)
+				);
+			} elseif ( sizeof( $check ) < 11 ) {
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'scan_start_time',
+						'option_value' => '0',
+					)
+				);
+			} elseif ( sizeof( $check ) < 12 ) {
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'pro_error_count',
+						'option_value' => '0',
+					)
+				);
+			}
 		}
-                
-                }
 
 			$options_table = $wpdb->prefix . 'spellcheck_options';
 
 		if ( sizeof( $options_check ) !== 0 ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
 			$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
 
 			if ( sizeof( $check ) < 32 ) {
@@ -11062,7 +11069,7 @@ class Wpscx_Database {
 
 	function wpsc_update_db_check_main() {
 		global $wpdb;
-                
+
 		$this->wpsc_update_db_check();
 	}
 }

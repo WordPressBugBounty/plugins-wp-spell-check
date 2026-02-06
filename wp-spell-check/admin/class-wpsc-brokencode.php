@@ -1,9 +1,12 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 	function clean_all( $content, $wpsc_settings ) {
-                $content = wpscx_script_cleanup( $content );
-                
+				$content = wpscx_script_cleanup( $content );
+
 		if ( 'true' === $wpsc_settings[23]->option_value ) {
 				$content = wpscx_email_cleanup( $content );
 		}
@@ -22,12 +25,12 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 		global $wpscx_scan_delay;
 		global $wpscx_ent_included;
 		global $wpsc_settings;
-                $is_running = null;
+				$is_running = null;
 		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
 			wpscx_set_global_vars();
 		}
 
-		ini_set( 'memory_limit', '1024M' ); //Sets the PHP memory limit
+		ini_set( 'memory_limit', '1024M' ); // Sets the PHP memory limit
 		set_time_limit( 600 );
 		global $wpdb;
 
@@ -52,11 +55,11 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 			$post_status = " AND post_status='publish'"; }
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, ID, post_type FROM $page_table WHERE (post_type='page' OR post_type='post')$post_status" ) );
-			$sql_count++;
+			++$sql_count;
 
 			if ( ! $is_running ) {
 				$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-				$sql_count++;
+				++$sql_count;
 				$start_time = time();
 			}
 			$ind_start_time = time();
@@ -65,7 +68,8 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 
 			$divi_check = wp_get_theme();
 
-				$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
+			$ignore_pages = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 
 			global $wpscx_ignore_list;
 			global $wpscx_dict_list;
@@ -74,9 +78,9 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 
 			for ( $x = 0;$x < $page_list->getSize();$x++ ) {
 				if ( 'page' === $page_list[ $x ]->post_type ) {
-					$page_count++;
+					++$page_count;
 				} else {
-						$post_count++; }
+						++$post_count; }
 
 						$ignore_flag = 'false';
 				foreach ( $ignore_pages as $ignore_check ) {
@@ -109,10 +113,10 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 								$hold[2] = 0;
 								$hold[3] = 'Broken HTML';
 
-								$error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
+								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
 
-								$error_count++;
+								++$error_count;
 							}
 						}
 					}
@@ -121,18 +125,18 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 				preg_match_all( '/\[.*?\]/', $words_content, $shortcode_errors );
 
 				for ( $y = 0;$y <= sizeof( $shortcode_errors[0] );$y++ ) {
-                                        if ( isset( $shortcode_errors[0][ $y ] ) ) {
-                                                $hold = new SplFixedArray( 4 );
-                                                $hold[0] = $shortcode_errors[0][ $y ];
-                                                $hold[1] = $page_list[ $x ]->post_title;
-                                                $hold[2] = $page_list[ $x ]->ID;
-                                                $hold[3] = 'Broken Shortcode';
+					if ( isset( $shortcode_errors[0][ $y ] ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $shortcode_errors[0][ $y ];
+							$hold[1] = $page_list[ $x ]->post_title;
+							$hold[2] = $page_list[ $x ]->ID;
+							$hold[3] = 'Broken Shortcode';
 
-                                                $error_list->setSize( $error_list->getSize() + 1 ); //Increase the size of the main error array by 1
-                                                $error_list[ $error_count ] = $hold;
-                                                $error_count++;
-                                        }
-                                }
+							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+					}
+				}
 				unset( $page_list[ $x ] );
 			}
 

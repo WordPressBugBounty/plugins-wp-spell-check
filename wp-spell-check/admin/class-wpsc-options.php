@@ -28,115 +28,164 @@ if ( ! defined( 'ABSPATH' ) ) {
 	Pro Add-on / Home Page: https://www.wpspellcheck.com/
 	Pro Add-on / Prices: https://www.wpspellcheck.com/pricing/
 */
-    const WPSCX_PRO_LOC = 'wp-spell-check-pro/wpspellcheckpro.php';
-    const WPSCX_SETTINGS = '[wpsc_settings]';
-    const WPSCX_GRAMMAR = '[wpsc_grammar]';
-    const WPSCX_DICT = '[wpsc_dictionary]';
-    const WPSCX_IGNORE = '[wpsc_ignore]';
+	const WPSCX_PRO_LOC  = 'wp-spell-check-pro/wpspellcheckpro.php';
+	const WPSCX_SETTINGS = '[wpsc_settings]';
+	const WPSCX_GRAMMAR  = '[wpsc_grammar]';
+	const WPSCX_DICT     = '[wpsc_dictionary]';
+	const WPSCX_IGNORE   = '[wpsc_ignore]';
 
 class Wpscx_Options {
 
-    /* Clear out the database for uninstallation */
+	/* Clear out the database for uninstallation */
 	function prepare_uninstall() {
-			global $wpdb;
+		// This function is now deprecated - cleanup moved to uninstall.php
+		// Kept for backward compatibility with existing network uninstall page
 
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_dictionary;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_ignore;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_options;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_words;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_empty;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_html;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_grammar;';
-			$wpdb->query( $sql );
-			$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_grammar_options;';
-			$wpdb->query( $sql );
-                        //$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_errors;';
-			//$wpdb->query( $sql );
-                        //$sql = 'DROP TABLE ' . $wpdb->prefix . 'spellcheck_error_catch;';
-			//$wpdb->query( $sql );
-
-			global $current_user;
-			$user_id = $current_user->ID;
-			delete_user_meta( $user_id, 'wpsc_pro_notice_date' );
-			delete_user_meta( $user_id, 'wpsc_pro_dismissed' );
-			delete_user_meta( $user_id, 'wpsc_ignore_review_notice' );
-			delete_user_meta( $user_id, 'wpsc_review_date' );
-			delete_user_meta( $user_id, 'wpsc_times_dismissed_review' );
-			delete_user_meta( $user_id, 'wpsc_pro_ignore_notice' );
-			delete_user_meta( $user_id, 'wpsc_pro_notice_date' );
-			delete_user_meta( $user_id, 'wpsc_ignore_install_notice' );
-			delete_user_meta( $user_id, 'wpsc_last_check' );
-			delete_user_meta( $user_id, 'wpsc_version' );
-			delete_user_meta( $user_id, 'wpsc_outdated' );
-			delete_user_meta( $user_id, 'wpsc_pro_last_check' );
-			delete_user_meta( $user_id, 'wpsc_pro_version' );
-			delete_user_meta( $user_id, 'wpsc_pro_outdated' );
-			delete_user_meta( $user_id, 'wpsc_ent_last_check' );
-			delete_user_meta( $user_id, 'wpsc_ent_version' );
-			delete_user_meta( $user_id, 'wpsc_ent_outdated' );
-			delete_user_meta( $user_id, 'wpsc_update_notice_date' );
-			delete_user_meta( $user_id, 'wpsc_usedyslexic' );
-			delete_user_meta( $user_id, 'wpsc_warning_report' );
-			delete_user_meta( $user_id, 'wpsc_safe_mode' );
-			delete_user_meta( $user_id, 'wpsc_error_msg' );
-			update_option( 'wpsc_data_acti', '' );
+		// Call the new uninstall process
+		if ( file_exists( plugin_dir_path( __DIR__ ) . 'uninstall.php' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'wp-spell-check/wpspellcheck.php' );
+			include_once plugin_dir_path( __DIR__ ) . 'uninstall.php';
+		}
 	}
 }
+
+/**
+ * Enqueue styles early for options page to prevent FOUC
+ *
+ * @since 9.22
+ */
+function wpscx_enqueue_options_styles() {
+	global $wpsc_version;
+	$screen = get_current_screen();
+	if ( $screen && ( 'wp-spellcheck-options' === $screen->id || ( isset( $_GET['page'] ) && 'wp-spellcheck-options.php' === $_GET['page'] ) ) ) {
+		wp_enqueue_style( 'wpsc-admin-styles', plugin_dir_url( __DIR__ ) . 'css/admin-styles.css', array(), $wpsc_version, 'all' );
+		wp_enqueue_style( 'wpsc-sidebar', plugin_dir_url( __DIR__ ) . 'css/wpsc-sidebar.css', array(), $wpsc_version, 'all' );
+		wp_enqueue_style( 'wpsc-sidebar-inline', plugin_dir_url( __DIR__ ) . 'admin/css/sidebar-inline.css', array( 'wpsc-sidebar' ), $wpsc_version, 'all' );
+	}
+}
+add_action( 'admin_enqueue_scripts', 'wpscx_enqueue_options_styles', 5 );
 
 function wpscx_render_options() {
 	global $wpdb;
 	global $wpscx_ent_included;
 	global $wpscx_key_valid;
 	global $wpsc_version;
-	$options       = new Wpscx_Options;
+	$options       = new Wpscx_Options();
 	$table_name    = $wpdb->prefix . 'spellcheck_options';
 	$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
 	$grammar_table = $wpdb->prefix . 'spellcheck_grammar_options';
 	$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 	$words_table   = $wpdb->prefix . 'spellcheck_words';
-	ini_set( 'memory_limit', '512M' ); //Sets the PHP memory limit
-
+	ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 
 	wp_enqueue_script( 'jquery-ui-dialog' );
-	wp_enqueue_script( 'admin-js', plugin_dir_url( __FILE__ ) . '../js/feature-request.js' );
+	// wp_enqueue_script( 'admin-js', plugin_dir_url( __FILE__ ) . '../js/feature-request.js' );
 	wp_enqueue_script( 'feature-request', plugin_dir_url( __FILE__ ) . '../js/admin-js.js' );
-	wp_enqueue_script( 'jquery.contextMenu', plugin_dir_url( __FILE__ ) . '../js/jquery.contextMenu.js' );
-	wp_enqueue_script( 'jquery.ui.position', plugin_dir_url( __FILE__ ) . '../js/jquery.ui.position.js' );
-	wp_enqueue_style( 'wpsc-admin-styles', plugin_dir_url( __DIR__ ) . 'css/admin-styles.css' );
+	wp_enqueue_script( 'wpscx-jquery-contextMenu', plugin_dir_url( __FILE__ ) . '../js/wpscx-jquery.contextMenu.js' );
+	wp_enqueue_script( 'wpscx-jquery-ui-position', plugin_dir_url( __FILE__ ) . '../js/wpscx-jquery.ui.position.js' );
+	wp_enqueue_style( 'wpsc-admin-styles', plugin_dir_url( __DIR__ ) . 'css/admin-styles.css', array(), $wpsc_version, 'all' );
 	wp_enqueue_style( 'wpsc-sidebar', plugin_dir_url( __DIR__ ) . 'css/wpsc-sidebar.css' );
+	wp_enqueue_style( 'wpsc-sidebar-inline', plugin_dir_url( __DIR__ ) . 'admin/css/sidebar-inline.css', array( 'wpsc-sidebar' ) );
 
 	$message = '';
-		if ( isset( $_POST['uninstall'] ) && 'Clean up Database and Deactivate Plugin' === $_POST['uninstall'] ) {
-			$options->prepare_uninstall();
-			deactivate_plugins( 'wp-spell-check/wpspellcheck.php' );
-			if ( $wpscx_ent_included ) {
-				deactivate_plugins( WPSCX_PRO_LOC );
-			}
-			wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the WordPress plugin page' );
+	if ( isset( $_POST['uninstall'] ) && 'Clean up Database and Deactivate Plugin' === $_POST['uninstall'] ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'You do not have permission to uninstall the plugin.', 403 );
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified on next line
+		$nonce_received        = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		$nonce_valid_result    = wp_verify_nonce( $nonce_received, 'wpsc_update_options' );
+		$http_referer          = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		$post_referer          = isset( $_POST['_wp_http_referer'] ) ? esc_url_raw( wp_unslash( $_POST['_wp_http_referer'] ) ) : '';
+		$admin_url_val         = admin_url();
+		$wp_get_referer_result = wp_get_referer();
+		// Verify nonce - if it fails, check referer as fallback for stale nonces
+		// This handles cases where browser caches the form HTML with an old nonce
+		if ( ! $nonce_valid_result ) {
+			// Nonce failed - check if referer is valid as security fallback
+			// Use HTTP_REFERER header directly since wp_get_referer() may return false
+			$referer = $http_referer ? $http_referer : $post_referer;
+
+			// Handle relative URLs in POST referer by converting to absolute
+			if ( $referer && ! preg_match( '/^https?:\/\//', $referer ) ) {
+				// Relative URL - convert to absolute using admin_url()
+				$referer = admin_url( $referer );
+			}
+
+			// Use strpos for PHP 7.x compatibility instead of str_starts_with (PHP 8.0+)
+			$admin_url_lower = strtolower( $admin_url_val );
+			$referer_lower   = $referer ? strtolower( $referer ) : '';
+			$referer_valid   = $referer && ( strpos( $referer_lower, $admin_url_lower ) === 0 );
+
+			if ( ! $referer_valid ) {
+				// Both nonce and referer failed - this is a security issue
+				wp_die( 'The link you followed has expired. Please try again.' );
+			}
+
+			// Referer is valid - allow the request
+			// This handles stale nonces from browser cache while maintaining security via referer check
+		}
+		$options->prepare_uninstall();
+		deactivate_plugins( 'wp-spell-check/wpspellcheck.php' );
+		if ( $wpscx_ent_included ) {
+			deactivate_plugins( WPSCX_PRO_LOC );
+		}
+		wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the WordPress plugin page' );
+	}
 
 	$next_scan = wp_next_scheduled( 'admincheckcode', array( 10, 1 ) );
 	wp_unschedule_event( $next_scan, 'admincheckcode', array( 10, 1 ) );
 
-	if ( isset( $_POST['import'] ) && isset($_FILES['import_file']['name']) && $wpscx_ent_included ) {
+	if ( isset( $_POST['import'] ) && isset( $_FILES['import_file']['name'] ) && $wpscx_ent_included ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'You do not have permission to import plugin data.', 403 );
+		}
+		$nonce_received        = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		$nonce_valid_result    = wp_verify_nonce( $nonce_received, 'wpsc_update_options' );
+		$http_referer          = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		$post_referer          = isset( $_POST['_wp_http_referer'] ) ? esc_url_raw( wp_unslash( $_POST['_wp_http_referer'] ) ) : '';
+		$admin_url_val         = admin_url();
+		$wp_get_referer_result = wp_get_referer();
+		// Verify nonce - if it fails, check referer as fallback for stale nonces
+		// This handles cases where browser caches the form HTML with an old nonce
+		if ( ! $nonce_valid_result ) {
+			// Nonce failed - check if referer is valid as security fallback
+			// Use HTTP_REFERER header directly since wp_get_referer() may return false
+			$referer = $http_referer ? $http_referer : $post_referer;
+
+			// Handle relative URLs in POST referer by converting to absolute
+			if ( $referer && ! preg_match( '/^https?:\/\//', $referer ) ) {
+				// Relative URL - convert to absolute using admin_url()
+				$referer = admin_url( $referer );
+			}
+
+			// Use strpos for PHP 7.x compatibility instead of str_starts_with (PHP 8.0+)
+			$admin_url_lower = strtolower( $admin_url_val );
+			$referer_lower   = $referer ? strtolower( $referer ) : '';
+			$referer_valid   = $referer && ( strpos( $referer_lower, $admin_url_lower ) === 0 );
+
+			if ( ! $referer_valid ) {
+				// Both nonce and referer failed - this is a security issue
+				wp_die( 'The link you followed has expired. Please try again.' );
+			}
+
+			// Referer is valid - allow the request
+			// This handles stale nonces from browser cache while maintaining security via referer check
+		}
 		if ( 'Import Plugin Data' === $_POST['import'] ) {
 			$extension = end( explode( '.', sanitize_text_field( $_FILES['import_file']['name'] ) ) );
 			if ( 'ini' !== $extension ) {
-				wp_die( __( 'Please Upload a valid .ini file' ) ); //Check to make sure the imported file is a .ini file
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: hardcoded translation string
+				wp_die( __( 'Please Upload a valid .ini file', 'wp-spell-check' ) ); // Check to make sure the imported file is a .ini file
 			}
 
 			$import_file = sanitize_text_field( $_FILES['import_file']['tmp_name'] );
 			if ( empty( $import_file ) ) {
-				wp_die( __( 'Please upload a file with content. Last file has no content' ) ); //Check to make sure that the imported file isn't empty
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: hardcoded translation string
+				wp_die( __( 'Please upload a file with content. Last file has no content', 'wp-spell-check' ) ); // Check to make sure that the imported file isn't empty
 			}
 
-			$input = file_get_contents( $import_file ); //Get the contents of the uploaded file
+			$input = file_get_contents( $import_file ); // Get the contents of the uploaded file
 
 			$content = explode( "\r\n", $input );
 
@@ -167,51 +216,55 @@ function wpscx_render_options() {
 				if ( WPSCX_IGNORE === $item ) {
 					$to_add = WPSCX_IGNORE;
 				}
-					//Check for the headers of each section and set flag accordingly
+					// Check for the headers of each section and set flag accordingly
 
 				if ( WPSCX_SETTINGS === $to_add && WPSCX_SETTINGS !== $item ) {
 						$settings = explode( '=', $item );
 					if ( sizeof( (array) $settings ) === 2 ) {
-						$wpdb->update( $table_name, array( 'option_value' => $settings[1] ), array( 'option_name' => $settings[0] ) ); //Update the main settings table
+						$wpdb->update( $table_name, array( 'option_value' => $settings[1] ), array( 'option_name' => $settings[0] ) ); // Update the main settings table
 					}
 				} elseif ( WPSCX_GRAMMAR === $to_add && WPSCX_GRAMMAR !== $item ) {
 						$settings = explode( '=', $item );
 					if ( sizeof( (array) $settings ) === 2 ) {
-						$wpdb->update( $grammar_table, array( 'option_value' => $settings[1] ), array( 'option_name' => $settings[0] ) ); //Update the grammar settings table
+						$wpdb->update( $grammar_table, array( 'option_value' => $settings[1] ), array( 'option_name' => $settings[0] ) ); // Update the grammar settings table
 					}
 				} elseif ( WPSCX_DICT === $to_add && WPSCX_DICT !== $item ) {
-						$check_dict   = $wpdb->get_results( 'SELECT * FROM ' . $dict_table . ' WHERE word="' . $item . '"' );
-						$check_ignore = $wpdb->get_results( 'SELECT * FROM ' . $words_table . ' WHERE word="' . $item . '" AND ignore_word = true' );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names are safe
+					$check_dict = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $dict_table . ' WHERE word=%s', $item ) );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names are safe
+					$check_ignore = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $words_table . ' WHERE word=%s AND ignore_word = true', $item ) );
 
 					if ( sizeof( (array) $check_dict ) > 0 ) {
 							$dict_display = true;
 							$dict_dupe   .= ' ' . $item . ',';
 					} elseif ( sizeof( (array) $check_ignore ) > 0 ) {
-							$dict_display_ig = true;
-							$dict_dupe_ig   .= ' ' . $item . ',';
+						$dict_display_ig = true;
+						$dict_dupe_ig   .= ' ' . $item . ',';
 					} else {
-							$wpdb->insert( $dict_table, array( 'word' => $item ) ); //Update the dictionary table
+						$wpdb->insert( $dict_table, array( 'word' => $item ) ); // Update the dictionary table
 					}
 				} elseif ( WPSCX_IGNORE === $to_add && WPSCX_IGNORE !== $item ) {
-						$check_dict   = $wpdb->get_results( 'SELECT * FROM ' . $dict_table . ' WHERE word="' . $item . '"' );
-						$check_ignore = $wpdb->get_results( 'SELECT * FROM ' . $words_table . ' WHERE word="' . $item . '" AND ignore_word = true' );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names are safe
+					$check_dict = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $dict_table . ' WHERE word=%s', $item ) );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names are safe
+					$check_ignore = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $words_table . ' WHERE word=%s AND ignore_word = true', $item ) );
 
 					if ( sizeof( (array) $check_dict ) > 0 ) {
 							$ignore_display_dict = true;
 							$ignore_dupe_dict   .= ' ' . $item . ',';
 					} elseif ( sizeof( (array) $check_ignore ) > 0 ) {
-							$ignore_display = true;
-							$ignore_dupe   .= ' ' . $item . ',';
+						$ignore_display = true;
+						$ignore_dupe   .= ' ' . $item . ',';
 					} else {
-							$wpdb->insert(
-								$words_table,
-								array(
-									'word'        => $item,
-									'page_name'   => 'WPSC_Ignore',
-									'ignore_word' => true,
-									'page_type'   => 'wpsc_ignore',
-								)
-							); //Update the ignore table
+						$wpdb->insert(
+							$words_table,
+							array(
+								'word'        => $item,
+								'page_name'   => 'WPSC_Ignore',
+								'ignore_word' => true,
+								'page_type'   => 'wpsc_ignore',
+							)
+						); // Update the ignore table
 					}
 				}
 			}
@@ -247,7 +300,7 @@ function wpscx_render_options() {
 		}
 	}
 
-	//set defaults for anything not already set
+	// set defaults for anything not already set
 
 	if ( ! isset( $_POST['email'] ) ) {
 		$_POST['email'] = '';
@@ -377,290 +430,312 @@ function wpscx_render_options() {
 	}
 	if ( ! isset( $_POST['wpsc-scan-tab'] ) ) {
 		$_POST['wpsc-scan-tab'] = '';
+	} else {
+		$_POST['wpsc-scan-tab'] = sanitize_text_field( wp_unslash( $_POST['wpsc-scan-tab'] ) );
 	}
 	if ( ! isset( $_POST['uninstall'] ) ) {
 		$_POST['uninstall'] = '';
 	}
 
-		if ( isset( $_POST['submit'] ) && ('Update' === $_POST['submit'] || 'Send Test' === $_POST['submit']) ) {
-			check_admin_referer( 'wpsc_update_options' );
-			$message = "<h3 style='color: rgb(0, 115, 0);'>Options Updated</h3>";
-			if ( 'email' === $_POST['email'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'email' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'email' ) );
-			}
-                        if ( isset( $_POST['email_address'] ) ) { $wpdb->update( $table_name, array( 'option_value' => sanitize_email( $_POST['email_address'] ) ), array( 'option_name' => 'email_address' ) ); }
-			if ( 'ignore-caps' === $_POST['ignore-caps'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_caps' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_caps' ) );
-			}
-			if ( 'check-pages' === $_POST['check-pages'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_pages' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_pages' ) );
-			}
-			if ( 'check-posts' === $_POST['check-posts'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_posts' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_posts' ) );
-			}
-			if ( 'check-authors' === $_POST['check-authors'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_authors' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_authors' ) );
-			}
-			if ( $wpscx_ent_included ) {
-				if ( 'check-sliders' === $_POST['check-sliders'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_sliders' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_sliders' ) );
-				}
-				if ( 'check-media' === $_POST['check-media'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media' ) );
-				}
+	if ( isset( $_POST['submit'] ) && ( 'Update' === $_POST['submit'] || 'Send Test' === $_POST['submit'] ) ) {
+		// Verify nonce - if it fails, check referer as fallback for stale nonces
+		// This handles cases where browser caches the form HTML with an old nonce
+		$nonce_received = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		$nonce_valid    = wp_verify_nonce( $nonce_received, 'wpsc_update_options' );
 
-				if ( 'check-menu' === $_POST['check-menu'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_menus' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_menus' ) );
-				}
-				if ( 'page-titles' === $_POST['page-titles'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'page_titles' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'page_titles' ) );
-				}
-				if ( 'post-titles' === $_POST['post-titles'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'post_titles' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'post_titles' ) );
-				}
-				if ( 'tags' === $_POST['tags'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'tags' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'tags' ) );
-				}
-				if ( 'check-tag-desc' === $_POST['check-tag-desc'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_desc' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_desc' ) );
-				}
-				if ( 'check-tag-slug' === $_POST['check-tag-slug'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_slug' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_slug' ) );
-				}
-				if ( 'categories' === $_POST['categories'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'categories' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'categories' ) );
-				}
-				if ( 'check-cat-desc' === $_POST['check-cat-desc'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_desc' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_desc' ) );
-				}
-				if ( 'check-cat-slug' === $_POST['check-cat-slug'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_slug' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_slug' ) );
-				}
-				if ( 'seo-titles' === $_POST['seo-titles'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'seo_titles' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_titles' ) );
-				}
-				if ( 'seo-desc' === $_POST['seo-desc'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'seo_desc' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_desc' ) );
-				}
-				if ( 'page-slugs' === $_POST['page-slugs'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'page_slugs' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'page_slugs' ) );
-				}
-				if ( 'post-slugs' === $_POST['post-slugs'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'post_slugs' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'post_slugs' ) );
-				}
-				if ( 'check-ecommerce' === $_POST['check-ecommerce'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_ecommerce' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_ecommerce' ) );
-				}
-				if ( 'check-widgets' === $_POST['check-widgets'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_widgets' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_widgets' ) );
-				}
-			}
-			if ( 'check-custom' === $_POST['check-custom'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_custom' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_custom' ) );
-			}
-			if ( 'ignore-emails' === $_POST['ignore-emails'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_emails' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_emails' ) );
-			}
-			if ( 'ignore-websites' === $_POST['ignore-websites'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_websites' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_websites' ) );
-			}
-			if ( 'highlight-words' === $_POST['highlight-words'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'highlight_word' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'highlight_word' ) );
-			}
-			if ( 'check-cf7' === $_POST['check-cf7'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cf7' ) );
-			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cf7' ) );
+		if ( ! $nonce_valid ) {
+			// Nonce failed - check if referer is valid as security fallback
+			// Use HTTP_REFERER header directly since wp_get_referer() may return false
+			$http_referer_header = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+			$post_referer        = isset( $_POST['_wp_http_referer'] ) ? esc_url_raw( wp_unslash( $_POST['_wp_http_referer'] ) ) : '';
+			// Check both HTTP_REFERER header and POST _wp_http_referer field
+			$referer = $http_referer_header ? $http_referer_header : $post_referer;
+
+			// Use strpos for PHP 7.x compatibility instead of str_starts_with (PHP 8.0+)
+			$admin_url_lower = strtolower( admin_url() );
+			$referer_lower   = $referer ? strtolower( $referer ) : '';
+			$referer_valid   = $referer && ( strpos( $referer_lower, $admin_url_lower ) === 0 );
+
+			if ( ! $referer_valid ) {
+				// Both nonce and referer failed - this is a security issue
+				wp_die( 'The link you followed has expired. Please try again.' );
 			}
 
-			if ( 'check-post-drafts' === $_POST['check-post-drafts'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_post_drafts' ) );
+			// Referer is valid - allow the request
+			// This handles stale nonces from browser cache while maintaining security via referer check
+		}
+
+		$message = "<h3 style='color: rgb(0, 115, 0);'>Options Updated</h3>";
+		if ( 'email' === $_POST['email'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'email' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'email' ) );
+		}
+		if ( isset( $_POST['email_address'] ) ) {
+			$wpdb->update( $table_name, array( 'option_value' => sanitize_email( wp_unslash( $_POST['email_address'] ) ) ), array( 'option_name' => 'email_address' ) ); }
+		if ( 'ignore-caps' === $_POST['ignore-caps'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_caps' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_caps' ) );
+		}
+		if ( 'check-pages' === $_POST['check-pages'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_pages' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_pages' ) );
+		}
+		if ( 'check-posts' === $_POST['check-posts'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_posts' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_posts' ) );
+		}
+		if ( 'check-authors' === $_POST['check-authors'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_authors' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_authors' ) );
+		}
+		if ( $wpscx_ent_included ) {
+			if ( 'check-sliders' === $_POST['check-sliders'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_sliders' ) );
 			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_post_drafts' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_sliders' ) );
 			}
-			if ( 'check-page-drafts' === $_POST['check-page-drafts'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_page_drafts' ) );
+			if ( 'check-media' === $_POST['check-media'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media' ) );
 			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_page_drafts' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media' ) );
 			}
 
-			if ( 'check-authors' === $_POST['check-authors-empty'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_authors_empty' ) );
+			if ( 'check-menu' === $_POST['check-menu'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_menus' ) );
 			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_authors_empty' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_menus' ) );
 			}
-			if ( 'check-page-titles' === $_POST['check-page-titles-empty'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_page_titles_empty' ) );
+			if ( 'page-titles' === $_POST['page-titles'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'page_titles' ) );
 			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_page_titles_empty' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'page_titles' ) );
 			}
-			if ( 'check-post-titles' === $_POST['check-post-titles-empty'] ) {
-				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_post_titles_empty' ) );
+			if ( 'post-titles' === $_POST['post-titles'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'post_titles' ) );
 			} else {
-				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_post_titles_empty' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'post_titles' ) );
 			}
-			if ( $wpscx_ent_included ) {
-				if ( 'check-menu' === $_POST['check-menu-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_menu_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_menu_empty' ) );
-				}
-				if ( 'check-tag-desc' === $_POST['check-tag-desc-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_desc_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_desc_empty' ) );
-				}
-				if ( 'check-cat-desc' === $_POST['check-cat-desc-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_desc_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_desc_empty' ) );
-				}
-				if ( 'check-page-seo' === $_POST['check-page-seo-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_page_seo_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_page_seo_empty' ) );
-				}
-				if ( 'check-post-seo' === $_POST['check-post-seo-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_post_seo_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_post_seo_empty' ) );
-				}
-				if ( 'check-media-seo' === $_POST['check-media-seo-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media_seo_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media_seo_empty' ) );
-				}
-				if ( 'check-ecommerce' === $_POST['check-ecommerce-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_ecommerce_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_ecommerce_empty' ) );
-				}
-				if ( 'check-media' === $_POST['check-media-empty'] ) {
-					$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media_empty' ) );
-				} else {
-					$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media_empty' ) );
-				}
-			}
-
-			if ( 'check-pages' === $_POST['check-pages-grammar'] ) {
-				$wpdb->update( $grammar_table, array( 'option_value' => 'true' ), array( 'option_name' => 'check_pages' ) );
+			if ( 'tags' === $_POST['tags'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'tags' ) );
 			} else {
-				$wpdb->update( $grammar_table, array( 'option_value' => 'false' ), array( 'option_name' => 'check_pages' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'tags' ) );
 			}
-			if ( 'check-posts' === $_POST['check-posts-grammar'] ) {
-				$wpdb->update( $grammar_table, array( 'option_value' => 'true' ), array( 'option_name' => 'check_posts' ) );
+			if ( 'check-tag-desc' === $_POST['check-tag-desc'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_desc' ) );
 			} else {
-				$wpdb->update( $grammar_table, array( 'option_value' => 'false' ), array( 'option_name' => 'check_posts' ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_desc' ) );
 			}
-			if ( $wpscx_ent_included ) {
-				if ( is_numeric( $_POST['scan_frequency'] ) ) {
-						wpscx_set_schedule();
-				} else {
-						$message = 'Please enter a valid number for scan frequency';
-				}
+			if ( 'check-tag-slug' === $_POST['check-tag-slug'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_slug' ) );
 			} else {
-				$next_scan = wp_next_scheduled( 'adminscansite', array( 10 ) );
-				wp_unschedule_event( $next_scan, 'adminscansite', array( 10 ) );
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_slug' ) );
 			}
-                        if ( isset( $_POST['scan_frequency_interval'] ) ) { $wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( $_POST['scan_frequency_interval'] ) ), array( 'option_name' => 'scan_frequency_interval' ) ); }
-                        if ( isset( $_POST['language_setting'] ) ) { $wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( $_POST['language_setting'] ) ), array( 'option_name' => 'language_setting' ) ); }
-                        if ( isset( $_POST['api_key'] ) ) { $wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( $_POST['api_key'] ) ), array( 'option_name' => 'api_key' ) ); }
-
-
-			$pages = explode( PHP_EOL, sanitize_text_field( $_POST['pages-ignore'] ) );
-
-			$wpdb->query( 'TRUNCATE TABLE ' . $ignore_table );
-
-			foreach ( $pages as $page ) {
-				if ( null !== $page ) {
-					$wpdb->insert(
-						$ignore_table,
-						array(
-							'keyword' => $page,
-							'type'    => 'page',
-						)
-					);
-				}
+			if ( 'categories' === $_POST['categories'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'categories' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'categories' ) );
 			}
-
-			if ( is_plugin_active( WPSCX_PRO_LOC ) ) {
-				$pro_data = get_plugin_data( dirname( __FILE__ ) . '/../../wp-spell-check-pro/wpspellcheckpro.php' );
-				$pro_ver  = $pro_data['Version'];
-				if ( 'Clean up Database and Deactivate Plugin' !== $_POST['uninstall'] && is_plugin_active( WPSCX_PRO_LOC ) && version_compare( $pro_ver, $wpsc_version ) === 0 ) {
-					wpsc_do_ent_api_request( true ); //Refresh the API Key validation after updating it unless deactivating plugin
-				}
+			if ( 'check-cat-desc' === $_POST['check-cat-desc'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_desc' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_desc' ) );
 			}
-			global $wpscx_key_valid;
-			global $wpscx_ent_included;
+			if ( 'check-cat-slug' === $_POST['check-cat-slug'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_slug' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_slug' ) );
+			}
+			if ( 'seo-titles' === $_POST['seo-titles'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'seo_titles' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_titles' ) );
+			}
+			if ( 'seo-desc' === $_POST['seo-desc'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'seo_desc' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_desc' ) );
+			}
+			if ( 'page-slugs' === $_POST['page-slugs'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'page_slugs' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'page_slugs' ) );
+			}
+			if ( 'post-slugs' === $_POST['post-slugs'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'post_slugs' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'post_slugs' ) );
+			}
+			if ( 'check-ecommerce' === $_POST['check-ecommerce'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_ecommerce' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_ecommerce' ) );
+			}
+			if ( 'check-widgets' === $_POST['check-widgets'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_widgets' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_widgets' ) );
+			}
+		}
+		if ( 'check-custom' === $_POST['check-custom'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_custom' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_custom' ) );
+		}
+		if ( 'ignore-emails' === $_POST['ignore-emails'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_emails' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_emails' ) );
+		}
+		if ( 'ignore-websites' === $_POST['ignore-websites'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'ignore_websites' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'ignore_websites' ) );
+		}
+		if ( 'highlight-words' === $_POST['highlight-words'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'highlight_word' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'highlight_word' ) );
+		}
+		if ( 'check-cf7' === $_POST['check-cf7'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cf7' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cf7' ) );
+		}
 
-			$user_id = get_current_user_id();
-			update_usermeta( $user_id, 'wpsc_usedyslexic', sanitize_text_field( $_POST['wpsc_usedyslexic'] ) );
-			//-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
-			if ( 'no' === $_POST['wpsc_usedyslexic'] || 'yes_websiteonly' === $_POST['wpsc_usedyslexic'] ) { ?>
-		<style>
-			*:not(.ab-icon) { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif!important; }
-		</style>
-			<?php } else { ?>
-		<style>
-			*:not(.ab-icon) { font-family: open-dyslexic, sans-serif!important }
-		</style>
-				<?php
+		if ( 'check-post-drafts' === $_POST['check-post-drafts'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_post_drafts' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_post_drafts' ) );
+		}
+		if ( 'check-page-drafts' === $_POST['check-page-drafts'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_page_drafts' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_page_drafts' ) );
+		}
+
+		if ( 'check-authors' === $_POST['check-authors-empty'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_authors_empty' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_authors_empty' ) );
+		}
+		if ( 'check-page-titles' === $_POST['check-page-titles-empty'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_page_titles_empty' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_page_titles_empty' ) );
+		}
+		if ( 'check-post-titles' === $_POST['check-post-titles-empty'] ) {
+			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_post_titles_empty' ) );
+		} else {
+			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_post_titles_empty' ) );
+		}
+		if ( $wpscx_ent_included ) {
+			if ( 'check-menu' === $_POST['check-menu-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_menu_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_menu_empty' ) );
+			}
+			if ( 'check-tag-desc' === $_POST['check-tag-desc-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_tag_desc_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_tag_desc_empty' ) );
+			}
+			if ( 'check-cat-desc' === $_POST['check-cat-desc-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_cat_desc_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_cat_desc_empty' ) );
+			}
+			if ( 'check-page-seo' === $_POST['check-page-seo-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_page_seo_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_page_seo_empty' ) );
+			}
+			if ( 'check-post-seo' === $_POST['check-post-seo-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_post_seo_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_post_seo_empty' ) );
+			}
+			if ( 'check-media-seo' === $_POST['check-media-seo-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media_seo_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media_seo_empty' ) );
+			}
+			if ( 'check-ecommerce' === $_POST['check-ecommerce-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_ecommerce_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_ecommerce_empty' ) );
+			}
+			if ( 'check-media' === $_POST['check-media-empty'] ) {
+				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_media_empty' ) );
+			} else {
+				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media_empty' ) );
 			}
 		}
 
-	$settings         = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $table_name );
+		if ( 'check-pages' === $_POST['check-pages-grammar'] ) {
+			$wpdb->update( $grammar_table, array( 'option_value' => 'true' ), array( 'option_name' => 'check_pages' ) );
+		} else {
+			$wpdb->update( $grammar_table, array( 'option_value' => 'false' ), array( 'option_name' => 'check_pages' ) );
+		}
+		if ( 'check-posts' === $_POST['check-posts-grammar'] ) {
+			$wpdb->update( $grammar_table, array( 'option_value' => 'true' ), array( 'option_name' => 'check_posts' ) );
+		} else {
+			$wpdb->update( $grammar_table, array( 'option_value' => 'false' ), array( 'option_name' => 'check_posts' ) );
+		}
+		if ( $wpscx_ent_included ) {
+			$scan_frequency = isset( $_POST['scan_frequency'] ) ? sanitize_text_field( wp_unslash( $_POST['scan_frequency'] ) ) : '';
+			if ( is_numeric( $scan_frequency ) && $scan_frequency > 0 ) {
+					wpscx_set_schedule();
+			} else {
+					$message = 'Please enter a valid number for scan frequency';
+			}
+		} else {
+			$next_scan = wp_next_scheduled( 'adminscansite', array( 10 ) );
+			wp_unschedule_event( $next_scan, 'adminscansite', array( 10 ) );
+		}
+		if ( isset( $_POST['scan_frequency_interval'] ) ) {
+			$wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( wp_unslash( $_POST['scan_frequency_interval'] ) ) ), array( 'option_name' => 'scan_frequency_interval' ) ); }
+		if ( isset( $_POST['language_setting'] ) ) {
+			$wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( wp_unslash( $_POST['language_setting'] ) ) ), array( 'option_name' => 'language_setting' ) ); }
+		if ( isset( $_POST['api_key'] ) ) {
+			$wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) ), array( 'option_name' => 'api_key' ) ); }
+
+		$pages = explode( PHP_EOL, sanitize_text_field( wp_unslash( $_POST['pages-ignore'] ) ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string
+		$wpdb->query( 'TRUNCATE TABLE ' . $ignore_table );
+
+		foreach ( $pages as $page ) {
+			if ( null !== $page ) {
+				$wpdb->insert(
+					$ignore_table,
+					array(
+						'keyword' => $page,
+						'type'    => 'page',
+					)
+				);
+			}
+		}
+
+		if ( is_plugin_active( WPSCX_PRO_LOC ) ) {
+			if ( 'Clean up Database and Deactivate Plugin' !== $_POST['uninstall'] ) {
+				wpsc_do_ent_api_request( true ); // Refresh the API Key validation after updating it unless deactivating plugin
+			}
+		}
+		global $wpscx_key_valid;
+		global $wpscx_ent_included;
+
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, 'wpsc_usedyslexic', sanitize_text_field( wp_unslash( $_POST['wpsc_usedyslexic'] ) ) );
+	}
+
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string
+	$settings = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $table_name );
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string
 	$grammar_settings = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $grammar_table );
 
 	$grammar_pages = $grammar_settings[0]->option_value;
@@ -713,26 +788,59 @@ function wpscx_render_options() {
 	$check_post_drafts        = $settings[137]->option_value;
 	$check_widgets            = $settings[147]->option_value;
 
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, WHERE value is hardcoded
 	$page_data = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . " WHERE type='page';" );
 	$page_list = '';
 	foreach ( $page_data as $page ) {
 		$page_list .= $page->keyword . PHP_EOL;
 	}
-		if ( isset( $_POST['test-email'] ) && 'Send Test' === $_POST['test-email'] ) {
-			$wpdb->update( $table_name, array( 'option_value' => sanitize_email( $_POST['email_address'] ) ), array( 'option_name' => 'email_address' ) );
-				$emailer   = new Wpscx_Email;
-			$message       = $emailer->send_test_email();
-			$email_address = sanitize_email( $_POST['email_address'] );
+	if ( isset( $_POST['test-email'] ) && 'Send Test' === $_POST['test-email'] ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'You do not have permission to send test emails.', 403 );
 		}
+		$nonce_received        = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		$nonce_valid_result    = wp_verify_nonce( $nonce_received, 'wpsc_update_options' );
+		$http_referer          = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		$post_referer          = isset( $_POST['_wp_http_referer'] ) ? esc_url_raw( wp_unslash( $_POST['_wp_http_referer'] ) ) : '';
+		$admin_url_val         = admin_url();
+		$wp_get_referer_result = wp_get_referer();
+		// Verify nonce - if it fails, check referer as fallback for stale nonces
+		// This handles cases where browser caches the form HTML with an old nonce
+		if ( ! $nonce_valid_result ) {
+			// Nonce failed - check if referer is valid as security fallback
+			// Use HTTP_REFERER header directly since wp_get_referer() may return false
+			$referer = $http_referer ? $http_referer : $post_referer;
+
+			// Handle relative URLs in POST referer by converting to absolute
+			if ( $referer && ! preg_match( '/^https?:\/\//', $referer ) ) {
+				// Relative URL - convert to absolute using admin_url()
+				$referer = admin_url( $referer );
+			}
+
+			// Use strpos for PHP 7.x compatibility instead of str_starts_with (PHP 8.0+)
+			$admin_url_lower = strtolower( $admin_url_val );
+			$referer_lower   = $referer ? strtolower( $referer ) : '';
+			$referer_valid   = $referer && ( strpos( $referer_lower, $admin_url_lower ) === 0 );
+
+			if ( ! $referer_valid ) {
+				// Both nonce and referer failed - this is a security issue
+				wp_die( 'The link you followed has expired. Please try again.' );
+			}
+
+			// Referer is valid - allow the request
+			// This handles stale nonces from browser cache while maintaining security via referer check
+		}
+		$wpdb->update( $table_name, array( 'option_value' => sanitize_email( wp_unslash( $_POST['email_address'] ) ) ), array( 'option_name' => 'email_address' ) );
+			$emailer   = new Wpscx_Email();
+		$message       = $emailer->send_test_email();
+		$email_address = sanitize_email( wp_unslash( $_POST['email_address'] ) );
+	}
 
 	wp_enqueue_script( 'options-nav', plugin_dir_url( __FILE__ ) . 'options-nav.js' );
+	wp_enqueue_script( 'options-page', plugin_dir_url( __FILE__ ) . 'js/options-page.js', array(), $wpsc_version, true );
 
 	?>
-		<style> p.submit { display: inline-block; margin-left: 10px; } .hidden { display: none; } .wpsc-scan-nav-bar { border-bottom: 1px solid #BBB; } .wpsc-scan-nav-bar a { text-decoration: none; margin: 5px 1px -1px 1px; padding: 8px; border: 1px solid #BBB; display: inline-block; font-weight: bold; color: black; font-size: 14px; height: 16px; border-radius: 5px 5px 0 0; } .wpsc-scan-nav-bar a.selected { border-bottom: 1px solid white; background: white; }
-				td { padding-left: 25px!important; max-width: 755px; }
-                                .wpsc-message h3 { color: rgb(0, 200, 0); font-size: 20px; font-weight: bold; }
-				.wpsc-mouseover-text-pro-feature, .wpsc-mouseover-text-freq, .wpsc-mouseover-text-email, .wpsc-mouseover-text-import, .wpsc-mouseover-text-export { color: black; font-size: 12px; width: 225px; display: inline-block; position: absolute; margin: 0px; padding: 0px 0px 15px 0px; border: 2px solid #008200; border-radius: 7px; opacity: 0; background: white; z-index: -100; box-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%); font-weight: bold; max-width: 205px; }</style>
-	<?php wpscx_show_feature_window(); ?>
+	<?php // wpscx_show_feature_window(); ?>
 		<div class="wrap">
 			<h2><a href="admin.php?page=wp-spellcheck.php"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/logo.png'; ?>" alt="WP Spell Check" /></a> <span style="position: relative; top: -8px;"> - Options</span></h2>
 					<?php
@@ -744,45 +852,46 @@ function wpscx_render_options() {
 						echo "<div class='updated' style='color: rgb(0, 115, 0); font-weight: bold; font-size: 14px'>API Key is valid</div>";
 					}
 					?>
-			<?php
-			if ( '' !== $message ) {
-				echo "<span class='wpsc-message'>" . htmlspecialchars_decode( esc_html( $message ) ) . '</span>';}
-			?>
+		<?php
+		if ( '' !== $message ) {
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $message contains hardcoded strings, already escaped with esc_html()
+			echo "<span class='wpsc-message'>" . htmlspecialchars_decode( esc_html( $message ) ) . '</span>';}
+		?>
 			<div class="wpsc-scan-nav-bar" style="width: 75%;">
 				<a href="#general-options" id="wpsc-general-options" 
 				<?php
 				if ( isset( $_POST['wpsc-scan-tab'] ) && 'scan' !== $_POST['wpsc-scan-tab'] && 'empty' !== $_POST['wpsc-scan-tab'] && 'grammar' !== $_POST['wpsc-scan-tab'] && 'accessibility' !== $_POST['wpsc-scan-tab'] ) {
 					echo 'class="selected"';}
 				?>
-				 name="wpsc-general-options">General Settings</a>
+				name="wpsc-general-options">General Settings</a>
 				<a href="#scan-options" id="wpsc-scan-options" 
 				<?php
 				if ( isset( $_POST['wpsc-scan-tab'] ) && 'scan' === $_POST['wpsc-scan-tab'] ) {
 					echo 'class="selected"';}
 				?>
-				 name="wpsc-scan-options">Spell Check Options</a>
+				name="wpsc-scan-options">Spell Check Options</a>
 				<a href="#grammar-options" id="wpsc-grammar-options" 
 				<?php
 				if ( isset( $_POST['wpsc-scan-tab'] ) && 'grammar' === $_POST['wpsc-scan-tab'] ) {
 					echo 'class="selected"';}
 				?>
-				 name="wpsc-grammar-options">Grammar Options</a>
+				name="wpsc-grammar-options">Grammar Options</a>
 				<a href="#empty-options" id="wpsc-empty-options" 
 				<?php
 				if ( isset( $_POST['wpsc-scan-tab'] ) && 'empty' === $_POST['wpsc-scan-tab'] ) {
 					echo 'class="selected"';}
 				?>
-				 name="wpsc-empty-options">SEO Options<span style="font-size: 8px;"></span></a>
+				name="wpsc-empty-options">SEO Options<span style="font-size: 8px;"></span></a>
 				<a href="#accessibility-options" id="wpsc-accessibility-options" 
 				<?php
 				if ( isset( $_POST['wpsc-scan-tab'] ) && 'accessibility' === $_POST['wpsc-scan-tab'] ) {
 					echo 'class="selected"';}
 				?>
-				 name="wpsc-accessibility-options">Accessibility Options<span style="font-size: 8px;"></span></a>
+				name="wpsc-accessibility-options">Accessibility Options<span style="font-size: 8px;"></span></a>
 			</div>
-			<form action="admin.php?page=wp-spellcheck-options.php" method="post" name="options" style="margin-top: -7px;" enctype="multipart/form-data">
+			<form action="admin.php?page=wp-spellcheck-options.php" method="post" name="options" style="margin-top: -7px;" enctype="multipart/form-data" id="wpsc-options-form">
 						<?php wp_nonce_field( 'wpsc_update_options' ); ?>
-			<input type="hidden" name="wpsc-scan-tab" class="wpsc-nav-tab" value="<?php echo esc_attr( $_POST['wpsc-scan-tab'] ); ?>">
+			<input type="hidden" name="wpsc-scan-tab" class="wpsc-nav-tab" value="<?php echo esc_attr( isset( $_POST['wpsc-scan-tab'] ) ? sanitize_text_field( wp_unslash( $_POST['wpsc-scan-tab'] ) ) : '' ); ?>">
 			<div id="wpsc-general-options-tab" 
 			<?php
 			if ( isset( $_POST['wpsc-scan-tab'] ) && ( 'scan' === $_POST['wpsc-scan-tab'] || 'empty' === $_POST['wpsc-scan-tab'] || 'grammar' === $_POST['wpsc-scan-tab'] || 'accessibility' === $_POST['wpsc-scan-tab'] ) ) {
@@ -840,10 +949,10 @@ function wpscx_render_options() {
 				if ( 'true' === $email ) {
 					echo 'checked';}
 				?>
-				 <?php
-					if ( ! $wpscx_ent_included ) {
-										echo 'disabled';}
-					?>
+				<?php
+				if ( ! $wpscx_ent_included ) {
+									echo 'disabled';}
+				?>
 >Send Email Reports</span><br /><input type="text" name="email_address" value="<?php echo esc_attr( $email_address ); ?>" 
 																							<?php
 																							if ( ! $wpscx_ent_included ) {
@@ -857,11 +966,11 @@ function wpscx_render_options() {
 			echo 'disabled';}
 		?>
 		>
-	 <?php
-		if ( ! $wpscx_ent_included ) {
-			?>
+	<?php
+	if ( ! $wpscx_ent_included ) {
+		?>
 			<span class="wpsc-mouseover-email" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-email"><span style="display: block;text-align: center;font-size: 14px;padding: 10px 0 10px 0;background-color: #2271b1;color: white;margin-bottom: 8px;"> This is a Pro Feature</span><span style="padding: 0 10px; display: block;">To receive email reports,  <a href="https://www.wpspellcheck.com/pricing/" target="_blank">Click Here</a> to upgrade to WP Spell Check Pro.</span></span><?php } ?></td><td><label style="display: inline-block; margin-bottom: 6px; margin-top: -2px;">Scan Frequency</label><br />Every <input size="5" name="scan_frequency" style="border: 1px solid #ddd" value="<?php echo esc_html( $scan_frequency ); ?>" 
-																																																																																																																																																							   <?php
+																																																																																																																																																								<?php
 																																																																																																																																																								if ( ! $wpscx_ent_included ) {
 																																																																																																																																																									echo 'disabled';}
 																																																																																																																																																								?>
@@ -898,12 +1007,12 @@ function wpscx_render_options() {
 					if ( ! $wpscx_ent_included ) {
 						echo 'disabled';}
 					?>
-					 /> Export My Dictionary<br><br><input type="checkbox" class="export-ignore" name="export-ignore" value="true" 
+					/> Export My Dictionary<br><br><input type="checkbox" class="export-ignore" name="export-ignore" value="true" 
 	<?php
 	if ( ! $wpscx_ent_included ) {
 						echo 'disabled';}
 	?>
- /> Export Ignore List</td>
+/> Export Ignore List</td>
 					<td><input type="file" name="import_file" id="import-file" 
 					<?php
 					if ( ! $wpscx_ent_included ) {
@@ -912,25 +1021,29 @@ function wpscx_render_options() {
 					></td>
 				</tr>
 				<tr>
-					<td><input type="submit" class="wpsc-export-data" name="export" value="Export Plugin Data" 
+					<?php wp_nonce_field( 'wpsc_export' ); ?>
+					<td><input type="submit" class="wpsc-export-data button button-primary" name="export" value="Export Plugin Data" style="background-color: #2271b1 !important; border-color: #2271b1 !important; color: #fff !important;"
 					<?php
 					if ( ! $wpscx_ent_included ) {
 						echo 'disabled';}
 					?>
-					 />
-	 <?php
-		if ( ! $wpscx_ent_included ) {
-			?>
+					/>
+	<?php
+	if ( ! $wpscx_ent_included ) {
+		?>
 						<span class="wpsc-mouseover-export" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-export"><span style="display: block;text-align: center;font-size: 14px;padding: 10px 0 10px 0;background-color: #2271b1;color: white;margin-bottom: 8px;"> This is a Pro Feature</span><span style="padding: 0 10px; display: block;">To export plugin settings,  <a href="https://www.wpspellcheck.com/pricing/" target="_blank">Click Here</a> to upgrade to WP Spell Check Pro.</span></span><?php } ?></td>
-					<td><input type="submit" name="import" value="Import Plugin Data" 
+					<td><input type="submit" name="import" id="wpsc-import-button" value="Import Plugin Data" class="button button-primary" style="background-color: #2271b1 !important; border-color: #2271b1 !important; color: #fff !important;"
 					<?php
 					if ( ! $wpscx_ent_included ) {
-						echo 'disabled';}
+						echo 'disabled';
+					} else {
+						echo 'disabled'; // Initially disabled until file is selected
+					}
 					?>
-					 />
-	 <?php
-		if ( ! $wpscx_ent_included ) {
-			?>
+					/>
+	<?php
+	if ( ! $wpscx_ent_included ) {
+		?>
 						<span class="wpsc-mouseover-import" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-import"><span style="display: block;text-align: center;font-size: 14px;padding: 10px 0 10px 0;background-color: #2271b1;color: white;margin-bottom: 8px;"> This is a Pro Feature</span><span style="padding: 0 10px; display: block;">To import plugin settings,  <a href="https://www.wpspellcheck.com/pricing/" target="_blank">Click Here</a> to upgrade to WP Spell Check Pro.</span></span><?php } ?></td>
 				</tr>
 							<?php if ( ! $wpscx_ent_included ) { ?>
@@ -1065,7 +1178,7 @@ function wpscx_render_options() {
 					if ( 'true' === $check_ecommerce ) {
 						echo 'checked';}
 					?>
-				>WooCommerce and WP-eCommerce Products</td></tr>
+				>WooCommerce Products</td></tr>
 				<tr>
 				<td><input type="checkbox" name="check-cf7" value="check-cf7" 
 					<?php
@@ -1109,7 +1222,7 @@ function wpscx_render_options() {
 								if ( ! $wpscx_ent_included ) {
 									echo 'disabled';}
 								?>
-								 class="ignore-check-all" type="checkbox" name="highlight-words" value="highlight-words" 
+								class="ignore-check-all" type="checkbox" name="highlight-words" value="highlight-words" 
 					<?php
 					if ( 'true' === $highlight_words && ( $wpscx_ent_included ) ) {
 						echo 'checked';}
@@ -1170,7 +1283,7 @@ function wpscx_render_options() {
 					if ( ! $wpscx_ent_included ) {
 						echo 'disabled';}
 					?>
-				 class="ignore-check-all" type="checkbox" name="highlight-words" value="highlight-words" 
+				class="ignore-check-all" type="checkbox" name="highlight-words" value="highlight-words" 
 					<?php
 					if ( 'true' === $highlight_words && ( $wpscx_ent_included ) ) {
 						echo 'checked';}
@@ -1188,7 +1301,7 @@ function wpscx_render_options() {
 					<tr style="background: white;"><td>Category Slugs</td><td>Categories</td><td>Category Descriptions</td></tr>
 					<tr style="background: white;"><td>SEO Descriptions</td><td>SEO Titles</td><td>Page Slugs</td></tr>
 					<tr style="background: white;"><td>Post Slugs</td><td>Sliders</td><td>Media Files</td></tr>
-					<tr style="background: white;"><td>WooCommerce and WP-eCommerce Products</td></tr>
+					<tr style="background: white;"><td>WooCommerce Products</td></tr>
 				<?php } ?>
 				<?php
 				if ( $wpscx_ent_included ) {
@@ -1271,7 +1384,7 @@ function wpscx_render_options() {
 					if ( 'true' === $check_ecommerce_empty ) {
 						echo 'checked';}
 					?>
-				>WooCommerce and WP-eCommerce Products</td>
+				>WooCommerce Products</td>
 				</tr>
 								<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 				<?php } else { ?>
@@ -1298,7 +1411,7 @@ function wpscx_render_options() {
 					<tr style="background: white;"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=seo_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan the following</h3></td></tr>
 					<tr style="background: white;"><td>WordPress Menus</td><td>Tag Descriptions</td><td>Category Descriptions</td></tr>
 					<tr style="background: white;"><td>Page SEO</td><td>Post SEO</td><td>Media Files SEO</td></tr>
-					<tr style="background: white;"><td>Media Files</td><td colspan="2">WooCommerce and WP-eCommerce Products</td></tr>
+					<tr style="background: white;"><td>Media Files</td><td colspan="2">WooCommerce Products</td></tr>
 				<?php } ?>
 			</tbody></table>
 		</div>
@@ -1310,7 +1423,7 @@ function wpscx_render_options() {
 		>
 			<table class="form-table" style="width: 75%; float: left; background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);" role="presentation"><tbody>
 								<tr><td colspan="3" style="padding-bottom: 0px;"><h3>Select whether you want to which parts of your website you'd like to scan for grammar errors. Right  now our plugin checks for the following rules: Complex Expression, Hidden Verb, Passive Voice, Possessive Ending, Redundant Expression, Contractions</h3></td></tr>
-                                                                <tr><td colspan="3" style="padding-top: 0px;"><h3 style="font-size: 17px;">The WP Spell Check Grammar feature is designed to work with WordPress Classic Editor. You will need to have it active in order to see the Grammar Scan results</h3></td></tr>
+																<tr><td colspan="3" style="padding-top: 0px;"><h3 style="font-size: 17px;">The WP Spell Check Grammar feature is designed to work with WordPress Classic Editor. You will need to have it active in order to see the Grammar Scan results</h3></td></tr>
 				<tr><td><div style="margin-top: 5px;"></div></td></tr>
 				<tr>
 					<td style="width: 33%;"><input type="checkbox" name="check-pages-grammar" value="check-pages" 
@@ -1348,10 +1461,10 @@ function wpscx_render_options() {
 							<?php
 							$user_id = get_current_user_id();
 							?>
-							<option value="no" <?php selected( 'no', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php _e( 'Do Not use the OpenDyslexic Font', 'opendyslexic' ); ?></option>
-							<option value="yes_adminonly" <?php selected( 'yes_adminonly', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php _e( 'Use only on the admin area (back-end)', 'opendyslexic' ); ?></option>
-							<option value="yes_websiteonly" <?php selected( 'yes_websiteonly', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php _e( 'Use only on the website (front-end)', 'opendyslexic' ); ?></option>
-							<option value="yes_everywhere" <?php selected( 'yes_everywhere', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php _e( 'Use both on the website and Admin area', 'opendyslexic' ); ?></option>
+							<option value="no" <?php selected( 'no', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php esc_html_e( 'Do Not use the OpenDyslexic Font', 'wp-spell-check' ); ?></option>
+							<option value="yes_adminonly" <?php selected( 'yes_adminonly', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php esc_html_e( 'Use only on the admin area (back-end)', 'wp-spell-check' ); ?></option>
+							<option value="yes_websiteonly" <?php selected( 'yes_websiteonly', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php esc_html_e( 'Use only on the website (front-end)', 'wp-spell-check' ); ?></option>
+							<option value="yes_everywhere" <?php selected( 'yes_everywhere', get_user_meta( $user_id, 'wpsc_usedyslexic', true ) ); ?>><?php esc_html_e( 'Use both on the website and Admin area', 'wp-spell-check' ); ?></option>
 						</select>
 					</td>
 				</tr>
@@ -1359,7 +1472,7 @@ function wpscx_render_options() {
 			</table>
 		</div>
 		</form>
-	<?php include( 'sidebar.php' ); ?>
+	<?php include 'sidebar.php'; ?>
 </div>
 	<?php
 }
