@@ -13,6 +13,9 @@ class Wpscx_Wordpress_Interface {
 	}
 
 	function register_menu_hooks() {
+		if ( ! class_exists( 'Wpscx_Menu' ) ) {
+			require_once __DIR__ . '/class-wpsc-menus.php';
+		}
 		$menu = new Wpscx_Menu();
 
 		add_action( 'admin_menu', array( $menu, 'add_menu' ) );
@@ -33,8 +36,9 @@ class Wpscx_Wordpress_Interface {
 	}
 
 	function register_dashboard_hooks() {
+		require_once __DIR__ . '/class-wpsc-utils.php';
 		if ( ! class_exists( 'Wpscx_Dashboard' ) ) {
-			require_once __DIR__ . '/class-wpsc-utils.php';
+			return;
 		}
 		$dashboard = new Wpscx_Dashboard();
 
@@ -42,6 +46,9 @@ class Wpscx_Wordpress_Interface {
 	}
 
 	function register_banner_hooks() {
+		if ( ! class_exists( 'Wpscx_Banner' ) ) {
+			require_once __DIR__ . '/class-wpsc-banner.php';
+		}
 		$banner = new Wpscx_Banner();
 		global $wp_version;
 		$ver_compare    = version_compare( $wp_version, '5.0.0' );
@@ -61,6 +68,9 @@ class Wpscx_Wordpress_Interface {
 	}
 
 	function register_opendyslexic_hooks() {
+		if ( ! class_exists( 'Wpscx_Opendyslexic' ) ) {
+			require_once __DIR__ . '/class-wpsc-utils.php';
+		}
 		$opendyslexic = new Wpscx_Opendyslexic();
 
 		add_action( 'profile_personal_options', array( $opendyslexic, 'profile_dyslexic' ) );
@@ -71,8 +81,12 @@ class Wpscx_Wordpress_Interface {
 	}
 
 	function register_ajax_hooks() {
+		require_once __DIR__ . '/class-wpsc-ajax.php';
 		if ( ! class_exists( 'Wpscx_Ajax' ) ) {
-			require_once __DIR__ . '/class-wpsc-ajax.php';
+			return;
+		}
+		if ( ! class_exists( 'Wpscx_Banner' ) ) {
+			require_once __DIR__ . '/class-wpsc-banner.php';
 		}
 		$ajax   = new Wpscx_Ajax();
 		$banner = new Wpscx_Banner();

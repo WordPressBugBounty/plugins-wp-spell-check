@@ -1,11 +1,11 @@
 function wpgcx_init_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpgcx_gram_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_gc",
-				nonce: ajax_object.wpgc_scan_nonce,
+				nonce: wpgcx_gram_ajax_object.wpgc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -23,11 +23,11 @@ function wpgcx_init_scan() {
 function wpgcx_recheck_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpgcx_gram_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_gc",
-				nonce: ajax_object.wpgc_scan_nonce,
+				nonce: wpgcx_gram_ajax_object.wpgc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -45,16 +45,16 @@ function wpgcx_recheck_scan() {
 function wpgcx_finish_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpgcx_gram_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "finish_scan_gc",
-				nonce: ajax_object.wpgc_finish_scan_nonce,
+				nonce: wpgcx_gram_ajax_object.wpgc_finish_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
 				window.location.href = encodeURI(
-					"?page=wp-spellcheck-grammar.php&wpsc-script=noscript",
+					"?page=wp-spellcheck-grammar.php&wpsc-script=noscript"
 				);
 			},
 		}

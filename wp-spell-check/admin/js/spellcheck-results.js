@@ -211,27 +211,33 @@
 
 		scan_in_progress = true;
 
-		// Initialize ajax_object if not already defined
-		var ajax_object = typeof ajax_object !== "undefined" ? ajax_object : {};
+		// Initialize wpscx__spell_ajax_object if not already defined
+		var wpscx__spell_ajax_object =
+		typeof wpscx__spell_ajax_object !== "undefined"
+		? wpscx__spell_ajax_object
+		: {};
 
 		// Use localized data if available, otherwise use fallback
 		if (typeof wpscResultsPage !== "undefined") {
-			ajax_object.ajax_url = wpscResultsPage.ajaxUrl;
-			if (typeof ajax_object.wpsc_start_scan_nonce === "undefined") {
-				ajax_object.wpsc_start_scan_nonce      =
+			wpscx__spell_ajax_object.ajax_url = wpscResultsPage.ajaxUrl;
+			if (
+			typeof wpscx__spell_ajax_object.wpsc_start_scan_nonce === "undefined"
+			) {
+				wpscx__spell_ajax_object.wpsc_start_scan_nonce      =
 				wpscResultsPage.nonces.wpsc_start_scan;
-				ajax_object.wpsc_scan_nonce            = wpscResultsPage.nonces.wpsc_scan;
-				ajax_object.wpsc_finish_scan_nonce     =
+				wpscx__spell_ajax_object.wpsc_scan_nonce            =
+				wpscResultsPage.nonces.wpsc_scan;
+				wpscx__spell_ajax_object.wpsc_finish_scan_nonce     =
 				wpscResultsPage.nonces.wpsc_finish_scan;
-				ajax_object.wpsc_display_results_nonce =
+				wpscx__spell_ajax_object.wpsc_display_results_nonce =
 				wpscResultsPage.nonces.wpsc_display_results;
-				ajax_object.wpsc_get_stats_nonce       =
+				wpscx__spell_ajax_object.wpsc_get_stats_nonce       =
 				wpscResultsPage.nonces.wpsc_get_stats;
 			}
 		} else {
-			// Fallback: try to get from existing ajax_object or use defaults
-			if (typeof ajax_object === "undefined") {
-				ajax_object = {};
+			// Fallback: try to get from existing wpscx__spell_ajax_object or use defaults
+			if (typeof wpscx__spell_ajax_object === "undefined") {
+				wpscx__spell_ajax_object = {};
 			}
 		}
 
@@ -246,19 +252,19 @@
 		$( "#wpscScanMessage" ).html(
 			'<img src="' +
 			loadingGif +
-			'" alt="Scan in Progress" /> Starting New Scan',
+			'" alt="Scan in Progress" /> Starting New Scan'
 		);
 		$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
 
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx__spell_ajax_object.ajax_url,
 				timeout: 7200000, // 2 Hours
 				type: "POST",
 				data: {
 					type: scanType,
 					action: "wpscx_start_scan",
-					nonce: ajax_object.wpsc_start_scan_nonce,
+					nonce: wpscx__spell_ajax_object.wpsc_start_scan_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
@@ -410,7 +416,7 @@
 					400,
 					function () {
 						mouseover_visible = true;
-					},
+					}
 				);
 			}
 		)
@@ -420,7 +426,7 @@
 				var isHoveredPopup  = $( ".wpsc-mouseover-text-refresh" ).filter(
 					function () {
 						return $( this ).is( ":hover" );
-					},
+					}
 				);
 				var isHoveredParent = $( this )
 				.parent()
@@ -447,7 +453,7 @@
 						400,
 						function () {
 							mouseover_visible = true;
-						},
+						}
 					);
 				} else {
 					$( ".wpsc-mouseover-text-refresh" ).css( "z-index", "-100" );
@@ -480,22 +486,26 @@
 	 * Recheck scan progress
 	 */
 	function wpscx_recheck_scan_temp() {
-		var ajax_object = typeof ajax_object !== "undefined" ? ajax_object : {};
+		var wpscx__spell_ajax_object =
+		typeof wpscx__spell_ajax_object !== "undefined"
+		? wpscx__spell_ajax_object
+		: {};
 
 		// Use localized data if available
 		if (typeof wpscResultsPage !== "undefined") {
-			ajax_object.ajax_url        = wpscResultsPage.ajaxUrl;
-			ajax_object.wpsc_scan_nonce = wpscResultsPage.nonces.wpsc_scan;
+			wpscx__spell_ajax_object.ajax_url        = wpscResultsPage.ajaxUrl;
+			wpscx__spell_ajax_object.wpsc_scan_nonce =
+			wpscResultsPage.nonces.wpsc_scan;
 		}
 
 		var requestData = {
 			action: "results_sc",
-			nonce: ajax_object.wpsc_scan_nonce,
+			nonce: wpscx__spell_ajax_object.wpsc_scan_nonce,
 		};
 
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx__spell_ajax_object.ajax_url,
 				type: "POST",
 				data: requestData,
 				dataType: "html",
@@ -517,12 +527,15 @@
 	 * Finish scan and display results
 	 */
 	function wpscx_finish_scan_temp() {
-		var ajax_object = typeof ajax_object !== "undefined" ? ajax_object : {};
+		var wpscx__spell_ajax_object =
+		typeof wpscx__spell_ajax_object !== "undefined"
+		? wpscx__spell_ajax_object
+		: {};
 
 		// Use localized data if available
 		if (typeof wpscResultsPage !== "undefined") {
-			ajax_object.ajax_url                   = wpscResultsPage.ajaxUrl;
-			ajax_object.wpsc_display_results_nonce =
+			wpscx__spell_ajax_object.ajax_url                   = wpscResultsPage.ajaxUrl;
+			wpscx__spell_ajax_object.wpsc_display_results_nonce =
 			wpscResultsPage.nonces.wpsc_display_results;
 		}
 
@@ -532,11 +545,11 @@
 
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx__spell_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_display_results",
-					nonce: ajax_object.wpsc_display_results_nonce,
+					nonce: wpscx__spell_ajax_object.wpsc_display_results_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
@@ -567,52 +580,56 @@
 	 * Show scan statistics
 	 */
 	function wpscx_show_stats(x) {
-		var ajax_object = typeof ajax_object !== "undefined" ? ajax_object : {};
+		var wpscx__spell_ajax_object =
+		typeof wpscx__spell_ajax_object !== "undefined"
+		? wpscx__spell_ajax_object
+		: {};
 
 		// Use localized data if available
 		if (typeof wpscResultsPage !== "undefined") {
-			ajax_object.ajax_url             = wpscResultsPage.ajaxUrl;
-			ajax_object.wpsc_get_stats_nonce = wpscResultsPage.nonces.wpsc_get_stats;
+			wpscx__spell_ajax_object.ajax_url             = wpscResultsPage.ajaxUrl;
+			wpscx__spell_ajax_object.wpsc_get_stats_nonce =
+			wpscResultsPage.nonces.wpsc_get_stats;
 		}
 
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx__spell_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_get_stats",
 					scantime: x,
-					nonce: ajax_object.wpsc_get_stats_nonce,
+					nonce: wpscx__spell_ajax_object.wpsc_get_stats_nonce,
 				},
 				dataType: "json",
 				success: function (response) {
 					$( ".sc-literacy" ).html(
-						"Website Literacy Factor: " + response.literacyFactor + "%",
+						"Website Literacy Factor: " + response.literacyFactor + "%"
 					);
 					$( ".sc-type" ).html(
 						"Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" +
 						response.scanType +
 						": " +
-						response.totalErrors,
+						response.totalErrors
 					);
 
 					if (Number( response.postCount ) >= Number( response.totalPosts )) {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts,
+							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts
 						);
 					} else {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.postCount + "/" + response.totalPosts,
+							"Posts scanned: " + response.postCount + "/" + response.totalPosts
 						);
 					}
 
 					if (Number( response.pageCount ) >= Number( response.totalPages )) {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.totalPages + "/" + response.totalPages,
+							"Pages scanned: " + response.totalPages + "/" + response.totalPages
 						);
 					} else {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.pageCount + "/" + response.totalPages,
+							"Pages scanned: " + response.pageCount + "/" + response.totalPages
 						);
 					}
 
@@ -621,14 +638,14 @@
 							"Media Files scanned: " +
 							response.totalMedia +
 							"/" +
-							response.totalMedia,
+							response.totalMedia
 						);
 					} else {
 						$( ".sc-media" ).html(
 							"Media Files scanned: " +
 							response.mediaCount +
 							"/" +
-							response.totalMedia,
+							response.totalMedia
 						);
 					}
 
@@ -644,7 +661,7 @@
 							response.epsCount +
 							" Spelling Errors on other parts of your website are hurting your professional image. <a href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradespellch&utm_medium=spellcheck_scan&utm_content=" +
 							version +
-							"' target='_blank'>Click here</a> to upgrade to find and fix all the errors.",
+							"' target='_blank'>Click here</a> to upgrade to find and fix all the errors."
 						);
 					}
 

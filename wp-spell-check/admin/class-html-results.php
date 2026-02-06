@@ -306,7 +306,7 @@ function wphcx_admin_render() {
 		wp_enqueue_script( 'wphc-results-ajax', plugin_dir_url( __FILE__ ) . '/wphc-ajax.js', array( 'jquery' ) );
 		wp_localize_script(
 			'wphc-results-ajax',
-			'ajax_object',
+			'wphcx_broken_ajax_object',
 			array(
 				'ajax_url'                        => admin_url( WPSC_ADMIN_AJAX ),
 				'wpsc_start_scan_bc_nonce'        => wp_create_nonce( 'wpsc_start_scan_bc' ),

@@ -7,11 +7,11 @@
 function wpscex_init_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx_seo_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "emptyresults_sc",
-				nonce: ajax_object.wpsc_empty_scan_nonce,
+				nonce: wpscx_seo_ajax_object.wpsc_empty_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -29,11 +29,11 @@ function wpscex_init_scan() {
 function wpscex_recheck_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx_seo_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "emptyresults_sc",
-				nonce: ajax_object.wpsc_empty_scan_nonce,
+				nonce: wpscx_seo_ajax_object.wpsc_empty_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -51,16 +51,16 @@ function wpscex_recheck_scan() {
 function wpscex_finish_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx_seo_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "finish_empty_scan",
-				nonce: ajax_object.wpsc_finish_empty_scan_nonce,
+				nonce: wpscx_seo_ajax_object.wpsc_finish_empty_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
 				window.location.href = encodeURI(
-					"?page=wp-spellcheck-seo.php&wpsc-script=noscript",
+					"?page=wp-spellcheck-seo.php&wpsc-script=noscript"
 				);
 			},
 		}

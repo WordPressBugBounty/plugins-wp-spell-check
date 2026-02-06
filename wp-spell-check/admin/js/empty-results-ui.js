@@ -14,9 +14,9 @@
 	var scan_in_progress = uiData.check_scan || false;
 	var scanStartTime;
 
-	// Ensure ajax_object exists (may come from emptyresults-ajax.js or use fallback)
-	if (typeof ajax_object === "undefined") {
-		window.ajax_object = {
+	// Ensure wpscx_seo_ajax_object exists (may come from emptyresults-ajax.js or use fallback)
+	if (typeof wpscx_seo_ajax_object === "undefined") {
+		window.wpscx_seo_ajax_object = {
 			ajax_url: uiData.admin_ajax_url || "",
 			wpsc_start_scan_empty_nonce: uiData.nonces
 			? uiData.nonces.wpsc_start_scan_empty || ""
@@ -36,46 +36,53 @@
 			wpsc_openai_nonce: uiData.nonces ? uiData.nonces.wpsc_openai || "" : "",
 		};
 	} else {
-		// Merge nonces if ajax_object exists but nonces are missing
+		// Merge nonces if wpscx_seo_ajax_object exists but nonces are missing
 		if (uiData.nonces) {
-			if ( ! ajax_object.wpsc_openai_nonce && uiData.nonces.wpsc_openai) {
-				ajax_object.wpsc_openai_nonce = uiData.nonces.wpsc_openai;
+			if (
+			! wpscx_seo_ajax_object.wpsc_openai_nonce &&
+			uiData.nonces.wpsc_openai
+			) {
+				wpscx_seo_ajax_object.wpsc_openai_nonce = uiData.nonces.wpsc_openai;
 			}
 			if (
-			! ajax_object.wpsc_start_scan_empty_nonce &&
+			! wpscx_seo_ajax_object.wpsc_start_scan_empty_nonce &&
 			uiData.nonces.wpsc_start_scan_empty
 			) {
-				ajax_object.wpsc_start_scan_empty_nonce =
+				wpscx_seo_ajax_object.wpsc_start_scan_empty_nonce =
 				uiData.nonces.wpsc_start_scan_empty;
 			}
-			if ( ! ajax_object.wpsc_empty_scan_nonce && uiData.nonces.wpsc_empty_scan) {
-				ajax_object.wpsc_empty_scan_nonce = uiData.nonces.wpsc_empty_scan;
+			if (
+			! wpscx_seo_ajax_object.wpsc_empty_scan_nonce &&
+			uiData.nonces.wpsc_empty_scan
+			) {
+				wpscx_seo_ajax_object.wpsc_empty_scan_nonce =
+				uiData.nonces.wpsc_empty_scan;
 			}
 			if (
-			! ajax_object.wpsc_finish_empty_scan_nonce &&
+			! wpscx_seo_ajax_object.wpsc_finish_empty_scan_nonce &&
 			uiData.nonces.wpsc_finish_empty_scan
 			) {
-				ajax_object.wpsc_finish_empty_scan_nonce =
+				wpscx_seo_ajax_object.wpsc_finish_empty_scan_nonce =
 				uiData.nonces.wpsc_finish_empty_scan;
 			}
 			if (
-			! ajax_object.wpsc_display_results_empty_nonce &&
+			! wpscx_seo_ajax_object.wpsc_display_results_empty_nonce &&
 			uiData.nonces.wpsc_display_results_empty
 			) {
-				ajax_object.wpsc_display_results_empty_nonce =
+				wpscx_seo_ajax_object.wpsc_display_results_empty_nonce =
 				uiData.nonces.wpsc_display_results_empty;
 			}
 			if (
-			! ajax_object.wpsc_get_stats_empty_nonce &&
+			! wpscx_seo_ajax_object.wpsc_get_stats_empty_nonce &&
 			uiData.nonces.wpsc_get_stats_empty
 			) {
-				ajax_object.wpsc_get_stats_empty_nonce =
+				wpscx_seo_ajax_object.wpsc_get_stats_empty_nonce =
 				uiData.nonces.wpsc_get_stats_empty;
 			}
 		}
 		// Ensure ajax_url is set
-		if ( ! ajax_object.ajax_url && uiData.admin_ajax_url) {
-			ajax_object.ajax_url = uiData.admin_ajax_url;
+		if ( ! wpscx_seo_ajax_object.ajax_url && uiData.admin_ajax_url) {
+			wpscx_seo_ajax_object.ajax_url = uiData.admin_ajax_url;
 		}
 	}
 
@@ -127,7 +134,7 @@
 					should_submit = true;
 								$("#wpsc-edit-update-button").trigger('click');
 					//$("#wpsc-edit-update-button-hidden").trigger('click');
-						}*/
+							}*/
 				}
 			);
 		}
@@ -137,7 +144,7 @@
 	function wpscex_recheck_scan_temp() {
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx_seo_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "emptyresults_sc",
@@ -160,11 +167,11 @@
 		var scanFinal   = (scanEndTime - scanStartTime) / 1000;
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx_seo_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_display_results_empty",
-					nonce: ajax_object.wpsc_display_results_empty_nonce,
+					nonce: wpscx_seo_ajax_object.wpsc_display_results_empty_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
@@ -191,40 +198,40 @@
 	function wpscex_show_stats(x) {
 		$.ajax(
 			{
-				url: ajax_object.ajax_url,
+				url: wpscx_seo_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_get_stats_empty",
 					scantime: x,
-					nonce: ajax_object.wpsc_get_stats_empty_nonce,
+					nonce: wpscx_seo_ajax_object.wpsc_get_stats_empty_nonce,
 				},
 				dataType: "json",
 				success: function (response) {
 					$( ".sc-factor" ).html(
-						"Website Empty Fields Factor:" + response.emptyFactor + "%",
+						"Website Empty Fields Factor:" + response.emptyFactor + "%"
 					);
 					$( ".sc-type" ).html(
 						"Errors found on <span>" +
 						response.scanType +
 						": " +
-						response.totalErrors,
+						response.totalErrors
 					);
 					if (Number( response.pageCount ) >= Number( response.totalPages )) {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts,
+							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts
 						);
 					} else {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.postCount + "/" + response.totalPosts,
+							"Posts scanned: " + response.postCount + "/" + response.totalPosts
 						);
 					}
 					if (Number( response.pageCount ) >= Number( response.totalPages )) {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.totalPages + "/" + response.totalPages,
+							"Pages scanned: " + response.totalPages + "/" + response.totalPages
 						);
 					} else {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.pageCount + "/" + response.totalPages,
+							"Pages scanned: " + response.pageCount + "/" + response.totalPages
 						);
 					}
 					if (Number( response.mediaCount ) >= Number( response.totalMedia )) {
@@ -232,14 +239,14 @@
 							"Media Files scanned: " +
 							response.totalMedia +
 							"/" +
-							response.totalMedia,
+							response.totalMedia
 						);
 					} else {
 						$( ".sc-media" ).html(
 							"Media Files scanned: " +
 							response.mediaCount +
 							"/" +
-							response.totalMedia,
+							response.totalMedia
 						);
 					}
 					if (response.emptyEPS > 0) {
@@ -253,7 +260,7 @@
 							response.emptyEPS +
 							" SEO Empty Fields were found on your website. <a href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeSEO&utm_medium=seo_scan&utm_content=" +
 							version +
-							"' target='_blank'>Upgrade today</a> to boost your SEO and get <strong>AI suggestions for Page/post SEO</strong></h3>",
+							"' target='_blank'>Upgrade today</a> to boost your SEO and get <strong>AI suggestions for Page/post SEO</strong></h3>"
 						);
 					}
 					$( ".sc-time" ).html( "Last scan took " + response.scanTime );
@@ -300,25 +307,25 @@
 				.find( ".seo-progress" )
 				.css( "display", "inline-block" );
 
-				if (typeof ajax_object === "undefined") {
-					ajax_object = {};
+				if (typeof wpscx_seo_ajax_object === "undefined") {
+					wpscx_seo_ajax_object = {};
 				}
-				ajax_object.ajax_url = uiData.admin_ajax_url || "";
-				if (typeof ajax_object.wpsc_openai_nonce === "undefined") {
-					ajax_object.wpsc_openai_nonce = uiData.nonces
+				wpscx_seo_ajax_object.ajax_url = uiData.admin_ajax_url || "";
+				if (typeof wpscx_seo_ajax_object.wpsc_openai_nonce === "undefined") {
+					wpscx_seo_ajax_object.wpsc_openai_nonce = uiData.nonces
 					? uiData.nonces.wpsc_openai || ""
 					: "";
 				}
 
 				$.ajax(
 					{
-						url: ajax_object.ajax_url,
+						url: wpscx_seo_ajax_object.ajax_url,
 						type: "POST",
 						data: {
 							type: postType,
 							id: postID,
 							action: "wpscx_openAI_ajax",
-							nonce: ajax_object.wpsc_openai_nonce,
+							nonce: wpscx_seo_ajax_object.wpsc_openai_nonce,
 						},
 						dataType: "json",
 						success: function (response) {
@@ -367,6 +374,7 @@
 			}
 		);
 	}
+	window.wpscx_seoListener = wpscx_seoListener;
 
 	// BLOCK 3: Scan button click handler
 	$( ".wpscScan" ).click(
@@ -377,24 +385,26 @@
 			}
 			scan_in_progress = true;
 
-			if (typeof ajax_object === "undefined") {
-				ajax_object = {};
+			if (typeof wpscx_seo_ajax_object === "undefined") {
+				wpscx_seo_ajax_object = {};
 			}
-			ajax_object.ajax_url = uiData.admin_ajax_url || "";
-			if (typeof ajax_object.wpsc_start_scan_empty_nonce === "undefined") {
-				ajax_object.wpsc_start_scan_empty_nonce      = uiData.nonces
+			wpscx_seo_ajax_object.ajax_url = uiData.admin_ajax_url || "";
+			if (
+			typeof wpscx_seo_ajax_object.wpsc_start_scan_empty_nonce === "undefined"
+			) {
+				wpscx_seo_ajax_object.wpsc_start_scan_empty_nonce      = uiData.nonces
 				? uiData.nonces.wpsc_start_scan_empty || ""
 				: "";
-				ajax_object.wpsc_empty_scan_nonce            = uiData.nonces
+				wpscx_seo_ajax_object.wpsc_empty_scan_nonce            = uiData.nonces
 				? uiData.nonces.wpsc_empty_scan || ""
 				: "";
-				ajax_object.wpsc_finish_empty_scan_nonce     = uiData.nonces
+				wpscx_seo_ajax_object.wpsc_finish_empty_scan_nonce     = uiData.nonces
 				? uiData.nonces.wpsc_finish_empty_scan || ""
 				: "";
-				ajax_object.wpsc_display_results_empty_nonce = uiData.nonces
+				wpscx_seo_ajax_object.wpsc_display_results_empty_nonce = uiData.nonces
 				? uiData.nonces.wpsc_display_results_empty || ""
 				: "";
-				ajax_object.wpsc_get_stats_empty_nonce       = uiData.nonces
+				wpscx_seo_ajax_object.wpsc_get_stats_empty_nonce       = uiData.nonces
 				? uiData.nonces.wpsc_get_stats_empty || ""
 				: "";
 			}
@@ -405,7 +415,7 @@
 			$( "#wpscScanMessage" ).html(
 				'<img src="' +
 				loadingGifUrl +
-				'" alt="Scan in Progress" /> Starting New Scan',
+				'" alt="Scan in Progress" /> Starting New Scan'
 			);
 			$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
 
@@ -414,12 +424,12 @@
 
 			$.ajax(
 				{
-					url: ajax_object.ajax_url,
+					url: wpscx_seo_ajax_object.ajax_url,
 					type: "POST",
 					data: {
 						type: scanType,
 						action: "wpscx_start_scan_empty",
-						nonce: ajax_object.wpsc_start_scan_empty_nonce,
+						nonce: wpscx_seo_ajax_object.wpsc_start_scan_empty_nonce,
 					},
 					dataType: "html",
 					success: function (response) {
@@ -452,7 +462,7 @@
 											400,
 											function () {
 												mouseover_visible = true;
-											},
+											}
 										);
 									}
 								)
@@ -461,7 +471,7 @@
 										var isHoveredPopup      = $( ".wpsc-mouseover-text-refresh" ).filter(
 											function () {
 												return $( this ).is( ":hover" );
-											},
+											}
 										);
 											var isHoveredParent = $( this )
 											.parent()
@@ -487,7 +497,7 @@
 												400,
 												function () {
 													mouseover_visible = true;
-												},
+												}
 											);
 										} else {
 											$( ".wpsc-mouseover-text-refresh" ).css( "z-index", "-100" );

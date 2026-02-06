@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /*
 Plugin Name: WP Spell Check
 Description: The Fastest Proofreading plugin that allows you to find & fix Spelling errors, Grammar errors, Broken HTML & Shortcodes and, SEO Opportunities to Create a professional image and take your site to the next level
-Version: 9.22
+Version: 10.0
 Author: WP Spell Check
 Requires at least: 6.3
 Tested up to: 6.9
@@ -42,13 +42,39 @@ Pro Add-on / Prices: https://www.wpspellcheck.com/pricing/
 */
 
 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-require_once 'admin/class-wpsc-database.php';
-register_activation_hook( __FILE__, array( 'wpscx_database', 'wpsc_install_spellcheck_main' ) );
+require_once plugin_dir_path( __FILE__ ) . 'admin/class-wpsc-database.php';
+register_activation_hook( __FILE__, array( 'Wpscx_Database', 'wpsc_install_spellcheck_main' ) );
 const WPSC_FRAMEWORK  = 'wpsc-framework.php';
 const WPSC_ADMIN_AJAX = 'admin-ajax.php';
 
+/**
+ * Ensure requests to wp-cron.php (loopback / Site Health) do not time out on slow servers.
+ * Fixes "cURL error 28: Operation timed out after 3001 milliseconds" without server changes.
+ *
+ * @since 9.22
+ */
+add_filter(
+	'http_request_args',
+	function ( $args, $url ) {
+		if ( is_string( $url ) && strpos( $url, 'wp-cron.php' ) !== false ) {
+			$current = isset( $args['timeout'] ) ? (float) $args['timeout'] : 5;
+			if ( $current < 15 ) {
+				$args['timeout'] = 15;
+			}
+		}
+		return $args;
+	},
+	10,
+	2
+);
+
 function wpscx_core() {
-	if ( ! current_user_can( 'administrator' ) && ! current_user_can( 'editor' ) && ! current_user_can( 'author' ) && ! current_user_can( 'contributor' ) ) {
+	$can_run = current_user_can( 'administrator' ) || current_user_can( 'editor' ) || current_user_can( 'author' ) || current_user_can( 'contributor' );
+	if ( ! $can_run ) {
+		// During cron there is no user; load framework + Pro so wpscxscanall callbacks are registered.
+		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+			wpscx_load_plugin();
+		}
 		return;
 	}
 	$wpsc_user_id = get_current_user_id();
@@ -199,8 +225,8 @@ function wpscx_load_plugin() {
 		include __DIR__ . '-pro/pro-loader.php';
 	}
 	// Show activation notice only on Plugins page. Option is unset (false) or '' right after activation; after showing we set it so it does not show again.
-	// phpcs:ignore WordPress.Security.NonceVerification -- Not processing form data, only checking absence of $_POST['uninstall']
 	$wpsc_acti = get_option( 'wpsc_data_acti' );
+	// phpcs:ignore WordPress.Security.NonceVerification -- Not processing form data, only checking absence of $_POST['uninstall'] to avoid showing notice on uninstall.
 	if ( ( false === $wpsc_acti || '' === $wpsc_acti ) && current_user_can( 'administrator' ) && ! isset( $_POST['uninstall'] ) && ! isset( $_GET['action'] ) && isset( $_GET['plugin_status'] ) && 'all' === $_GET['plugin_status'] ) {
 		add_action( 'admin_head', array( 'wpscx_banner', 'show_install_notice' ) );
 		update_option( 'wpsc_data_acti', array() );
@@ -217,13 +243,13 @@ function wpscx_set_global_vars() {
 	global $wpscx_dict_list;
 	global $wpsc_settings;
 	global $wpgc_settings;
-	global $check_opt;
+	global $wpscx_check_opt;
 	global $wpsc_haystack;
 	global $wpscx_base_page_max;
 	global $wpscx_ent_included;
 	global $wpsc_version;
 
-	$wpsc_version = '9.22';
+	$wpsc_version = '10.0';
 
 	$wpscx_ignore_list = array();
 	$wpscx_dict_list   = array();
@@ -237,13 +263,13 @@ function wpscx_set_global_vars() {
 	$ignore_table          = $wpdb->prefix . 'spellcheck_ignore';
 	$dict_table            = $wpdb->prefix . 'spellcheck_dictionary';
 
-	$check_opt  = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );
-	$check_word = $wpdb->get_results( "SHOW TABLES LIKE '$words_table'" );
-	$check_ig   = $wpdb->get_results( "SHOW TABLES LIKE '$ignore_table'" );
-	$check_dict = $wpdb->get_results( "SHOW TABLES LIKE '$dict_table'" );
-	$check_grm  = $wpdb->get_results( "SHOW TABLES LIKE '$grammar_options_table'" );
+	$wpscx_check_opt = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );
+	$check_word      = $wpdb->get_results( "SHOW TABLES LIKE '$words_table'" );
+	$check_ig        = $wpdb->get_results( "SHOW TABLES LIKE '$ignore_table'" );
+	$check_dict      = $wpdb->get_results( "SHOW TABLES LIKE '$dict_table'" );
+	$check_grm       = $wpdb->get_results( "SHOW TABLES LIKE '$grammar_options_table'" );
 
-	if ( ! isset( $wpsc_settings ) && 0 < sizeof( $check_opt ) ) {
+	if ( ! isset( $wpsc_settings ) && 0 < sizeof( $wpscx_check_opt ) ) {
 		$wpsc_settings_temp = $wpdb->get_results( "SELECT * FROM $options_table" );
 		if ( isset( $wpsc_settings_temp ) && sizeof( $wpsc_settings_temp ) > 0 ) {
 			$wpsc_settings = new SplFixedArray( sizeof( $wpsc_settings_temp ) + 1 );
@@ -256,7 +282,7 @@ function wpscx_set_global_vars() {
 
 	if ( sizeof( (array) $wpsc_settings ) < 1 ) {
 
-		if ( sizeof( $check_opt ) !== 0 && sizeof( $check_word ) !== 0 && sizeof( $check_ig ) !== 0 && sizeof( $check_dict ) !== 0 ) {
+		if ( sizeof( $wpscx_check_opt ) !== 0 && sizeof( $check_word ) !== 0 && sizeof( $check_ig ) !== 0 && sizeof( $check_dict ) !== 0 ) {
 			$wpscx_ignore_list = $wpdb->get_results( "SELECT word FROM $words_table WHERE ignore_word = true" );
 			$wpscx_dict_list   = $wpdb->get_results( "SELECT word FROM $dict_table" );
 			$wpgc_settings     = $wpdb->get_results( "SELECT * FROM $grammar_options_table" );
@@ -275,10 +301,10 @@ function wpscx_set_global_vars() {
 	// $wpsc_settings[999] = "Test Error";
 }
 
-global $scdb_version;
+global $wpscx_scdb_version;
 global $wpscx_scan_delay;
-$wpscx_scan_delay = 0;
-$scdb_version     = '1.0';
+$wpscx_scan_delay   = 0;
+$wpscx_scdb_version = '1.0';
 wpscx_set_global_vars();
 
 /*
@@ -354,6 +380,10 @@ function wpscx_cron_add_custom( $schedules ) {
 		}
 
 		switch ( $scan_interval ) {
+			case 'minutes':
+			case 'minutely':
+				$scan_recurrence = $scan_timer * 60;
+				break;
 			case 'hourly':
 				$scan_recurrence = $scan_timer * 3600;
 				break;
@@ -393,7 +423,7 @@ function wpscx_add_settings_link( $links ) {
 	return $links;
 }
 
-$plugin = plugin_basename( __FILE__ );
-add_filter( "plugin_action_links_$plugin", 'wpscx_add_premium_link' );
-add_filter( "plugin_action_links_$plugin", 'wpscx_add_settings_link' );
+$wpscx_plugin = plugin_basename( __FILE__ );
+add_filter( "plugin_action_links_$wpscx_plugin", 'wpscx_add_premium_link' );
+add_filter( "plugin_action_links_$wpscx_plugin", 'wpscx_add_settings_link' );
 ?>

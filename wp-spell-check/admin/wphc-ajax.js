@@ -7,11 +7,11 @@
 function wphcx_init_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wphcx_broken_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_hc",
-				nonce: ajax_object.wpsc_hc_scan_nonce,
+				nonce: wphcx_broken_ajax_object.wpsc_hc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -29,11 +29,11 @@ function wphcx_init_scan() {
 function wphcx_recheck_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wphcx_broken_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_hc",
-				nonce: ajax_object.wpsc_hc_scan_nonce,
+				nonce: wphcx_broken_ajax_object.wpsc_hc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -51,16 +51,16 @@ function wphcx_recheck_scan() {
 function wphcx_finish_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wphcx_broken_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "finish_scan_hc",
-				nonce: ajax_object.wpsc_finish_html_scan_nonce,
+				nonce: wphcx_broken_ajax_object.wpsc_finish_html_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
 				window.location.href = encodeURI(
-					"?page=wp-spellcheck-html.php&wpsc-script=noscript",
+					"?page=wp-spellcheck-html.php&wpsc-script=noscript"
 				);
 			},
 		}

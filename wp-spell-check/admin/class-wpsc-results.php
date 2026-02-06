@@ -805,7 +805,7 @@ function wpscx_admin_render() {
 		wp_enqueue_script( 'results-ajax', plugin_dir_url( __FILE__ ) . '/ajax.js', array( 'jquery' ) );
 		wp_localize_script(
 			'results-ajax',
-			'ajax_object',
+			'wpscx__spell_ajax_object',
 			array(
 				'ajax_url'                   => admin_url( WPSC_ADMIN_AJAX ),
 				'wpsc_start_scan_nonce'      => wp_create_nonce( 'wpsc_start_scan' ),
@@ -904,8 +904,12 @@ function wpscx_admin_render() {
 	$literacy_factor  = $settings[64]->option_value;
 
 	if ( $check_scan && '' === $scan_message && isset( $settings[45]->option_value ) ) {
-		$last_type    = $settings[45]->option_value;
-		$scan_message = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . $last_type[0]->option_value . '</span>. Estimated time for completion is ' . $estimated_time . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
+		$last_type = $settings[45]->option_value;
+		// last_scan_type may be a string (e.g. "Posts") or legacy array of objects; avoid reading ->option_value on string.
+		$last_type_label = is_array( $last_type ) && isset( $last_type[0] ) && is_object( $last_type[0] ) && isset( $last_type[0]->option_value )
+			? $last_type[0]->option_value
+			: ( is_array( $last_type ) && isset( $last_type[0] ) ? (string) $last_type[0] : (string) $last_type );
+		$scan_message    = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . esc_html( $last_type_label ) . '</span>. Estimated time for completion is ' . $estimated_time . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 	} elseif ( '' === $scan_message ) {
 		$scan_message = 'No scan currently running';
 	}

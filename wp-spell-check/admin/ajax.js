@@ -7,11 +7,11 @@
 function wpscx_init_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx__spell_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_sc",
-				nonce: ajax_object.wpsc_scan_nonce,
+				nonce: wpscx__spell_ajax_object.wpsc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -29,11 +29,11 @@ function wpscx_init_scan() {
 function wpscx_recheck_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx__spell_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "results_sc",
-				nonce: ajax_object.wpsc_scan_nonce,
+				nonce: wpscx__spell_ajax_object.wpsc_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
@@ -51,21 +51,22 @@ function wpscx_recheck_scan() {
 function wpscx_finish_scan() {
 	jQuery.ajax(
 		{
-			url: ajax_object.ajax_url,
+			url: wpscx__spell_ajax_object.ajax_url,
 			type: "POST",
 			data: {
 				action: "wpscx_finish_scan",
-				nonce: ajax_object.wpsc_finish_scan_nonce,
+				nonce: wpscx__spell_ajax_object.wpsc_finish_scan_nonce,
 			},
 			dataType: "html",
 			success: function (response) {
 				var redirectUrl = "?page=wp-spellcheck.php&wpsc-script=noscript";
 				if (
-				typeof ajax_object !== "undefined" &&
-				typeof ajax_object.wpsc_scan_tab !== "undefined" &&
-				ajax_object.wpsc_scan_tab
+				typeof wpscx__spell_ajax_object !== "undefined" &&
+				typeof wpscx__spell_ajax_object.wpsc_scan_tab !== "undefined" &&
+				wpscx__spell_ajax_object.wpsc_scan_tab
 				) {
-					redirectUrl += "&wpsc-scan-tab=" + ajax_object.wpsc_scan_tab;
+					redirectUrl +=
+					"&wpsc-scan-tab=" + wpscx__spell_ajax_object.wpsc_scan_tab;
 				}
 				window.location.href = encodeURI( redirectUrl );
 			},

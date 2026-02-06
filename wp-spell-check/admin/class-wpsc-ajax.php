@@ -126,10 +126,9 @@ class Wpscx_Ajax {
 			return false;
 		}
 
-		if ( 'true' === $settings[0]->option_value ) {
-			$emailer = new Wpscx_Email();
-			$emailer->email_admin();
-		}
+		// @since 9.22
+
+		// }
 
 		$total_word = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count'" );
 		++$sql_count;
@@ -237,6 +236,7 @@ class Wpscx_Ajax {
 	}
 
 	function wpscx_scan_function() {
+		$this->check_permissions();
 		check_ajax_referer( 'wpsc_scan', 'nonce' );
 		require_once WPSC_FRAMEWORK;
 
@@ -1090,7 +1090,7 @@ class Wpscx_Ajax {
 			wp_enqueue_script( 'results-ajax', plugin_dir_url( __FILE__ ) . '/ajax.js', array( 'jquery' ) );
 			wp_localize_script(
 				'results-ajax',
-				'ajax_object',
+				'wpscx__spell_ajax_object',
 				array(
 					'ajax_url'          => admin_url( WPSC_ADMIN_AJAX ),
 					'wpsc_openai_nonce' => wp_create_nonce( 'wpsc_openai' ),
@@ -1116,6 +1116,21 @@ class Wpscx_Ajax {
 			++$sql_count;
 			$wpdb->update( $options_table, array( 'option_value' => WPSCX_SITE_STRING ), array( 'option_name' => 'last_scan_type' ) );
 			++$sql_count;
+			// #region agent log
+			if ( function_exists( 'wpscx_agent_debug_log' ) ) {
+				wpscx_agent_debug_log(
+					array(
+						'location'     => 'class-wpsc-ajax.php:manual_entire_site',
+						'message'      => 'manual_entire_site_scan_started',
+						'data'         => array(
+							'rng_seed_for_progress'   => $rng_seed,
+							'rng_seed_passed_to_scan' => 10,
+						),
+						'hypothesisId' => 'A',
+					)
+				);
+			}
+			// #endregion
 			wpscx_scan_site_event( 10, true );
 
 			echo '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> Scan has been started for the <span style="color: rgb(0, 150, 255); font-weight: bold;">Entire Site</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
@@ -1128,8 +1143,8 @@ class Wpscx_Ajax {
 	function wpscx_ajax_fetch_wpsc_list_callback() {
 		$this->check_permissions();
 
-		$wp_list_table = new Wpscx_Table();
-		$wp_list_table->ajax_response();
+		$wpscx_list_table = new Wpscx_Table();
+		$wpscx_list_table->ajax_response();
 	}
 
 	function wpscx_openAI_ajax() {

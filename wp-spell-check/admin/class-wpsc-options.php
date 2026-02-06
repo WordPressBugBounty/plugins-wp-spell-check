@@ -505,7 +505,7 @@ function wpscx_render_options() {
 				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_media' ) );
 			}
 
-			if ( 'check-menu' === $_POST['check-menu'] ) {
+			if ( isset( $_POST['check-menu'] ) && 'check-menu' === $_POST['check-menu'] ) {
 				$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_menus' ) );
 			} else {
 				$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'check_menus' ) );
@@ -980,12 +980,23 @@ function wpscx_render_options() {
 		echo 'disabled';}
 	?>
 >
-<option value="hourly" 
+	<?php
+	/*
+	Minute(s) and Hour(s) options commented out - only daily kept for options page.
+	<option value="minutes"
+	<?php
+	if ( 'minutes' === $scan_frequency_interval ) {
+		echo "selected='selected'";}
+	?>
+	>Minute(s)</option>
+	<option value="hourly"
 	<?php
 	if ( 'hourly' === $scan_frequency_interval ) {
 		echo "selected='selected'";}
 	?>
->Hour(s)</option>
+	>Hour(s)</option>
+	*/
+	?>
 <option value="daily" 
 	<?php
 	if ( 'daily' === $scan_frequency_interval ) {

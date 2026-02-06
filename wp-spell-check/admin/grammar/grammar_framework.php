@@ -3,6 +3,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Read file contents using WP_Filesystem for consistency with WordPress APIs.
+ * Falls back to file_get_contents() if WP_Filesystem is unavailable or read fails.
+ *
+ * @param string $path Absolute path to the file.
+ * @return string File contents, or empty string on failure.
+ * @since 1.0.0
+ */
+function wpgcx_read_file_contents( $path ) {
+	global $wp_filesystem;
+	if ( ! function_exists( 'WP_Filesystem' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+	}
+	if ( WP_Filesystem() && is_object( $wp_filesystem ) && method_exists( $wp_filesystem, 'get_contents' ) ) {
+		$contents = $wp_filesystem->get_contents( $path );
+		if ( false !== $contents ) {
+			return $contents;
+		}
+	}
+	$fallback = file_get_contents( $path );
+	return false !== $fallback ? $fallback : '';
+}
+
 function wpgcx_set_global_vars() {
 	global $wpdb;
 	global $wpgc_options;
@@ -93,7 +116,7 @@ function wpgcx_prepare_grammar_data() {
 	$language_setting = $wpdb->get_results( 'SELECT option_value from ' . $table_name . ' WHERE option_name="language_setting";' );
 
 	$loc      = __DIR__ . '/../dict/' . $language_setting[0]->option_value . '.pws';
-	$contents = file_get_contents( $loc );
+	$contents = wpgcx_read_file_contents( $loc );
 
 	$contents  = str_replace( "\r\n", "\n", $contents );
 	$main_list = explode( "\n", $contents );
@@ -206,42 +229,42 @@ function wpgcx_prepare_grammar_data() {
 
 	if ( sizeof( (array) $score ) > 0 ) {
 		$loc                     = __DIR__ . '/complex_expression.pws';
-		$contents                = file_get_contents( $loc );
+		$contents                = wpgcx_read_file_contents( $loc );
 		$contents                = str_replace( "\r\n", "\n", $contents );
 		$complex_expression_list = explode( "\n", $contents );
 
 		$loc               = __DIR__ . '/contractions.pws';
-		$contents          = file_get_contents( $loc );
+		$contents          = wpgcx_read_file_contents( $loc );
 		$contents          = str_replace( "\r\n", "\n", $contents );
 		$contractions_list = explode( "\n", $contents );
 
 		$loc          = __DIR__ . '/grammar.pws';
-		$contents     = file_get_contents( $loc );
+		$contents     = wpgcx_read_file_contents( $loc );
 		$contents     = str_replace( "\r\n", "\n", $contents );
 		$grammar_list = explode( "\n", $contents );
 
 		$loc              = __DIR__ . '/hidden_verb.pws';
-		$contents         = file_get_contents( $loc );
+		$contents         = wpgcx_read_file_contents( $loc );
 		$contents         = str_replace( "\r\n", "\n", $contents );
 		$hidden_verb_list = explode( "\n", $contents );
 
 		$loc                = __DIR__ . '/passive_voice.pws';
-		$contents           = file_get_contents( $loc );
+		$contents           = wpgcx_read_file_contents( $loc );
 		$contents           = str_replace( "\r\n", "\n", $contents );
 		$passive_voice_list = explode( "\n", $contents );
 
 		$loc                    = __DIR__ . '/possessive_ending.pws';
-		$contents               = file_get_contents( $loc );
+		$contents               = wpgcx_read_file_contents( $loc );
 		$contents               = str_replace( "\r\n", "\n", $contents );
 		$possessive_ending_list = explode( "\n", $contents );
 
 		$loc                       = __DIR__ . '/redundant_expression.pws';
-		$contents                  = file_get_contents( $loc );
+		$contents                  = wpgcx_read_file_contents( $loc );
 		$contents                  = str_replace( "\r\n", "\n", $contents );
 		$redundant_expression_list = explode( "\n", $contents );
 
 		$loc             = __DIR__ . '/suggestions.pws';
-		$contents        = file_get_contents( $loc );
+		$contents        = wpgcx_read_file_contents( $loc );
 		$contents        = str_replace( "\r\n", "\n", $contents );
 		$suggestion_list = explode( "\n", $contents );
 

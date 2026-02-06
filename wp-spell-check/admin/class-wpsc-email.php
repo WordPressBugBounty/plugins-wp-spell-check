@@ -17,6 +17,8 @@ class Wpscx_Email {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_options', no user input
 		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="email_address";' );
 
+		$to_address = ( isset( $settings[0]->option_value ) && is_string( $settings[0]->option_value ) ) ? $settings[0]->option_value : ( empty( $settings ) ? 'none_no_row' : 'none_empty' );
+
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_words', no user input
 		$words_list = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $words_table . ' WHERE ignore_word is false' );
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_empty', no user input
@@ -49,7 +51,7 @@ class Wpscx_Email {
 
 			$to_emails = explode( ',', $settings[0]->option_value );
 
-			wp_mail( $to_emails, 'WP Spellcheck report for ' . get_option( 'blogname' ), $output, $headers );
+			$mail_result = wp_mail( $to_emails, 'WP Spellcheck report for ' . get_option( 'blogname' ), $output, $headers );
 	}
 
 	function check_email_site_scan() {

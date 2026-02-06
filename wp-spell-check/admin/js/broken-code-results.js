@@ -10,7 +10,7 @@
 	// Ensure localized data exists
 	if (typeof wphcHtmlResults === "undefined") {
 		console.error(
-			"wphcHtmlResults object not found. Make sure script is localized properly.",
+			"wphcHtmlResults object not found. Make sure script is localized properly."
 		);
 		return;
 	}
@@ -19,16 +19,16 @@
 	var scan_in_progress = wphcHtmlResults.scan_in_progress || false;
 	var scanStartTime;
 
-	// Initialize ajax_object if not already defined (may be localized by wphc-results-ajax script)
-	// WordPress localizes scripts as global variables. Ensure ajax_object always exists.
+	// Initialize wphcx_broken_ajax_object if not already defined (may be localized by wphc-results-ajax script)
+	// WordPress localizes scripts as global variables. Ensure wphcx_broken_ajax_object always exists.
 	// Check if WordPress already created it, otherwise create it from localized data
-	if (typeof window.ajax_object === "undefined") {
-		// Try to use existing global ajax_object if WordPress created it
-		if (typeof ajax_object !== "undefined") {
-			window.ajax_object = ajax_object;
+	if (typeof window.wphcx_broken_ajax_object === "undefined") {
+		// Try to use existing global wphcx_broken_ajax_object if WordPress created it
+		if (typeof wphcx_broken_ajax_object !== "undefined") {
+			window.wphcx_broken_ajax_object = wphcx_broken_ajax_object;
 		} else {
-			// Create ajax_object from localized data
-			window.ajax_object = {
+			// Create wphcx_broken_ajax_object from localized data
+			window.wphcx_broken_ajax_object = {
 				ajax_url: wphcHtmlResults.ajax_url,
 				wpsc_start_scan_bc_nonce: wphcHtmlResults.wpsc_start_scan_bc_nonce,
 				wpsc_hc_scan_nonce: wphcHtmlResults.wpsc_hc_scan_nonce,
@@ -57,15 +57,15 @@
 
 	// Scan progress check function
 	function wphcx_recheck_scan_temp() {
-		// ajax_object is initialized at the top of the file
+		// wphcx_broken_ajax_object is initialized at the top of the file
 
 		$.ajax(
 			{
-				url: window.ajax_object.ajax_url,
+				url: window.wphcx_broken_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "results_hc",
-					nonce: window.ajax_object.wpsc_hc_scan_nonce,
+					nonce: window.wphcx_broken_ajax_object.wpsc_hc_scan_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
@@ -82,15 +82,15 @@
 
 	// Finish scan and display results
 	function wphcx_finish_scan_temp() {
-		// ajax_object is initialized at the top of the file
+		// wphcx_broken_ajax_object is initialized at the top of the file
 
 		$.ajax(
 			{
-				url: window.ajax_object.ajax_url,
+				url: window.wphcx_broken_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_display_results_html",
-					nonce: window.ajax_object.wpsc_display_results_html_nonce,
+					nonce: window.wphcx_broken_ajax_object.wpsc_display_results_html_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
@@ -114,39 +114,39 @@
 
 	// Show scan statistics
 	function wphcx_show_stats(x) {
-		// ajax_object is initialized at the top of the file
+		// wphcx_broken_ajax_object is initialized at the top of the file
 
 		$.ajax(
 			{
-				url: window.ajax_object.ajax_url,
+				url: window.wphcx_broken_ajax_object.ajax_url,
 				type: "POST",
 				data: {
 					action: "wpscx_get_stats_code",
 					scantime: x,
-					nonce: window.ajax_object.wpsc_get_stats_code_nonce,
+					nonce: window.wphcx_broken_ajax_object.wpsc_get_stats_code_nonce,
 				},
 				dataType: "json",
 				success: function (response) {
 					$( ".sc-type" ).html(
 						"Errors found on <span class='wpsc-site-span'> Entire Site</span>: " +
-						response.totalErrors,
+						response.totalErrors
 					);
 					if (Number( response.pageCount ) >= Number( response.totalPages )) {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts,
+							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts
 						);
 					} else {
 						$( ".sc-post" ).html(
-							"Posts scanned: " + response.postCount + "/" + response.totalPosts,
+							"Posts scanned: " + response.postCount + "/" + response.totalPosts
 						);
 					}
 					if (Number( response.pageCount ) >= Number( response.totalPages )) {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.totalPages + "/" + response.totalPages,
+							"Pages scanned: " + response.totalPages + "/" + response.totalPages
 						);
 					} else {
 						$( ".sc-page" ).html(
-							"Pages scanned: " + response.pageCount + "/" + response.totalPages,
+							"Pages scanned: " + response.pageCount + "/" + response.totalPages
 						);
 					}
 					$( ".sc-time" ).html( "Last scan took " + response.scanTime );
@@ -179,18 +179,21 @@
 			}
 			scan_in_progress = true;
 
-			// ajax_object is initialized at the top of the file, but update nonces if needed
-			if (typeof window.ajax_object.wpsc_start_scan_bc_nonce === "undefined") {
-				window.ajax_object.ajax_url                        = wphcHtmlResults.ajax_url;
-				window.ajax_object.wpsc_start_scan_bc_nonce        =
+			// wphcx_broken_ajax_object is initialized at the top of the file, but update nonces if needed
+			if (
+			typeof window.wphcx_broken_ajax_object.wpsc_start_scan_bc_nonce ===
+			"undefined"
+			) {
+				window.wphcx_broken_ajax_object.ajax_url                        = wphcHtmlResults.ajax_url;
+				window.wphcx_broken_ajax_object.wpsc_start_scan_bc_nonce        =
 				wphcHtmlResults.wpsc_start_scan_bc_nonce;
-				window.ajax_object.wpsc_hc_scan_nonce              =
+				window.wphcx_broken_ajax_object.wpsc_hc_scan_nonce              =
 				wphcHtmlResults.wpsc_hc_scan_nonce;
-				window.ajax_object.wpsc_finish_html_scan_nonce     =
+				window.wphcx_broken_ajax_object.wpsc_finish_html_scan_nonce     =
 				wphcHtmlResults.wpsc_finish_html_scan_nonce;
-				window.ajax_object.wpsc_display_results_html_nonce =
+				window.wphcx_broken_ajax_object.wpsc_display_results_html_nonce =
 				wphcHtmlResults.wpsc_display_results_html_nonce;
-				window.ajax_object.wpsc_get_stats_code_nonce       =
+				window.wphcx_broken_ajax_object.wpsc_get_stats_code_nonce       =
 				wphcHtmlResults.wpsc_get_stats_code_nonce;
 			}
 
@@ -199,7 +202,7 @@
 			$( "#wpscScanMessage" ).html(
 				'<img src="' +
 				wphcHtmlResults.loading_gif_url +
-				'" alt="Scan in Progress" /> Starting New Scan',
+				'" alt="Scan in Progress" /> Starting New Scan'
 			);
 			$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
 
@@ -208,12 +211,12 @@
 
 			$.ajax(
 				{
-					url: window.ajax_object.ajax_url,
+					url: window.wphcx_broken_ajax_object.ajax_url,
 					type: "POST",
 					data: {
 						type: scanType,
 						action: "wpscx_start_scan_bc",
-						nonce: window.ajax_object.wpsc_start_scan_bc_nonce,
+						nonce: window.wphcx_broken_ajax_object.wpsc_start_scan_bc_nonce,
 					},
 					dataType: "html",
 					success: function (response) {
@@ -243,7 +246,7 @@
 											400,
 											function () {
 												mouseover_visible = true;
-											},
+											}
 										);
 									}
 								)
@@ -264,7 +267,7 @@
 												400,
 												function () {
 													mouseover_visible = true;
-												},
+												}
 											);
 										} else {
 											$( ".wpsc-mouseover-text-refresh" ).css( "z-index", "-100" );

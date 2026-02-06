@@ -308,7 +308,7 @@ function wpgcx_render_results() {
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array( 'jquery' ) );
 		wp_localize_script(
 			'wpgc-results-ajax',
-			'ajax_object',
+			'wpgcx_gram_ajax_object',
 			array(
 				'ajax_url'                           => admin_url( WPSC_ADMIN_AJAX ),
 				'wpgc_start_scan_nonce'              => wp_create_nonce( 'wpgc_start_scan' ),
@@ -352,7 +352,7 @@ function wpgcx_render_results() {
 		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Posts</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
-		wp_localize_script( 'wpgc-results-ajax', 'ajax_object', array(
+		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
 			'ajax_url' => admin_url( WPSC_ADMIN_AJAX ),
 			'wpgc_scan_nonce' => wp_create_nonce( 'wpgc_scan' ),
 			'wpgc_finish_scan_nonce' => wp_create_nonce( 'wpgc_finish_scan' )
@@ -372,7 +372,7 @@ function wpgcx_render_results() {
 		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Pages</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
-		wp_localize_script( 'wpgc-results-ajax', 'ajax_object', array(
+		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
 			'ajax_url' => admin_url( WPSC_ADMIN_AJAX ),
 			'wpgc_scan_nonce' => wp_create_nonce( 'wpgc_scan' ),
 			'wpgc_finish_scan_nonce' => wp_create_nonce( 'wpgc_finish_scan' )
@@ -387,7 +387,7 @@ function wpgcx_render_results() {
 		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Entire Site</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
-		wp_localize_script( 'wpgc-results-ajax', 'ajax_object', array(
+		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
 			'ajax_url' => admin_url( WPSC_ADMIN_AJAX ),
 			'wpgc_scan_nonce' => wp_create_nonce( 'wpgc_scan' ),
 			'wpgc_finish_scan_nonce' => wp_create_nonce( 'wpgc_finish_scan' )

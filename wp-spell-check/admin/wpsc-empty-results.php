@@ -276,7 +276,7 @@ function wpscx_admin_empty_render() {
 	$check_scan = wpscx_check_scan_progress();
 	if ( 'noscript' !== $check_scan && isset( $_GET['wpsc-script'] ) ) {
 		wp_enqueue_script( 'results-ajax', plugin_dir_url( __FILE__ ) . '/ajax.js', array( 'jquery' ) );
-		wp_localize_script( 'results-ajax', 'ajax_object', array( 'ajax_url' => admin_url( WPSC_ADMIN_AJAX ) ) );
+		wp_localize_script( 'results-ajax', 'wpscx__spell_ajax_object', array( 'ajax_url' => admin_url( WPSC_ADMIN_AJAX ) ) );
 		sleep( 1 );
 	}
 	$check_empty = wpscx_check_empty_scan_progress();
@@ -284,7 +284,7 @@ function wpscx_admin_empty_render() {
 		wp_enqueue_script( 'emptyresults-ajax', plugin_dir_url( __FILE__ ) . '/empty-ajax.js', array( 'jquery' ) );
 		wp_localize_script(
 			'emptyresults-ajax',
-			'ajax_object',
+			'wpscx_seo_ajax_object',
 			array(
 				'ajax_url'                         => admin_url( WPSC_ADMIN_AJAX ),
 				'wpsc_start_scan_empty_nonce'      => wp_create_nonce( 'wpsc_start_scan_empty' ),
@@ -924,8 +924,6 @@ function wpscx_admin_empty_render() {
 	</table>
 	<!-- Inline script block #3 removed - now handled in empty-results-ui.js -->
 	<?php
-	// echo "debug - After Displaying Spellcheck Table: " . ($end_display - $start) . " Seconds<br />";
-	// echo "debug - After Displaying Empty Field Table: " . ($end_empty - $start) . " Seconds<br />";
 }
 
 

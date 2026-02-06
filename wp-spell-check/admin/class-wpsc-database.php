@@ -133,7 +133,7 @@ class Wpscx_Database {
 
 	public static function wpsc_install_spellcheck() {
 		global $wpdb;
-		global $scdb_version;
+		global $wpscx_scdb_version;
 
 		$table_name       = $wpdb->prefix . 'spellcheck_words';
 		$dictionary_table = $wpdb->prefix . 'spellcheck_dictionary';
@@ -417,7 +417,7 @@ class Wpscx_Database {
 			);
 		}
 
-		add_option( 'scdb_version', $scdb_version );
+		add_option( 'scdb_version', $wpscx_scdb_version );
 
 		$table_name    = $wpdb->prefix . 'spellcheck_grammar';
 		$options_table = $wpdb->prefix . 'spellcheck_grammar_options';
@@ -464,7 +464,7 @@ class Wpscx_Database {
 		$html_table    = $wpdb->prefix . 'spellcheck_html';
 
 		wpscx_set_global_vars();
-		global $check_opt;
+		global $wpscx_check_opt;
 		global $wpgc_settings;
 
 			$options_check = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );

@@ -50,7 +50,10 @@ class Wpscx_Admin {
 
 		$this->register_admin_hooks();
 
-		$interface = new Wpscx_Wordpress_Interface();
+		require_once __DIR__ . '/class-wpsc-interface.php';
+		if ( class_exists( 'Wpscx_Wordpress_Interface' ) ) {
+			$interface = new Wpscx_Wordpress_Interface();
+		}
 	}
 
 	function admin_footer() {

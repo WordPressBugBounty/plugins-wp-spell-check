@@ -4,11 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ============================================================================
-// DEBUG LOGGING SETTINGS
+// DEBUG LOG
 // ============================================================================
-// Set to true to enable debug logging, false to disable (default: false)
-// When enabled, logs are written to: /wp-content/uploads/wp-spell-check-logs/debug.log
-// Change this value to control all debug logging throughout the plugin
+
 define( 'WPSCX_DEBUG_LOGGING_ENABLED', false );
 // ============================================================================
 // END DEBUG LOGGING SETTINGS
@@ -116,9 +114,14 @@ function wpscx_print_debug( $scan, $time, $sql, $memory, $error ) {
 	$scan_padded = str_pad( $scan, 25, ' ', STR_PAD_RIGHT );
 
 	// Format: Time → SQL → Memory → Errors → Number of Options Loaded (one tab between each field)
-	// Only write if directory is writable to avoid PHP "Failed to open stream" warnings.
+	// Only write if directory is writable; use WP_Filesystem for host compatibility.
 	if ( wpscx_path_is_writable( dirname( $loc ) ) ) {
-		file_put_contents( $loc, "$scan_padded Time: $time.\tSQL: $sql\tMemory: $memory KB.\tErrors: $error\tNumber of Options Loaded: " . sizeof( (array) $wpsc_settings ) . "\r\n", FILE_APPEND );
+		global $wp_filesystem;
+		if ( is_object( $wp_filesystem ) && method_exists( $wp_filesystem, 'get_contents' ) && method_exists( $wp_filesystem, 'put_contents' ) ) {
+			$existing = $wp_filesystem->get_contents( $loc );
+			$line     = "$scan_padded Time: $time.\tSQL: $sql\tMemory: $memory KB.\tErrors: $error\tNumber of Options Loaded: " . sizeof( (array) $wpsc_settings ) . "\r\n";
+			$wp_filesystem->put_contents( $loc, ( false !== $existing ? $existing : '' ) . $line );
+		}
 	}
 	// file_put_contents( $loc, "Length: $length \r\n", FILE_APPEND );
 }
@@ -137,9 +140,14 @@ function wpscx_print_debug_end( $scan_type, $total_time = 0 ) {
 		return; // Logging disabled or log dir missing/unwritable, exit early
 	}
 
-	// Only write if directory is writable to avoid PHP "Failed to open stream" warnings.
+	// Only write if directory is writable; use WP_Filesystem for host compatibility.
 	if ( wpscx_path_is_writable( dirname( $loc ) ) ) {
-		file_put_contents( $loc, "-------------------------$scan_type | " . gmdate( 'd-M-Y H:i:s', current_time( 'timestamp', 0 ) ) . "------------------------------\r\n\r\n\r\n", FILE_APPEND );
+		global $wp_filesystem;
+		if ( is_object( $wp_filesystem ) && method_exists( $wp_filesystem, 'get_contents' ) && method_exists( $wp_filesystem, 'put_contents' ) ) {
+			$existing = $wp_filesystem->get_contents( $loc );
+			$line     = "-------------------------$scan_type | " . gmdate( 'd-M-Y H:i:s', current_time( 'timestamp', 0 ) ) . "------------------------------\r\n\r\n\r\n";
+			$wp_filesystem->put_contents( $loc, ( false !== $existing ? $existing : '' ) . $line );
+		}
 	}
 }
 
@@ -399,6 +407,7 @@ function wpscx_divi_check( $content ) {
 }
 
 function wpscx_script_cleanup( $content ) {
+	$content = (string) ( $content ?? '' );
 	$content = preg_replace( '@<style[^>]*?>.*?</style>@siu', ' ', $content );
 	$content = preg_replace( '@<script[^>]*?>.*?</script>@siu', ' ', $content );
 	$content = preg_replace( '/(\<.*?\>)/', ' ', $content );
@@ -611,30 +620,7 @@ function wpscx_clear_empty_results( $clear_type = '' ) {
 	}
 }
 
-/*
-Temporarily commented for dead-code verification.
-function wpscx_set_scan_in_progress_test( $rng_seed = 0 ) {
-		global $wpdb;
-		global $wpscx_ent_included;
-		global $wpsc_settings;
-		$options_table = $wpdb->prefix . 'spellcheck_options';
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table );
-
-		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'entire_scan' ) );
-
-	if ( 'true' === $settings[37]->option_value && is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) {
-		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'cf7_sip' ) );
-	}
-	if ( 'true' === $settings[44]->option_value ) {
-		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'author_sip' ) );
-	}
-	if ( 'true' === $settings[7]->option_value ) {
-		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'menu_sip' ) );
-	}
-}
-*/
 
 function wpscx_set_scan_in_progress( $rng_seed = 0 ) {
 	global $wpdb;
@@ -715,7 +701,25 @@ function wpscx_clear_scan() {
 
 function wpscx_scan_all( $rng_seed = 0, $log_debug = true ) {
 	global $wpsc_settings;
+
+	// #region agent log
+	if ( function_exists( 'wpscx_agent_debug_log' ) ) {
+		wpscx_agent_debug_log(
+			array(
+				'location'     => 'wpsc-framework.php:wpscx_scan_all',
+				'message'      => 'scan_all_entry',
+				'data'         => array(
+					'rng_seed'   => $rng_seed,
+					'doing_cron' => ( defined( 'DOING_CRON' ) && DOING_CRON ),
+				),
+				'hypothesisId' => 'B',
+			)
+		);
+	}
+	// #endregion
+
 	wpscx_set_global_vars();
+
 	wpscx_scan_site_event( $rng_seed, $log_debug );
 	wpscx_scan_site_empty( $rng_seed );
 	wpscx_check_broken_code();
@@ -727,54 +731,7 @@ function wpscx_scan_all( $rng_seed = 0, $log_debug = true ) {
 }
 add_action( 'wpscxscanall', 'wpscx_scan_all' );
 
-/*
-Temporarily commented for dead-code verification.
-function wpscx_scan_site_test( $rng_seed = 0, $log_debug = true ) {
-	$start = round( microtime( true ), 5 );
-	ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
-	set_time_limit( 600 );
-	global $wpdb;
-	global $wpscx_ent_included;
-	$table_name    = $wpdb->prefix . 'spellcheck_words';
-	$options_table = $wpdb->prefix . 'spellcheck_options';
-	$page_list     = null;
-	$post_list     = null;
-	$sql_count     = 0;
 
-	// if ( 10 === $rng_seed ) {
-		// wpscx_clear_results();
-	// }
-
-	$wpsc_haystack = null;
-
-	// $start_time = time();
-	// $wpdb->update($options_table, array('option_value' => $start_time), array('option_name' => 'scan_start_time')); $sql_count++;
-
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table );
-	++$sql_count;
-
-	wpscx_set_global_vars();
-
-	if ( ! $wpscx_ent_included ) {
-		$scanner = new Wpscx_Spellcheck_Scanner();
-		$scanner->check_errors();
-	}
-
-	if ( $wpscx_ent_included ) {
-		if ( 'true' === $settings[44]->option_value ) {
-			wpscx_check_authors( $wpsc_haystack, $log_debug );
-		}
-		if ( 'true' === $settings[37]->option_value && ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) ) {
-			wpscx_check_cf7( $wpsc_haystack, $log_debug );
-		}
-		if ( 'true' === $settings[7]->option_value ) {
-			wpscx_check_menus_ent( $rng_seed, $wpsc_haystack, $log_debug );
-		}
-	}
-}
-		add_action( 'adminscansite_test', 'wpscx_scan_site_test' );
-*/
 
 function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 	$start = round( microtime( true ), 5 );
