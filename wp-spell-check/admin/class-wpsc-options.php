@@ -981,8 +981,7 @@ function wpscx_render_options() {
 	?>
 >
 	<?php
-	/*
-	Minute(s) and Hour(s) options commented out - only daily kept for options page.
+	?>
 	<option value="minutes"
 	<?php
 	if ( 'minutes' === $scan_frequency_interval ) {
@@ -995,9 +994,7 @@ function wpscx_render_options() {
 		echo "selected='selected'";}
 	?>
 	>Hour(s)</option>
-	*/
-	?>
-<option value="daily" 
+	<option value="daily" 
 	<?php
 	if ( 'daily' === $scan_frequency_interval ) {
 		echo "selected='selected'";}

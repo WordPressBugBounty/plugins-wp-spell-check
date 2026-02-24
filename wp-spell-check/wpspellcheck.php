@@ -2,70 +2,62 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-/*
-Plugin Name: WP Spell Check
-Description: The Fastest Proofreading plugin that allows you to find & fix Spelling errors, Grammar errors, Broken HTML & Shortcodes and, SEO Opportunities to Create a professional image and take your site to the next level
-Version: 10.0
-Author: WP Spell Check
-Requires at least: 6.3
-Tested up to: 6.9
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Copyright: © 2026 WP Spell Check
-Contributors: wpspellcheck
-Donate Link: www.wpspellcheck.com
-Tags: spelling, SEO, Spell Check, WordPress spell check, Spell Checker, WordPress spell checker, spelling errors, spelling mistakes, spelling report, fix spelling, WP Spell Check
+/**
+ * Plugin Name: WP Spell Check
+ * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
+ * Version: 10.1
+ * Author: WP Spell Check
+ * Author URI: https://www.wpspellcheck.com
+ * License: GPLv2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 6.3
+ * Requires PHP: 7.0
+ * Tested up to: 6.9
+ */
 
-Author URI: https://www.wpspellcheck.com
-
-Works in the background: yes
-Pro version scans the entire website: yes
-Sends email reminders: yes
-Finds place holder text: yes
-Custom Dictionary for unusual words: yes
-Scans Password Protected membership Sites: yes
-Unlimited scans on my website: Yes
-
-Scans Categories: Yes WP Spell Check Pro
-Scans SEO Titles: Yes WP Spell Check Pro
-Scans SEO Descriptions: Yes WP Spell Check Pro
-Scans WordPress Menus: Yes WP Spell Check Pro
-Scans Page Titles: Yes WP Spell Check Pro
-Scans Post Titles: Yes WP Spell Check Pro
-Scans Page slugs: Yes WP Spell Check Pro
-Scans Post Slugs: Yes WP Spell Check Pro
-Scans Post categories: Yes WP Spell Check Pro
-
-Privacy URI: https://www.wpspellcheck.com/privacy-policy/
-Pro Add-on / Home Page: https://www.wpspellcheck.com/
-Pro Add-on / Prices: https://www.wpspellcheck.com/pricing/
-*/
-
-require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-require_once plugin_dir_path( __FILE__ ) . 'admin/class-wpsc-database.php';
-register_activation_hook( __FILE__, array( 'Wpscx_Database', 'wpsc_install_spellcheck_main' ) );
 const WPSC_FRAMEWORK  = 'wpsc-framework.php';
 const WPSC_ADMIN_AJAX = 'admin-ajax.php';
 
 /**
+ * Activation callback: load DB/upgrade only when activating so they are not loaded on frontend.
+ *
+ * @since 10.0
+ */
+function wpscx_activation_install() {
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	require_once plugin_dir_path( __FILE__ ) . 'admin/class-wpsc-database.php';
+	Wpscx_Database::wpsc_install_spellcheck_main();
+}
+register_activation_hook( __FILE__, 'wpscx_activation_install' );
+
+/**
  * Ensure requests to wp-cron.php (loopback / Site Health) do not time out on slow servers.
- * Fixes "cURL error 28: Operation timed out after 3001 milliseconds" without server changes.
+ * Only registered in admin or during cron to avoid frontend work.
  *
  * @since 9.22
  */
-add_filter(
-	'http_request_args',
-	function ( $args, $url ) {
-		if ( is_string( $url ) && strpos( $url, 'wp-cron.php' ) !== false ) {
-			$current = isset( $args['timeout'] ) ? (float) $args['timeout'] : 5;
-			if ( $current < 15 ) {
-				$args['timeout'] = 15;
-			}
+add_action(
+	'init',
+	function () {
+		if ( ! is_admin() && ! ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			return;
 		}
-		return $args;
+		add_filter(
+			'http_request_args',
+			function ( $args, $url ) {
+				if ( is_string( $url ) && strpos( $url, 'wp-cron.php' ) !== false ) {
+					$current = isset( $args['timeout'] ) ? (float) $args['timeout'] : 5;
+					if ( $current < 15 ) {
+						$args['timeout'] = 15;
+					}
+				}
+				return $args;
+			},
+			10,
+			2
+		);
 	},
-	10,
-	2
+	1
 );
 
 function wpscx_core() {
@@ -77,6 +69,8 @@ function wpscx_core() {
 		}
 		return;
 	}
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	require_once plugin_dir_path( __FILE__ ) . 'admin/class-wpsc-database.php';
 	$wpsc_user_id = get_current_user_id();
 	$database     = new Wpscx_Database();
 	$database->wpsc_update_db_check_main();
@@ -249,7 +243,7 @@ function wpscx_set_global_vars() {
 	global $wpscx_ent_included;
 	global $wpsc_version;
 
-	$wpsc_version = '10.0';
+	$wpsc_version = '10.1';
 
 	$wpscx_ignore_list = array();
 	$wpscx_dict_list   = array();
@@ -305,7 +299,6 @@ global $wpscx_scdb_version;
 global $wpscx_scan_delay;
 $wpscx_scan_delay   = 0;
 $wpscx_scdb_version = '1.0';
-wpscx_set_global_vars();
 
 /*
 Initialization Code */
@@ -342,9 +335,44 @@ function wpscx_uninstall_page() {
 	<?php
 }
 
-function wpscx_cron_add_custom( $schedules ) {
+/**
+ * Whether the wpsc custom cron schedule should be registered.
+ * Only when: Pro active, API valid ($wpscx_ent_included), Send Email Reports is on, and an email is saved.
+ *
+ * @since 10.0
+ * @return bool
+ */
+function wpscx_should_register_cron_schedule() {
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+	if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) {
+		return false;
+	}
+	global $wpscx_ent_included;
+	if ( empty( $wpscx_ent_included ) ) {
+		return false;
+	}
 	global $wpdb;
-	wpscx_set_global_vars();
+	$table = $wpdb->prefix . 'spellcheck_options';
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix; option_name is literal.
+	$email = $wpdb->get_var( "SELECT option_value FROM {$table} WHERE option_name = 'email' LIMIT 1" );
+	if ( $email !== 'true' ) {
+		return false;
+	}
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix; option_name is literal.
+	$email_address = $wpdb->get_var( "SELECT option_value FROM {$table} WHERE option_name = 'email_address' LIMIT 1" );
+	return ( is_string( $email_address ) && trim( $email_address ) !== '' );
+}
+
+function wpscx_cron_add_custom( $schedules ) {
+	if ( ! is_admin() && ! ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+		return $schedules;
+	}
+	if ( ! wpscx_should_register_cron_schedule() ) {
+		return $schedules;
+	}
+	global $wpdb;
 	$table_name = $wpdb->prefix . 'spellcheck_options';
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string. Query contains no user input.
@@ -407,7 +435,19 @@ function wpscx_cron_add_custom( $schedules ) {
 	}
 	return $schedules;
 }
-add_filter( 'cron_schedules', 'wpscx_cron_add_custom' );
+add_action(
+	'init',
+	function () {
+		if ( ! is_admin() && ! ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			return;
+		}
+		if ( ! wpscx_should_register_cron_schedule() ) {
+			return;
+		}
+		add_filter( 'cron_schedules', 'wpscx_cron_add_custom' );
+	},
+	20
+);
 
 function wpscx_add_premium_link( $links ) {
 	global $wpsc_version;
