@@ -24,15 +24,17 @@ class Wpscx_Dashboard {
 
 	function create_dashboard_widget() {
 		global $wpdb;
+		global $wpscx_check_opt;
+
+		wpscx_set_global_vars();
 
 		$table_name = $wpdb->prefix . 'spellcheck_words';
 
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$empty_table   = $wpdb->prefix . 'spellcheck_empty';
 
-		$check_db = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );
-
-		if ( sizeof( $check_db ) >= 1 ) {
+		// Use options table check from wpscx_set_global_vars() to avoid duplicate SHOW TABLES.
+		if ( isset( $wpscx_check_opt ) && sizeof( $wpscx_check_opt ) >= 1 ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string. Query contains no user input.
 			$empty_count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . esc_sql( $empty_table ) . ' WHERE ignore_word!=1' );
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string. Query contains no user input.
@@ -44,9 +46,9 @@ class Wpscx_Dashboard {
 			$empty_factor    = $empty_factor[0]->option_value;
 			echo "<p><span style='color: rgb(0, 115, 0); font-weight: bold;'>Website Literacy Factor: </span><span style='color: red; font-weight: bold;'>" . esc_html( $literacy_factor ) . '%</span><br />';
 			echo "<span style='color: rgb(0, 115, 0); font-weight: bold;'>Website Empty Fields Factor: </span><span style='color: red; font-weight: bold;'>" . esc_html( $empty_factor ) . '%</span><br />';
-			echo 'The last spell check scan found ' . esc_html( $word_count ) . ' spelling errors<br />';
-			echo 'The last empty fields scan found ' . esc_html( $empty_count ) . ' empty fields<br />';
-			echo "<a href='/wp-admin/admin.php?page=wp-spellcheck.php'>Click here</a> To view and fix errors</p>";
+			echo 'Last spell check scan found ' . esc_html( $word_count ) . ' spelling errors<br />';
+			echo 'Last SEO scan found ' . esc_html( $empty_count ) . ' empty fields<br />';
+			echo '<a href="' . esc_url( admin_url( 'admin.php?page=wp-spellcheck.php' ) ) . '">Click here</a> To view and fix errors</p>';
 		}
 	}
 }
@@ -92,7 +94,6 @@ class Wpscx_OpenAI {
 
 		// Decode the response as JSON
 		$response_data = json_decode( $response, true );
-		// print_r($response_data);
 
 		// Check if the API returned an error
 		if ( ! empty( $response_data['error'] ) ) {
@@ -145,7 +146,6 @@ class Wpscx_OpenAI {
 
 		// Decode the response as JSON
 		$response_data = json_decode( $response, true );
-		// print_r($response_data);
 
 		// Check if the API returned an error
 		if ( ! empty( $response_data['error'] ) ) {
@@ -498,7 +498,6 @@ class Wpscx_Results_Utils {
 	 *
 	 */
 	function update_word_admin( $old_words, $new_words, $page_names, $page_types, $old_word_ids, $mass_edit ) {
-		// print_r($new_words);
 		global $wpdb;
 		global $wpscx_ent_included;
 		global $wpsc_version;
@@ -1068,6 +1067,9 @@ class Wpscx_Results_Utils {
 				$widget_instances = get_option( 'widget_text' );
 
 				foreach ( array_keys( $widget_instances ) as $index ) {
+					if ( ! is_array( $widget_instances[ $index ] ) || ! isset( $widget_instances[ $index ]['title'], $widget_instances[ $index ]['text'] ) ) {
+						continue;
+					}
 					if ( $widget_instances[ $index ]['title'] === $page_names[ $x ] ) {
 						$widget_instances[ $index ]['text'] = str_replace( $old_words[ $x ], $new_words[ $x ], html_entity_decode( $widget_instances[ $index ]['text'] ) );
 					}

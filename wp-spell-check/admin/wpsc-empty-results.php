@@ -134,8 +134,14 @@ function wpscx_admin_empty_render() {
 		wpscx_clear_empty_scan();
 	}
 
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-	$settings                = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $options_table );
+	// Use options already loaded by wpscx_set_global_vars() (called earlier via wpsc_do_ent_api_request) to avoid duplicate SELECT from wp_spellcheck_options.
+	global $wpsc_settings;
+	if ( isset( $wpsc_settings ) && ( is_array( $wpsc_settings ) || $wpsc_settings instanceof SplFixedArray ) && count( $wpsc_settings ) > 0 ) {
+		$settings = $wpsc_settings;
+	} else {
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe; ORDER BY id ensures stable index-based access.
+		$settings = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $options_table . ' ORDER BY id' );
+	}
 	$check_pages             = $settings[4]->option_value;
 	$check_posts             = $settings[5]->option_value;
 	$check_menus             = $settings[7]->option_value;
@@ -168,8 +174,14 @@ function wpscx_admin_empty_render() {
 	$check_post_seo_empty    = $settings[54]->option_value;
 	$check_media_seo_empty   = $settings[55]->option_value;
 	$check_media_empty       = $settings[56]->option_value;
-	$check_ecommerce_empty   = $settings[57]->option_value;
-	$openAIKey               = $settings[151]->option_value;
+	$check_ecommerce_empty   = ( isset( $settings[57] ) && is_object( $settings[57] ) ) ? $settings[57]->option_value : '';
+	$openAIKey               = '';
+	foreach ( $settings as $row ) {
+		if ( isset( $row->option_name ) && 'openAIKey' === $row->option_name ) {
+			$openAIKey = $row->option_value;
+			break;
+		}
+	}
 
 	$postmeta_table    = $wpdb->prefix . 'postmeta';
 	$post_table        = $wpdb->prefix . 'posts';
@@ -404,7 +416,7 @@ function wpscx_admin_empty_render() {
 	$scan_progress = wpscx_check_scan_progress();
 	if ( $scan_progress && '' === $scan_message && 'noscript' === $_GET['wpsc-script'] ) {
 		$last_type    = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name='last_scan_type'" );
-		$scan_message = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message">' . esc_html( $last_type[0]->option_value ) . '</span>. Estimated time for completion is ' . esc_html( $estimated_time ) . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
+		$scan_message = '<img src="' . esc_url( function_exists( 'wpsc_get_loading_spinner_url' ) ? wpsc_get_loading_spinner_url() : plugin_dir_url( __FILE__ ) . 'images/loading.svg' ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message">' . esc_html( $last_type[0]->option_value ) . '</span>. Estimated time for completion is ' . esc_html( $estimated_time ) . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 	} elseif ( 'error' === $scanning[0]->option_value && '' === $scan_message && ! $scan_progress ) {
 		$scan_message = "<span class='error-red'>No scan currently running. The previous scan was unable to finish scanning</span>";
 	} elseif ( '' === $scan_message ) {
@@ -414,7 +426,7 @@ function wpscx_admin_empty_render() {
 	$empty_scan_progress = wpscx_check_empty_scan_progress();
 	if ( '' === $empty_scan_progress && $empty_scan_message && 'noscript' !== $_GET['wpsc-script'] ) {
 		$last_type          = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name='last_empty_type'" );
-		$empty_scan_message = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message">' . esc_html( $last_type[0]->option_value ) . '</span>. Estimated time for completion is ' . esc_html( $estimated_time ) . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
+		$empty_scan_message = '<img src="' . esc_url( function_exists( 'wpsc_get_loading_spinner_url' ) ? wpsc_get_loading_spinner_url() : plugin_dir_url( __FILE__ ) . 'images/loading.svg' ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message">' . esc_html( $last_type[0]->option_value ) . '</span>. Estimated time for completion is ' . esc_html( $estimated_time ) . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 	} elseif ( '' === $empty_scan_message ) {
 		$empty_scan_message = 'No scan currently running';
 	}
@@ -477,6 +489,7 @@ function wpscx_admin_empty_render() {
 			'check_scan'         => $check_scan ? true : false,
 			'admin_ajax_url'     => admin_url( WPSC_ADMIN_AJAX ),
 			'plugin_url'         => plugin_dir_url( __FILE__ ),
+			'loading_spinner_url' => function_exists( 'wpsc_get_loading_spinner_url' ) ? wpsc_get_loading_spinner_url() : plugin_dir_url( __FILE__ ) . 'images/loading.svg',
 			'auto_click_enabled' => ( isset( $_GET['action'] ) && 'check' === $_GET['action'] && isset( $_GET['submit-empty'] ) && 'Entire Site' === $_GET['submit-empty'] ),
 			'nonces'             => array(
 				'wpsc_start_scan_empty'      => wp_create_nonce( 'wpsc_start_scan_empty' ),
@@ -503,7 +516,7 @@ function wpscx_admin_empty_render() {
 		<p>This will update all areas of your website that you have selected WP Spell Check to scan. Are you sure you wish
 			to proceed with the changes?</p>
 	</div>
-	<div class="wrap wpsc-table">
+	<div class="wrap wpsc-table wpsc-page-seo">
 		<h2><a href="admin.php?page=wp-spellcheck-seo.php"><img
 					src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/logo.png'; ?>"
 					alt="WP Spell Check" /></a> <span class="wpsc-seo-page-title"> - SEO Empty Field
@@ -788,17 +801,13 @@ function wpscx_admin_empty_render() {
 				<div class="wpsc-mesage-container">
 					<?php
 					if ( '' !== $message ) {
-						echo "<div class='wpsc-message'>" . esc_html( $message ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $message ) . '</span></div>';
 					}
-					?>
-					<?php
 					if ( isset( $ignore_message[0] ) && '' !== $ignore_message[0] ) {
-						echo "<div class='wpsc-message'>" . esc_html( $ignore_message[0] ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $ignore_message[0] ) . '</span></div>';
 					}
-					?>
-					<?php
 					if ( isset( $dict_message[0] ) && '' !== $dict_message[0] ) {
-						echo "<div class='wpsc-message'>" . esc_html( $dict_message[0] ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $dict_message[0] ) . '</span></div>';
 					}
 					?>
 				</div>
@@ -824,13 +833,15 @@ function wpscx_admin_empty_render() {
 					<?php $empty_table->display(); ?>
 				</div>
 				<?php $end_empty = time(); ?>
-				<p class="search-box bottom">
-					<label class="screen-reader-text" for="search_id-search-input">search:</label>
-					<input type="search" id="search_id-search-input" name="s" value="" placeholder="Search for Page Names">
-					<input type="submit" id="search-submit" class="button" value="search">
-				</p>
-				<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button bottom empty-tab" type="submit"
-					value="Save all Changes" class="button button-primary" />
+				<div class="wpsc-words-list-footer">
+					<p class="search-box bottom">
+						<label class="screen-reader-text" for="search_id-search-input">search:</label>
+						<input type="search" id="search_id-search-input" name="s" value="" placeholder="Search for Page Names">
+						<input type="submit" id="search-submit" class="button" value="search">
+					</p>
+					<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button bottom empty-tab" type="submit"
+						value="Save all Changes" class="button button-primary" />
+				</div>
 			</form>
 
 			<div class="wpsc-stats-summary">
@@ -914,8 +925,8 @@ function wpscx_admin_empty_render() {
 						<input type="button" class="button-secondary alignleft wpsc-generate-seo-button"
 							value="Generate SEO with AI">
 						<div class="seo-progress"><img
-								src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif'; ?>"
-								alt="Generating SEO" /></div>
+								src="<?php echo esc_url( function_exists( 'wpsc_get_loading_spinner_url' ) ? wpsc_get_loading_spinner_url() : plugin_dir_url( __FILE__ ) . 'images/loading.svg' ); ?>"
+								alt="Generating SEO" class="wpsc-loading-spinner" /></div>
 						<div class="clear"></div>
 					</div>
 				</td>

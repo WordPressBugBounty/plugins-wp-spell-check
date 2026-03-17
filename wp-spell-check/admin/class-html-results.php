@@ -128,7 +128,7 @@ class Wphcx_Table extends WP_List_Table {
 		static $row_class = 'wpsc-row';
 		$row_class        = ( '' === $row_class ? ' class="alternate"' : '' );
 
-		echo '<tr class="wpsc-row" id="wpsc-row-' . esc_html( $item['id'] ) . '">';
+		echo '<tr class="wpsc-row' . ( '' !== $row_class ? ' alternate' : '' ) . '" id="wpsc-row-' . esc_attr( $item['id'] ) . '">';
 		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
@@ -324,7 +324,7 @@ function wphcx_admin_render() {
 		'wphcHtmlResults',
 		array(
 			'scan_in_progress'                => $check_scan ? true : false,
-			'loading_gif_url'                 => esc_url( plugin_dir_url( __FILE__ ) . 'images/loading.gif' ),
+			'loading_gif_url'                 => esc_url( wpsc_get_loading_spinner_url() ),
 			'ajax_url'                        => admin_url( WPSC_ADMIN_AJAX ),
 			'auto_click_enabled'              => ( isset( $_GET['action'] ) && isset( $_GET['submit'] ) && 'check' === $_GET['action'] && 'Entire Site' === $_GET['submit'] ),
 			'wpsc_start_scan_bc_nonce'        => wp_create_nonce( 'wpsc_start_scan_bc' ),
@@ -355,19 +355,19 @@ function wphcx_admin_render() {
 	?>
 	<?php // wpscx_show_feature_window(); ?>
 
-	<div class="wrap wpsc-table wpsc-html-results-page">
+	<div class="wrap wpsc-table wpsc-html-results-page wpsc-page-html">
 		<div id="wpsc-dialog-confirm" title="Are you sure?">
 			<p>Would you like to Proceed with the changes?</p>
 		</div>
-		<h2><a href="admin.php?page=wp-spellcheck-grammar.php"><img
+		<h2><a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-grammar.php' ) ); ?>"><img
 					src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/logo.png'; ?>"
 					alt="WP Spell Check" /></a> <span> - Broken Code Scan
 				Results</span></h2>
 		<div class="wpsc-scan-nav-bar">
-			<a href="/wp-admin/admin.php?page=wp-spellcheck.php" id="wpsc-scan-results" name="wpsc-scan-results">Spelling
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck.php' ) ); ?>" id="wpsc-scan-results" name="wpsc-scan-results">Spelling
 				Errors</a>
-			<a href="/wp-admin/admin.php?page=wp-spellcheck-grammar.php" id="wpsc-grammar" name="wpsc-grammar">Grammar</a>
-			<a href="/wp-admin/admin.php?page=wp-spellcheck-seo.php" id="wpsc-empty-fields" name="wpsc-empty-fields">SEO</a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-grammar.php' ) ); ?>" id="wpsc-grammar" name="wpsc-grammar">Grammar</a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-seo.php' ) ); ?>" id="wpsc-empty-fields" name="wpsc-empty-fields">SEO</a>
 			<a href="#" class="selected" id="wpsc-html" name="wpsc-html">Broken Code</a>
 		</div>
 		<?php if ( $wpscx_ent_included ) { ?>
@@ -385,7 +385,7 @@ function wphcx_admin_render() {
 								code errors and broken shortcodes on your site</h3>
 							<h3>This function shows all the broken shortcodes and HTML code
 								displaying on pages. </h3>
-							<h3>Make sure you go to your <a href="/wp-admin/admin.php?page=wp-spellcheck-options.php">Options
+							<h3>Make sure you go to your <a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-options.php' ) ); ?>">Options
 									page</a> to set up
 								automatic reports to be notified if broken code is found</h3>
 							<h3 class="scan-label">Scan:</h3>
@@ -398,19 +398,19 @@ function wphcx_admin_render() {
 							<p class="submit wpsc-action-button-wrapper"><span class="wpsc-action-dash"> -
 								</span><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/clear-results.png'; ?>"
-									alt="Clear Results Table" class="wpsc-icon-clear-results" /><input type="submit"
-									name="submit" id="submit" class="button button-primary wpsc-button-red"
+									alt="Clear Results Table" class="wpsc-action-icon wpsc-icon-clear-results" /><input type="submit"
+									name="submit" id="submit" class="button button-primary wpsc-btn-clear-results"
 									value="Clear Results"></p>
 							<p class="submit wpsc-action-button-wrapper"><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/see-results.png'; ?>"
-									alt="See Results" class="wpsc-icon-see-results" /><input type="submit" name="submit"
-									id="submit" class="button button-primary wpsc-button-red" value="See Scan Results"></p>
+									alt="See Results" class="wpsc-action-icon wpsc-icon-see-results" /><input type="submit" name="submit"
+									id="submit" class="button button-primary wpsc-btn-see-results" value="See Scan Results"></p>
 							<p class="submit wpsc-action-button-wrapper"><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/stop-scans.png'; ?>"
-									alt="Stop Current Scans" class="wpsc-icon-stop-scans" /><input type="submit" name="submit"
-									id="submit" class="button button-primary wpsc-button-red" value="Stop Scans"></p>
+									alt="Stop Current Scans" class="wpsc-action-icon wpsc-icon-stop-scans" /><input type="submit" name="submit"
+									id="submit" class="button button-primary wpsc-btn-stop-scans" value="Stop Scans"></p>
 							<p class="submit wpsc-action-button-wrapper"><a
-									href="/wp-admin/admin.php?page=wp-spellcheck-options.php" target="_blank"><img
+									href="<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-options.php' ) ); ?>" target="_blank"><img
 										src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/options.png'; ?>"
 										alt="WP Spell Check Options" title="Options" class="wpsc-options-icon" /></a>
 							</p>
@@ -421,10 +421,10 @@ function wphcx_admin_render() {
 							<?php if ( $scan_message == 'sip' ) { ?>
 
 								<h3 class='sc-message' id='wpscScanMessage'><img
-										src='<?php echo esc_url( plugin_dir_url( __FILE__ ) ); ?>images/loading.gif'
-										alt='Scan in Progress' /> A scan is currently in progress for <span
+										src='<?php echo esc_url( wpsc_get_loading_spinner_url() ); ?>'
+										alt='Scan in Progress' class='wpsc-loading-spinner' /> A scan is currently in progress for <span
 										class='sc-message wpsc-site-span'>Entire site</span>. <a
-										href='/wp-admin/admin.php?page=wp-spellcheck-html.php'>Click here</a> to see scan results.
+										href='<?php echo esc_url( admin_url( 'admin.php?page=wp-spellcheck-html.php' ) ); ?>'>Click here</a> to see scan results.
 								</h3>
 							<?php } else { ?>
 								<h3 class='sc-message' id='wpscScanMessage'>
@@ -490,7 +490,7 @@ function wphcx_admin_render() {
 					<input type="hidden" name="page" value="wp-spellcheck-html.php">
 					<input type="hidden" name="action" value="check">
 					<h3>Click the button below to find out how many broken code errors are on your site</h3>
-					<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary"
+					<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary wpscScanSite"
 							value="Scan Site"></p>
 				</form>
 				<?php

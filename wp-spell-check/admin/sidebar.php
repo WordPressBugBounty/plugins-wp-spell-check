@@ -27,6 +27,19 @@ global $wpsc_version;
 				</div>
 </div>
 <hr>
+<?php
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) :
+	?>
+<div class="wpsc-sidebar-tutorial-box">
+	<a href="https://buy.stripe.com/9B66oI6uia7o8nMdRa2Ry01" target="_blank" rel="noopener noreferrer"><img class="wpsc-sidebar-coffee-img" src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'images/support-the-plugin.png' ); ?>" alt="Support the plugin" /></a>
+</div>
+<hr>
+	<?php
+endif;
+?>
 <div class="newsletter newsletter-subscription">
 <div class="wpsc-sidebar"><h2>Enjoying this plugin?</h2>Please help by giving us a <a class="review-button" href="https://wordpress.org/support/plugin/wp-spell-check/reviews/" target="_blank">★★★★★ Rating</a></div>
 </div>

@@ -3,117 +3,122 @@
 
 /* Outer sidebar container */
 .wpsc-sidebar-container {
-	float: right;
-	width: 23%;
-	margin-left: 2%;
-	margin-top: 50px;
+  float: right;
+  width: 23%;
+  margin-left: 2%;
+  margin-top: 50px;
 }
 
-/* Tutorial box */
+/* Tutorial box - uses design tokens from admin-styles.css */
 .wpsc-sidebar-tutorial-box {
-	padding: 5px 5px 10px 5px;
-	border-radius: 5px;
-	background: white;
-	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
-	text-align: center;
+  padding: 5px 5px 10px 5px;
+  border-radius: var(--wpsc-card-radius, 8px);
+  background: white;
+  box-shadow: var(--wpsc-card-shadow, 0 2px 8px rgba(0, 0, 0, 0.12));
+  text-align: center;
 }
 
 /* Tutorial image */
 .wpsc-sidebar-tutorial-box img {
-	max-width: 99%;
+  max-width: 99%;
+}
+
+/* Buy me a coffee image – reduce max-width to make it narrower (e.g. 70%, 60%) */
+.wpsc-sidebar-tutorial-box .wpsc-sidebar-coffee-img {
+  max-width: 50%;
 }
 
 /* Sidebar HR separators */
 .wpsc-sidebar-container hr {
-	margin: 1em 0;
+  margin: 1em 0;
 }
 
-/* Social media box */
+/* Social media box - uses design tokens */
 .wpsc-sidebar-social-box {
-	padding: 15px 10px;
-	border-radius: 5px;
-	background: white;
-	text-align: center;
-	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+  padding: 15px 10px;
+  border-radius: var(--wpsc-card-radius, 8px);
+  background: white;
+  text-align: center;
+  box-shadow: var(--wpsc-card-shadow, 0 2px 8px rgba(0, 0, 0, 0.12));
 }
 
 .wpsc-sidebar-social-box h2 {
-	margin: 0 0 15px 0;
-	font-size: 18px;
-	font-weight: 600;
-	color: #333;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
 }
 
 .wpsc-social-links {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
 }
 
 .wpsc-social-link {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	padding: 10px 15px;
-	width: 100%;
-	max-width: 180px;
-	border-radius: 6px;
-	text-decoration: none;
-	font-size: 14px;
-	font-weight: 500;
-	transition: all 0.2s ease;
-	color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  width: 100%;
+  max-width: 180px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #fff;
 }
 
 .wpsc-social-link:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-	text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
 }
 
 .wpsc-social-link:focus {
-	outline: 2px solid #2271b1;
-	outline-offset: 2px;
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
 }
 
 .wpsc-social-link svg {
-	flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .wpsc-social-link span {
-	line-height: 1;
+  line-height: 1;
 }
 
 .wpsc-social-facebook {
-	background-color: #1877f2;
+  background-color: #1877f2;
 }
 
 .wpsc-social-facebook:hover {
-	background-color: #166fe5;
-	color: #fff;
+  background-color: #166fe5;
+  color: #fff;
 }
 
 .wpsc-social-x {
-	background-color: #000;
+  background-color: #000;
 }
 
 .wpsc-social-x:hover {
-	background-color: #333;
-	color: #fff;
+  background-color: #333;
+  color: #fff;
 }
 
-/* Newsletter box - scoped to sidebar container */
+/* Newsletter / "Enjoying this plugin?" box - same card styling as tutorial and social boxes */
 .wpsc-sidebar-container .newsletter.newsletter-subscription {
-	padding: 5px 5px 10px 5px;
-	border-radius: 5px;
-	background: white;
-	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+  padding: 5px 5px 10px 5px;
+  border-radius: var(--wpsc-card-radius, 8px);
+  background: white;
+  box-shadow: var(--wpsc-card-shadow, 0 2px 8px rgba(0, 0, 0, 0.12));
 }
 
 /* Inner sidebar div */
 .wpsc-sidebar-container .wpsc-sidebar {
-	margin-bottom: 15px;
-	text-align: center;
+  margin-bottom: 15px;
+  text-align: center;
 }

@@ -5,13 +5,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Name: WP Spell Check
  * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
- * Version: 10.1
+ * Version: 11.0
  * Author: WP Spell Check
  * Author URI: https://www.wpspellcheck.com
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Requires at least: 6.3
+ * Requires at least: 6.0
  * Requires PHP: 7.0
+ * 
  * Tested up to: 6.9
  */
 
@@ -242,8 +243,14 @@ function wpscx_set_global_vars() {
 	global $wpscx_base_page_max;
 	global $wpscx_ent_included;
 	global $wpsc_version;
+	global $wpsc_globals_loaded;
 
-	$wpsc_version = '10.1';
+	$wpsc_version = '11.0';
+
+	// Return early if globals are already loaded to prevent duplicate queries
+	if ( isset( $wpsc_globals_loaded ) && $wpsc_globals_loaded === true ) {
+		return;
+	}
 
 	$wpscx_ignore_list = array();
 	$wpscx_dict_list   = array();
@@ -264,7 +271,8 @@ function wpscx_set_global_vars() {
 	$check_grm       = $wpdb->get_results( "SHOW TABLES LIKE '$grammar_options_table'" );
 
 	if ( ! isset( $wpsc_settings ) && 0 < sizeof( $wpscx_check_opt ) ) {
-		$wpsc_settings_temp = $wpdb->get_results( "SELECT * FROM $options_table" );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix; ORDER BY id ensures stable index-based access (options by insertion order).
+		$wpsc_settings_temp = $wpdb->get_results( "SELECT * FROM $options_table ORDER BY id" );
 		if ( isset( $wpsc_settings_temp ) && sizeof( $wpsc_settings_temp ) > 0 ) {
 			$wpsc_settings = new SplFixedArray( sizeof( $wpsc_settings_temp ) + 1 );
 			for ( $x = 0; $x < sizeof( $wpsc_settings_temp ); $x++ ) {
@@ -288,11 +296,79 @@ function wpscx_set_global_vars() {
 			$wpscx_base_page_max = $wpsc_settings[138]->option_value;
 		}
 	} else {
-		$wpscx_base_page_max = 10;
+		$wpscx_base_page_max = 20;
 	}
 
-	// Sample error for testing safe mode - Out of Index on Fixed Array
-	// $wpsc_settings[999] = "Test Error";
+	// Mark globals as loaded so subsequent calls return early (no duplicate queries).
+	$wpsc_globals_loaded = true;
+
+	
+}
+
+/**
+ * Returns the admin UI theme preference (system, dark, or light). New installs default to system (match OS/browser).
+ * Cached per request to avoid duplicate DB queries.
+ *
+ * @since 11.0
+ * @return string 'system', 'dark', or 'light'
+ */
+function wpsc_get_admin_theme() {
+	global $wpdb, $wpsc_admin_theme_cache;
+	if ( isset( $wpsc_admin_theme_cache ) ) {
+		return $wpsc_admin_theme_cache;
+	}
+	$options_table = $wpdb->prefix . 'spellcheck_options';
+	$row           = $wpdb->get_row( "SELECT option_value FROM {$options_table} WHERE option_name = 'wpsc_admin_theme'" );
+	if ( ! $row || ! in_array( $row->option_value, array( 'system', 'dark', 'light' ), true ) ) {
+		$wpsc_admin_theme_cache = 'dark';
+		return $wpsc_admin_theme_cache;
+	}
+	$wpsc_admin_theme_cache = $row->option_value;
+	return $wpsc_admin_theme_cache;
+}
+
+/**
+ * Clears the in-request cache for admin theme. Call after updating wpsc_admin_theme in the DB.
+ *
+ * @since 11.0
+ */
+function wpsc_clear_admin_theme_cache() {
+	unset( $GLOBALS['wpsc_admin_theme_cache'] );
+}
+
+/**
+ * Returns the admin theme to use for the current request. On the Options page after clicking Update,
+ * returns the submitted theme so body class and enqueued styles reflect the new colors immediately
+ * without a second refresh (the form is processed later in the same request).
+ *
+ * @since 11.0
+ * @return string 'system', 'dark', or 'light'
+ */
+function wpsc_get_effective_admin_theme() {
+	$page = isset( $_REQUEST['page'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['page'] ) ) : '';
+	$is_options_page = ( 'wp-spellcheck-options.php' === $page || 'class-wpsc-options.php' === $page );
+	if ( is_admin() && $is_options_page
+		&& isset( $_POST['submit'] ) && 'Update' === $_POST['submit']
+		&& isset( $_POST['wpsc_admin_theme'] ) ) {
+		$theme = sanitize_text_field( wp_unslash( $_POST['wpsc_admin_theme'] ) );
+		if ( in_array( $theme, array( 'light', 'dark', 'system' ), true ) ) {
+			return $theme;
+		}
+	}
+	return wpsc_get_admin_theme();
+}
+
+/**
+ * Returns the URL to the theme-appropriate loading spinner SVG (transparent background).
+ * Dark theme → loading.svg (currentColor); light theme → loading-dark.svg (black).
+ *
+ * @since 11.0
+ * @return string URL to admin/images/loading.svg or loading-dark.svg
+ */
+function wpsc_get_loading_spinner_url() {
+	$theme = function_exists( 'wpsc_get_effective_admin_theme' ) ? wpsc_get_effective_admin_theme() : 'dark';
+	$base  = plugin_dir_url( __FILE__ ) . 'admin/images/';
+	return $base . ( 'light' === $theme ? 'loading-dark.svg' : 'loading.svg' );
 }
 
 global $wpscx_scdb_version;
@@ -320,7 +396,7 @@ function wpscx_uninstall_page() {
 		if ( $wpscx_ent_included ) {
 			deactivate_plugins( 'wp-spell-check-pro/wpspellcheckpro.php' );
 		}
-		wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the WordPress plugin page' );
+		wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the <a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">WordPress plugin page</a>.' );
 	}
 
 	?>
@@ -343,14 +419,20 @@ function wpscx_uninstall_page() {
  * @return bool
  */
 function wpscx_should_register_cron_schedule() {
+	static $result = null;
+	if ( $result !== null ) {
+		return $result;
+	}
 	if ( ! function_exists( 'is_plugin_active' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
 	if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) {
+		$result = false;
 		return false;
 	}
 	global $wpscx_ent_included;
 	if ( empty( $wpscx_ent_included ) ) {
+		$result = false;
 		return false;
 	}
 	global $wpdb;
@@ -358,11 +440,13 @@ function wpscx_should_register_cron_schedule() {
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix; option_name is literal.
 	$email = $wpdb->get_var( "SELECT option_value FROM {$table} WHERE option_name = 'email' LIMIT 1" );
 	if ( $email !== 'true' ) {
+		$result = false;
 		return false;
 	}
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix; option_name is literal.
 	$email_address = $wpdb->get_var( "SELECT option_value FROM {$table} WHERE option_name = 'email_address' LIMIT 1" );
-	return ( is_string( $email_address ) && trim( $email_address ) !== '' );
+	$result = ( is_string( $email_address ) && trim( $email_address ) !== '' );
+	return $result;
 }
 
 function wpscx_cron_add_custom( $schedules ) {
@@ -372,13 +456,15 @@ function wpscx_cron_add_custom( $schedules ) {
 	if ( ! wpscx_should_register_cron_schedule() ) {
 		return $schedules;
 	}
-	global $wpdb;
+	wpscx_set_global_vars();
+	global $wpdb, $wpscx_check_opt;
 	$table_name = $wpdb->prefix . 'spellcheck_options';
 
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string. Query contains no user input.
-	$check_db = $wpdb->get_results( "SHOW TABLES LIKE '" . esc_sql( $table_name ) . "'" );
-	if ( sizeof( $check_db ) !== 0 ) {
-		if ( ! isset( $_POST['scan_frequency_interval'] ) && ! isset( $_POST['scan_frequency'] ) ) {
+	// Reuse options table check from wpscx_set_global_vars() to avoid duplicate SHOW TABLES.
+	if ( empty( $wpscx_check_opt ) || sizeof( $wpscx_check_opt ) === 0 ) {
+		return $schedules;
+	}
+	if ( ! isset( $_POST['scan_frequency_interval'] ) && ! isset( $_POST['scan_frequency'] ) ) {
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input (hardcoded WHERE clause).
 			$scan_frequency = $wpdb->get_results( 'SELECT option_value FROM ' . $table_name . ' WHERE option_name="scan_frequency";' );
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input (hardcoded WHERE clause).
@@ -407,32 +493,31 @@ function wpscx_cron_add_custom( $schedules ) {
 			}
 		}
 
-		switch ( $scan_interval ) {
-			case 'minutes':
-			case 'minutely':
-				$scan_recurrence = $scan_timer * 60;
-				break;
-			case 'hourly':
-				$scan_recurrence = $scan_timer * 3600;
-				break;
-			case 'daily':
-				$scan_recurrence = $scan_timer * 86400;
-				break;
-			case 'weekly':
-				$scan_recurrence = $scan_timer * 604800;
-				break;
-			case 'monthly':
-				$scan_recurrence = $scan_timer * 2592000;
-				break;
-			default:
-				$scan_recurrence = 604800;
-		}
-
-		$schedules['wpsc'] = array(
-			'interval' => $scan_recurrence,
-			'display'  => __( 'wpsc', 'wp-spell-check' ),
-		);
+	switch ( $scan_interval ) {
+		case 'minutes':
+		case 'minutely':
+			$scan_recurrence = $scan_timer * 60;
+			break;
+		case 'hourly':
+			$scan_recurrence = $scan_timer * 3600;
+			break;
+		case 'daily':
+			$scan_recurrence = $scan_timer * 86400;
+			break;
+		case 'weekly':
+			$scan_recurrence = $scan_timer * 604800;
+			break;
+		case 'monthly':
+			$scan_recurrence = $scan_timer * 2592000;
+			break;
+		default:
+			$scan_recurrence = 604800;
 	}
+
+	$schedules['wpsc'] = array(
+		'interval' => $scan_recurrence,
+		'display'  => __( 'wpsc', 'wp-spell-check' ),
+	);
 	return $schedules;
 }
 add_action(

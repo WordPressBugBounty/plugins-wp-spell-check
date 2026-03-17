@@ -473,11 +473,11 @@ function wpgcx_clean_all( $content, $wpsc_settings ) {
 function wpbcx_clean_all( $content, $wpsc_settings ) {
 	$content = wpscx_script_cleanup( $content );
 
-	if ( 'true' === $wpsc_settings[23]->option_value ) {
+	if ( isset( $wpsc_settings[23] ) && $wpsc_settings[23] && 'true' === $wpsc_settings[23]->option_value ) {
 		$content = wpscx_email_cleanup( $content );
 	}
 
-	if ( 'true' === $wpsc_settings[24]->option_value ) {
+	if ( isset( $wpsc_settings[24] ) && $wpsc_settings[24] && 'true' === $wpsc_settings[24]->option_value ) {
 		$content = wpscx_website_cleanup( $content );
 	}
 
@@ -702,22 +702,6 @@ function wpscx_clear_scan() {
 function wpscx_scan_all( $rng_seed = 0, $log_debug = true ) {
 	global $wpsc_settings;
 
-	// #region agent log
-	if ( function_exists( 'wpscx_agent_debug_log' ) ) {
-		wpscx_agent_debug_log(
-			array(
-				'location'     => 'wpsc-framework.php:wpscx_scan_all',
-				'message'      => 'scan_all_entry',
-				'data'         => array(
-					'rng_seed'   => $rng_seed,
-					'doing_cron' => ( defined( 'DOING_CRON' ) && DOING_CRON ),
-				),
-				'hypothesisId' => 'B',
-			)
-		);
-	}
-	// #endregion
-
 	wpscx_set_global_vars();
 
 	wpscx_scan_site_event( $rng_seed, $log_debug );
@@ -770,8 +754,8 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 
 	$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table );
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe; ORDER BY id ensures stable index-based access (matches wpscx_set_global_vars).
+	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table . ' ORDER BY id' );
 	++$sql_count;
 
 	if ( ! $wpscx_ent_included ) {
@@ -945,9 +929,8 @@ function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_
 	global $wpscx_scan_delay;
 	global $wpscx_ent_included;
 	global $wpsc_settings;
-	if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-		wpscx_set_global_vars();
-	}
+	wpscx_set_global_vars();
+
 	// if (!$is_running) sleep($wpscx_scan_delay);
 
 	ini_set( 'memory_limit', '1024M' ); // Sets the PHP memory limit
@@ -960,7 +943,7 @@ function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_
 	$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 	$page_table    = $wpdb->prefix . 'posts';
 
-	$max_pages = intval( $wpsc_settings[138]->option_value );
+	$max_pages = ( isset( $wpsc_settings[138] ) && $wpsc_settings[138] ) ? intval( $wpsc_settings[138]->option_value ) : 0;
 
 	$total_words = 0;
 	$page_count  = 0;
@@ -968,14 +951,13 @@ function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_
 	$word_count  = 0;
 	$error_count = 0;
 
-	wpscx_set_global_vars();
-
-	if ( 'true' === $wpsc_settings[136]->option_value ) {
+	if ( isset( $wpsc_settings[136] ) && $wpsc_settings[136] && 'true' === $wpsc_settings[136]->option_value ) {
 		$post_status = " AND (post_status='publish' OR post_status='draft')";
 	} else {
 		$post_status = " AND post_status='publish'";
 	}
 
+	// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $post_status is one of two hardcoded strings from lines 955/957, no user input.
 	$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content FROM $page_table WHERE (post_type='page' OR post_type='post')$post_status" ) );
 	++$sql_count;
 
@@ -1002,21 +984,16 @@ function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_
 			++$post_count;
 		}
 
-		// if ($page_list[$x]->ID == 2624) print_r("<code>" . $words_content . "</code>");
-
 		$words_content = $page_list[ $x ]->post_content;
 		$words_content = do_shortcode( $words_content );
 		$words_content = wpscx_content_filter( $words_content );
 		$words_content = wpbc_clean_all( $words_content, $wpsc_settings );
 
-		// if ($page_list[$x]->post_title == 'Resources') print_r($words_content);
-
 		preg_match_all( '/&lt;.+&gt;/', $words_content, $html_errors );
 
 		if ( sizeof( (array) $html_errors ) !== 0 ) {
-			// print_r("<br>" . $page_list[$x]->post_title . " | " . print_r($html_errors));
 			foreach ( $html_errors as $html_error ) {
-				if ( '' !== $html_error[0] ) {
+				if ( is_array( $html_error ) && isset( $html_error[0] ) && '' !== $html_error[0] ) {
 					$hold    = new SplFixedArray( 1 );
 					$hold[0] = $html_error[0];
 
@@ -1031,9 +1008,8 @@ function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_
 		preg_match_all( '/\[.*?\]/', $words_content, $shortcode_errors );
 
 		if ( sizeof( (array) $shortcode_errors ) !== 0 ) {
-			// print_r("<br>" . $page_list[$x]->post_title . " | " . print_r($shortcode_errors));
 			foreach ( $shortcode_errors as $shortcode_error ) {
-				if ( '' !== $shortcode_error[0] && strpos( $shortcode_error[0], 'vc' ) === false ) {
+				if ( is_array( $shortcode_error ) && isset( $shortcode_error[0] ) && '' !== $shortcode_error[0] && strpos( $shortcode_error[0], 'vc' ) === false ) {
 					$hold    = new SplFixedArray( 1 );
 					$hold[0] = $shortcode_error[0];
 
@@ -1060,7 +1036,7 @@ function wphcx_check_scan_progress() {
 
 	$scan_in_progress = false;
 
-	if ( 'true' === $wpsc_settings[141]->option_value ) {
+	if ( isset( $wpsc_settings[141] ) && $wpsc_settings[141] && 'true' === $wpsc_settings[141]->option_value ) {
 		$scan_in_progress = true;
 	}
 
@@ -1074,7 +1050,7 @@ function wpscx_check_scan_progress() {
 	$scan_in_progress = false;
 
 	for ( $x = 66; $x <= 86; $x++ ) {
-		if ( 'true' === $wpsc_settings[ $x ]->option_value ) {
+		if ( isset( $wpsc_settings[ $x ] ) && $wpsc_settings[ $x ] && 'true' === $wpsc_settings[ $x ]->option_value ) {
 			$scan_in_progress = true;
 		}
 	}

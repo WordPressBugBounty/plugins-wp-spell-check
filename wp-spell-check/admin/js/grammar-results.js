@@ -223,7 +223,7 @@
 			$( "#wpscScanMessage" ).html(
 				'<img src="' +
 				loadingGifUrl +
-				'" alt="Scan in Progress" /> Starting New Scan'
+				'" alt="Scan in Progress" class="wpsc-loading-spinner" /> Starting New Scan'
 			);
 			$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
 

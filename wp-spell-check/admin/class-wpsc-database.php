@@ -157,7 +157,9 @@ class Wpscx_Database {
 			page_name varchar(100) NOT NULL,
 			page_type varchar(100) NOT NULL,
 			ignore_word bool DEFAULT false,
-			UNIQUE KEY id (id)
+			UNIQUE KEY id (id),
+			KEY idx_word_ignore_word (word, ignore_word),
+			KEY idx_ignore_word (ignore_word)
 		) $charset_collate;";
 
 		dbDelta( $sql );
@@ -466,8 +468,10 @@ class Wpscx_Database {
 		wpscx_set_global_vars();
 		global $wpscx_check_opt;
 		global $wpgc_settings;
+		global $wpsc_settings;
 
-			$options_check = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );
+		// Use result from wpscx_set_global_vars() to avoid duplicate SHOW TABLES.
+		$options_check = $wpscx_check_opt;
 		while ( sizeof( $options_check ) < 1 ) {
 			sleep( 1 );
 			$options_check = $wpdb->get_results( "SHOW TABLES LIKE '$options_table'" );
@@ -524,10 +528,26 @@ class Wpscx_Database {
 			page_type varchar(100) NOT NULL,
 			ignore_word bool DEFAULT false,
 			page_id mediumint(9),
-			UNIQUE KEY id (id)
+			UNIQUE KEY id (id),
+			KEY idx_word_ignore_word (word, ignore_word),
+			KEY idx_ignore_word (ignore_word)
 		) $charset_collate;";
 
 			dbDelta( $sql );
+
+			// Add index for ignore-list lookups if missing (existing installs); guard so re-run does not error.
+			$words_table_esc = esc_sql( $table_name );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix + literal. DDL cannot use prepare().
+			$idx_exists = $wpdb->get_results( "SHOW INDEX FROM `{$words_table_esc}` WHERE Key_name = 'idx_word_ignore_word'" );
+			if ( empty( $idx_exists ) ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name escaped above. ALTER is DDL.
+				$wpdb->query( "ALTER TABLE `{$words_table_esc}` ADD INDEX idx_word_ignore_word (word, ignore_word)" );
+			}
+			$idx_ignore_exists = $wpdb->get_results( "SHOW INDEX FROM `{$words_table_esc}` WHERE Key_name = 'idx_ignore_word'" );
+			if ( empty( $idx_ignore_exists ) ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name escaped above. ALTER is DDL.
+				$wpdb->query( "ALTER TABLE `{$words_table_esc}` ADD INDEX idx_ignore_word (ignore_word)" );
+			}
 
 			$table_name    = $wpdb->prefix . 'spellcheck_grammar';
 			$options_table = $wpdb->prefix . 'spellcheck_grammar_options';
@@ -553,10 +573,9 @@ class Wpscx_Database {
 
 		if ( sizeof( $options_check ) !== 0 ) {
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-			$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
-
-			if ( sizeof( $check ) < 1 ) {
+			// Use options already loaded by wpscx_set_global_vars() to avoid duplicate SELECT.
+			$options_count = isset( $wpsc_settings ) ? sizeof( (array) $wpsc_settings ) : 0;
+			if ( $options_count < 1 ) {
 				$wpdb->insert(
 					$options_table,
 					array(
@@ -613,7 +632,7 @@ class Wpscx_Database {
 						'option_value' => '0',
 					)
 				);
-			} elseif ( sizeof( $check ) < 9 ) {
+			} elseif ( $options_count < 9 ) {
 				$wpdb->insert(
 					$options_table,
 					array(
@@ -628,7 +647,7 @@ class Wpscx_Database {
 						'option_value' => 'false',
 					)
 				);
-			} elseif ( sizeof( $check ) < 11 ) {
+			} elseif ( $options_count < 11 ) {
 				$wpdb->insert(
 					$options_table,
 					array(
@@ -636,7 +655,7 @@ class Wpscx_Database {
 						'option_value' => '0',
 					)
 				);
-			} elseif ( sizeof( $check ) < 12 ) {
+			} elseif ( $options_count < 12 ) {
 				$wpdb->insert(
 					$options_table,
 					array(
@@ -650,10 +669,10 @@ class Wpscx_Database {
 			$options_table = $wpdb->prefix . 'spellcheck_options';
 
 		if ( sizeof( $options_check ) !== 0 ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
-			$check = $wpdb->get_results( 'SELECT * FROM ' . $options_table );
-
-			if ( sizeof( $check ) < 32 ) {
+			// Use options already loaded by wpscx_set_global_vars() to avoid duplicate SELECT.
+			$options_count = isset( $wpsc_settings ) ? sizeof( (array) $wpsc_settings ) : 0;
+			$check         = ( isset( $wpsc_settings ) && ( is_array( $wpsc_settings ) || $wpsc_settings instanceof \Countable ) ) ? $wpsc_settings : array();
+			if ( $options_count < 32 ) {
 				$wpdb->insert(
 					$options_table,
 					array(
@@ -11063,6 +11082,43 @@ class Wpscx_Database {
 						'option_value' => 'None',
 					)
 				);
+			}
+
+			// Add admin theme option at end of all option inserts so index-based access (e.g. index 30 = check_sliders) stays correct.
+			// Skip theme check after one-time migration to avoid extra SELECTs and globals clear on every request.
+			$theme_migrated = $wpdb->get_var( "SELECT option_value FROM {$options_table} WHERE option_name = 'wpsc_theme_option_migrated' LIMIT 1" );
+			if ( '1' === $theme_migrated ) {
+				// Already migrated; do nothing (no SELECT theme row, no clear of globals).
+			} else {
+				$theme_row = $wpdb->get_results( "SELECT id, option_value FROM {$options_table} WHERE option_name = 'wpsc_admin_theme'" );
+				if ( empty( $theme_row ) ) {
+					$wpdb->insert(
+						$options_table,
+						array(
+							'option_name'  => 'wpsc_admin_theme',
+							'option_value' => 'dark',
+						)
+					);
+					$wpdb->insert( $options_table, array( 'option_name' => 'wpsc_theme_option_migrated', 'option_value' => '1' ) );
+				} else {
+					// If theme was inserted earlier (e.g. id 31), move to end so index 30 remains check_sliders.
+					$max_id = (int) $wpdb->get_var( "SELECT MAX(id) FROM {$options_table}" );
+					if ( (int) $theme_row[0]->id < $max_id ) {
+					$theme_value = $theme_row[0]->option_value;
+					$wpdb->delete( $options_table, array( 'option_name' => 'wpsc_admin_theme' ) );
+					$wpdb->insert(
+						$options_table,
+						array(
+							'option_name'  => 'wpsc_admin_theme',
+							'option_value' => $theme_value,
+						)
+					);
+					// Clear options cache so rest of request sees correct index mapping.
+					$GLOBALS['wpsc_settings']       = null;
+					$GLOBALS['wpsc_globals_loaded'] = false;
+					$wpdb->insert( $options_table, array( 'option_name' => 'wpsc_theme_option_migrated', 'option_value' => '1' ) );
+				}
+				}
 			}
 		}
 	}

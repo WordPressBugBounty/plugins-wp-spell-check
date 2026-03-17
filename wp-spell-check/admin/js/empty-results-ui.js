@@ -410,12 +410,12 @@
 			}
 
 			var scanType      = $( this ).attr( "value" );
-			var loadingGifUrl = (uiData.plugin_url || "") + "images/loading.gif";
+			var loadingSpinnerUrl = uiData.loading_spinner_url || (uiData.plugin_url || "") + "images/loading.svg";
 
 			$( "#wpscScanMessage" ).html(
 				'<img src="' +
-				loadingGifUrl +
-				'" alt="Scan in Progress" /> Starting New Scan'
+				loadingSpinnerUrl +
+				'" alt="Scan in Progress" class="wpsc-loading-spinner" /> Starting New Scan'
 			);
 			$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
 

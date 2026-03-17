@@ -12,10 +12,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		global $wpdb;
 		global $wpscx_base_page_max;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -31,8 +28,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			++$sql_count;
 			$start_time = time();
 		}
-
-		wpscx_set_global_vars();
 
 		if ( 'true' === $wpsc_settings[136]->option_value ) {
 			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
@@ -102,10 +97,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		global $wpdb;
 		global $wpsc_settings;
 		global $wpscx_base_page_max;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -133,8 +125,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				array_push( $post_type_list, $type );
 			}
 		}
-
-		wpscx_set_global_vars();
 
 		if ( 'true' === $wpsc_settings[137]->option_value ) {
 			$post_status = array( 'publish', 'draft' ); } else {
@@ -210,7 +200,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
 		$options_table  = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table   = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table     = $wpdb->prefix . 'spellcheck_dictionary';
 		$post_table     = $wpdb->prefix . 'posts';
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
@@ -417,7 +406,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$sql_count     = 1;
@@ -464,7 +452,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$timer_start = round( microtime( true ), 5 );
 				global $wpdb;
 		global $wpsc_settings;
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$sql_count     = 0;
@@ -507,7 +494,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 		set_time_limit( 6000 );
 		$error_count = 0;
@@ -554,7 +540,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 
 		set_time_limit( 6000 );
@@ -599,7 +584,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$sql_count     = 1;
@@ -650,7 +634,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 
 		set_time_limit( 6000 );
@@ -712,7 +695,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 
 		set_time_limit( 6000 );
@@ -774,7 +756,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 
 		set_time_limit( 6000 );
@@ -835,7 +816,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$sql_count     = 1;
 
 		set_time_limit( 6000 );
@@ -897,7 +877,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
 		$options_table  = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table   = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table     = $wpdb->prefix . 'spellcheck_dictionary';
 		$post_table     = $wpdb->prefix . 'posts';
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
@@ -950,7 +929,6 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
 		$options_table  = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table   = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table     = $wpdb->prefix . 'spellcheck_dictionary';
 		$post_table     = $wpdb->prefix . 'posts';
 		$user_table     = $wpdb->prefix . 'usermeta';
 		$username_table = $wpdb->prefix . 'users';
@@ -1001,10 +979,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1060,10 +1035,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1119,10 +1091,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1178,10 +1147,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1237,10 +1203,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
@@ -1292,10 +1255,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		global $wpdb;
 		global $wpsc_settings;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		wpscx_set_global_vars();
 		$table_name    = $wpdb->prefix . 'postmeta';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';

@@ -228,7 +228,7 @@ jQuery(document).ready(function () {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-3").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-3").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-3").animate(
             { opacity: 0 },
             400
           );
@@ -343,7 +343,7 @@ jQuery(document).ready(function () {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-3").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-3").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-3").animate(
             { opacity: 0 },
             400
           );
@@ -446,7 +446,7 @@ jQuery(document).ready(function () {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-2").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-2").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-2").animate(
             { opacity: 0 },
             400
           );
@@ -954,7 +954,7 @@ function wpscx_connect_listeners() {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-3").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-3").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-3").animate(
             { opacity: 0 },
             400
           );
@@ -1066,7 +1066,7 @@ function wpscx_connect_listeners() {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-3").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-3").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-3").animate(
             { opacity: 0 },
             400
           );
@@ -1169,7 +1169,7 @@ function wpscx_connect_listeners() {
           );
         } else {
           jQuery(".wpsc-mouseover-text-pro-feature-2").css("z-index", "-100");
-          jQuery(".wpsc-mouseover-text-pro-featuret-2").animate(
+          jQuery(".wpsc-mouseover-text-pro-feature-2").animate(
             { opacity: 0 },
             400
           );
@@ -1580,16 +1580,33 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
   var mouseover_visible = false;
+  function showChange2Popup(buttonEl) {
+    var $popup = jQuery(".wpsc-mouseover-text-change-2");
+    var buttonOffset = jQuery(buttonEl).offset();
+    var scrollTop = jQuery(window).scrollTop();
+    $popup.css("display", "block");
+    $popup.css("position", "fixed");
+    $popup.css("z-index", "100");
+    $popup.css("left", buttonOffset.left - 200 + "px");
+    $popup.css("top", buttonOffset.top - scrollTop - 120 + "px");
+    $popup.animate({ opacity: 1.0 }, 400, function () {
+      mouseover_visible = true;
+    });
+  }
+  function hideChange2Popup() {
+    var $popup = jQuery(".wpsc-mouseover-text-change-2");
+    $popup.css("z-index", "-100");
+    $popup.animate({ opacity: 0 }, 400, function () {
+      $popup.css("display", "none");
+      $popup.css("position", "absolute");
+      $popup.css("left", "-9999px");
+      $popup.css("top", "-9999px");
+    });
+    mouseover_visible = false;
+  }
   jQuery(".wpsc-mouseover-button-change-2")
     .on("mouseenter", function () {
-      jQuery(".wpsc-mouseover-text-change-2").css("z-index", "100");
-      jQuery(".wpsc-mouseover-text-change-2").animate(
-        { opacity: 1.0 },
-        400,
-        function () {
-          mouseover_visible = true;
-        }
-      );
+      showChange2Popup(this);
     })
     .on("mouseleave", function () {
       var isHoveredPopup = jQuery(".wpsc-mouseover-text-change-2").filter(
@@ -1598,46 +1615,33 @@ jQuery(document).ready(function () {
         }
       );
       var isHoveredParent = jQuery(this)
-        .parent(".sc-message")
+        .parent(".sc-message, .wpsc-message")
         .filter(function () {
           return jQuery(this).is(":hover");
         });
 
-      if (!isHoveredPopup && !isHoveredParent) {
-        jQuery(".wpsc-mouseover-text-change-2").css("z-index", "-100");
-        jQuery(".wpsc-mouseover-text-change-2").animate({ opacity: 0 }, 400);
-        mouseover_visible = false;
+      if (!isHoveredPopup.length && !isHoveredParent.length) {
+        hideChange2Popup();
       }
     });
   jQuery(".wpsc-mouseover-button-change-2").on("click", function () {
     if (!mouseover_visible) {
       jQuery(".wpsc-mouseover-text-change-2").stop();
-      jQuery(".wpsc-mouseover-text-change-2").css("z-index", "100");
-      jQuery(".wpsc-mouseover-text-change-2").animate(
-        { opacity: 1.0 },
-        400,
-        function () {
-          mouseover_visible = true;
-        }
-      );
+      showChange2Popup(this);
     } else {
-      jQuery(".wpsc-mouseover-text-change-2").css("z-index", "-100");
-      jQuery(".wpsc-mouseover-text-change-2").animate({ opacity: 0 }, 400);
-      mouseover_visible = false;
+      hideChange2Popup();
     }
   });
 
   jQuery(".wpsc-mouseover-button-change-2")
-    .parent(".sc-message")
+    .parent(".sc-message, .wpsc-message")
     .on("mouseleave", function () {
       var isHoveredPopup =
         jQuery(".wpsc-mouseover-text-change-2:hover").length > 0;
       var isHoveredButton =
         jQuery(".wpsc-mouseover-button-change-2:hover").length > 0;
       if (!isHoveredPopup && !isHoveredButton) {
-        jQuery(".wpsc-mouseover-text-change-2").css("z-index", "-100");
-        jQuery(".wpsc-mouseover-text-change-2").animate({ opacity: 0 }, 400);
-        mouseover_visible = false;
+        hideChange2Popup();
       }
     });
 });
@@ -1915,7 +1919,7 @@ jQuery(document).ready(function () {
       );
     } else {
       jQuery(".wpsc-mouseover-text-pro-feature-2").css("z-index", "-100");
-      jQuery(".wpsc-mouseover-text-pro-featuret-2").animate(
+      jQuery(".wpsc-mouseover-text-pro-feature-2").animate(
         { opacity: 0 },
         400
       );
@@ -1955,7 +1959,7 @@ jQuery(document).ready(function () {
       );
     } else {
       jQuery(".wpsc-mouseover-text-pro-feature-3").css("z-index", "-100");
-      jQuery(".wpsc-mouseover-text-pro-featuret-3").animate(
+      jQuery(".wpsc-mouseover-text-pro-feature-3").animate(
         { opacity: 0 },
         400
       );

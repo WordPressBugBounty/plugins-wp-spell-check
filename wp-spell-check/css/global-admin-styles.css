@@ -1,3 +1,8 @@
+/* Page background - light orange on all plugin admin pages (overrides WP default silver) */
+body.wpsc-admin-page #wpcontent {
+	background-color: #faf8f6;
+}
+
 li#wp-admin-bar-WP_Spell_Check > a.ab-item, li#wp-admin-bar-WP_Spell_Check > a.ab-item:hover, li#wp-admin-bar-WP_Spell_Check > a.ab-item:active { background-image: url('images/logo-icon-16x16.png')!important; background-repeat: no-repeat!important; background-position: 0.15em 50%!important; padding-left: 25px!important; }
 #wpsc-scan-results-tab th { vertical-align: top; }
 #wpgc-scan-results-tab .wp-list-table th { text-align: center; vertical-align: top; }

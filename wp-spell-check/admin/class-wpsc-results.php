@@ -167,67 +167,76 @@ class Wpscx_Table extends WP_List_Table {
 			$item['ID'] = '';
 		}
 
-		$contents = file_get_contents( $loc );
+		// SEO/empty table rows: no dictionary or spelling suggestions needed; skip query and .pws load.
+		if ( 'Empty Field' === $item['word'] ) {
+			$suggestions    = array( '', '', '', '' );
+			$hasSuggestions = false;
+		} else {
+			static $cached_my_dictionary = null;
+			static $cached_word_list     = null;
+			if ( null === $cached_word_list ) {
+				$contents = file_get_contents( $loc );
+				$word_list = array();
+				foreach ( $dict_words as $dict_word ) {
+					array_push( $word_list, $dict_word->word );
+				}
+				if ( null === $cached_my_dictionary ) {
+					$cached_my_dictionary = $wpdb->get_results( "SELECT * FROM $dict_table;" );
+				}
+				foreach ( $cached_my_dictionary as $dict_word ) {
+					array_push( $word_list, $dict_word->word );
+				}
+				$contents  = str_replace( "\r\n", "\n", $contents );
+				$main_list = explode( "\n", $contents );
+				$word_list = array_merge( $word_list, $main_list );
+				$cached_word_list = $word_list;
+			}
+			$word_list = $cached_word_list;
 
-		$word_list = array();
-		foreach ( $dict_words as $dict_word ) {
-			array_push( $word_list, $dict_word->word );
-		}
+			$suggestions         = array();
+			$suggestions_holding = array();
+			$hasSuggestions      = false;
 
-		$my_dictionary = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-
-		foreach ( $my_dictionary as $dict_word ) {
-			array_push( $word_list, $dict_word->word );
-		}
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$main_list = explode( "\n", $contents );
-
-		$word_list = array_merge( $word_list, $main_list );
-
-		$suggestions         = array();
-		$suggestions_holding = array();
-		$hasSuggestions      = false;
-
-		$start      = round( microtime( true ), 5 );
-		$first_word = stripslashes( $item['word'] );
-		foreach ( $word_list as $words ) {
-			if ( strlen( $words ) >= strlen( $first_word ) - 2 && strlen( $words ) <= strlen( $first_word ) + 2 ) {
-				similar_text( strtoupper( $first_word ), strtoupper( $words ), $percentage );
-				if ( $percentage > 85.00 ) {
-					if ( strtoupper( $first_word[0] ) === $first_word[0] ) {
-						array_push( $suggestions_holding, array( ucfirst( $words ), $percentage ) );
-					} else {
-						array_push( $suggestions_holding, array( lcfirst( $words ), $percentage ) );
+			$start      = round( microtime( true ), 5 );
+			$first_word = stripslashes( $item['word'] );
+			foreach ( $word_list as $words ) {
+				if ( strlen( $words ) >= strlen( $first_word ) - 2 && strlen( $words ) <= strlen( $first_word ) + 2 ) {
+					similar_text( strtoupper( $first_word ), strtoupper( $words ), $percentage );
+					if ( $percentage > 85.00 ) {
+						if ( strtoupper( $first_word[0] ) === $first_word[0] ) {
+							array_push( $suggestions_holding, array( ucfirst( $words ), $percentage ) );
+						} else {
+							array_push( $suggestions_holding, array( lcfirst( $words ), $percentage ) );
+						}
 					}
 				}
 			}
-		}
 
-		for ( $x = 0; $x < sizeof( (array) $suggestions_holding ); $x++ ) {
-			$temp       = '';
-			$temp_per   = 0;
-			$temp_index = 0;
-			for ( $y = 0; $y < sizeof( (array) $suggestions_holding ); $y++ ) {
-				if ( $suggestions_holding[ $y ][1] > $temp_per ) {
-					$temp       = $suggestions_holding[ $y ][0];
-					$temp_per   = $suggestions_holding[ $y ][1];
-					$temp_index = $y;
+			for ( $x = 0; $x < sizeof( (array) $suggestions_holding ); $x++ ) {
+				$temp       = '';
+				$temp_per   = 0;
+				$temp_index = 0;
+				for ( $y = 0; $y < sizeof( (array) $suggestions_holding ); $y++ ) {
+					if ( $suggestions_holding[ $y ][1] > $temp_per ) {
+						$temp       = $suggestions_holding[ $y ][0];
+						$temp_per   = $suggestions_holding[ $y ][1];
+						$temp_index = $y;
+					}
+				}
+				if ( '' !== $temp ) {
+					array_push( $suggestions, $temp );
+					$suggestions_holding[ $temp_index ][1] = 0;
+					$hasSuggestions                        = true;
+				}
+				if ( sizeof( (array) $suggestions ) >= 4 ) {
+					break;
 				}
 			}
-			if ( '' !== $temp ) {
-				array_push( $suggestions, $temp );
-				$suggestions_holding[ $temp_index ][1] = 0;
-				$hasSuggestions                        = true;
-			}
-			if ( sizeof( (array) $suggestions ) >= 4 ) {
-				break;
-			}
-		}
 
-		for ( $x = 0; $x <= 4; $x++ ) {
-			if ( ! isset( $suggestions[ $x ] ) ) {
-				$suggestions[ $x ] = '';
+			for ( $x = 0; $x <= 4; $x++ ) {
+				if ( ! isset( $suggestions[ $x ] ) ) {
+					$suggestions[ $x ] = '';
+				}
 			}
 		}
 
@@ -317,7 +326,7 @@ class Wpscx_Table extends WP_List_Table {
 		} elseif ( 'Post Category' === $item['page_type'] || 'Category Description' === $item['page_type'] || WPSCX_CAT === $item['page_type'] || 'Category Title' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=category&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Author Nickname' === $item['page_type'] || 'Author First Name' === $item['page_type'] || 'Author Last Name' === $item['page_type'] || 'Author Biography' === $item['page_type'] || 'Author SEO Title' === $item['page_type'] || 'Author SEO Description' === $item['page_type'] || 'twitter' === $item['page_type'] || 'facebook' === $item['page_type'] || 'Author facebook' === $item['page_type'] || 'Author twitter' === $item['page_type'] || 'Author googleplus' === $item['page_type'] ) {
-			$output = '<a href="/wp-admin/user-edit.php?user_id=' . $item['page_id'] . ' " id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+			$output = '<a href="' . esc_url( get_edit_user_link( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Sitename' === $item['page_type'] || 'Site Tagline' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/options-general.php" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Widget Content' === $item['page_type'] ) {
@@ -425,7 +434,7 @@ class Wpscx_Table extends WP_List_Table {
 		static $row_class = 'wpsc-row';
 		$row_class        = ( '' === $row_class ? ' class="alternate"' : '' );
 
-		echo '<tr class="wpsc-row" id="wpsc-row-' . esc_attr( $item['id'] ) . '">';
+		echo '<tr class="wpsc-row' . ( '' !== $row_class ? ' alternate' : '' ) . '" id="wpsc-row-' . esc_attr( $item['id'] ) . '">';
 		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
@@ -533,9 +542,6 @@ class Wpscx_Table extends WP_List_Table {
 		} else {
 			$paged = 1;
 		}
-
-		// print_r(array_slice( $data, ( ( 0 ) * $per_page ), $per_page )); echo "<br>";
-		// echo "Ent Included: $wpscx_ent_included <br>";
 
 		$current_page = intval( $paged );
 		$total_items  = count( $data );
@@ -664,8 +670,8 @@ function wpscx_admin_render() {
 	$message    = '';
 	$show_popup = false;
 
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'
-	$settings = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $options_table );
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe; ORDER BY id ensures stable index-based access.
+	$settings = $wpdb->get_results( 'SELECT option_name, option_value FROM ' . $options_table . ' ORDER BY id' );
 	++$sql_count;
 
 	$max_pages = intval( $settings[138]->option_value );
@@ -909,7 +915,7 @@ function wpscx_admin_render() {
 		$last_type_label = is_array( $last_type ) && isset( $last_type[0] ) && is_object( $last_type[0] ) && isset( $last_type[0]->option_value )
 			? $last_type[0]->option_value
 			: ( is_array( $last_type ) && isset( $last_type[0] ) ? (string) $last_type[0] : (string) $last_type );
-		$scan_message    = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . esc_html( $last_type_label ) . '</span>. Estimated time for completion is ' . $estimated_time . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
+		$scan_message    = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . esc_html( $last_type_label ) . '</span>. Estimated time for completion is ' . $estimated_time . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 	} elseif ( '' === $scan_message ) {
 		$scan_message = 'No scan currently running';
 	}
@@ -954,7 +960,7 @@ function wpscx_admin_render() {
 				'wpsc_display_results' => wp_create_nonce( 'wpsc_display_results' ),
 				'wpsc_get_stats'       => wp_create_nonce( 'wpsc_get_stats' ),
 			),
-			'loadingGif'          => plugin_dir_url( __FILE__ ) . 'images/loading.gif',
+			'loadingGif'          => wpsc_get_loading_spinner_url(),
 			'version'             => $wpsc_version,
 		)
 	);
@@ -979,7 +985,7 @@ function wpscx_admin_render() {
 		<p>Have you backed up your database? This will update all areas of your website that you have selected WP Spell
 			Check to scan. Are you sure you wish to proceed with the changes?</p>
 	</div>
-	<div class="wrap wpsc-table">
+	<div class="wrap wpsc-table wpsc-page-spell">
 		<h2><a href="admin.php?page=wp-spellcheck.php"><img
 					src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/logo.png'; ?>"
 					alt="WP Spell Check" /></a> <span style="position: relative; top: -8px;"> - Scan Results</span></h2>
@@ -1000,20 +1006,19 @@ function wpscx_admin_render() {
 		?>
 		>
 			<form action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method='GET'>
-				<div style="border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%); background: white;">
+				<div class="wpsc-scan-container">
 					<div class="wpsc-scan-buttons" style="padding-left: 8px;">
 						<h3 style="margin-bottom: 0px; padding-top: 10px;">Click on the buttons below to spell check various
 							parts of your website.</h3>
 						<h3 style="display: inline-block;">Scan:</h3>
 						<p class="submit wpsc-mouseleave-scfeature"><input
-								style="background-color: #ffb01f; border-color: #ffb01f; box-shadow: 0px 1px 0px #ffb01f; text-shadow: 1px 1px 1px #ffb01f; font-weight: bold;"
 								type="submit" name="submit" id="submit wpscEntireSite"
 								class="button button-primary wpscScan wpscScanSite" value="Entire Site"></p>
 						<p class="submit wpsc-mouseleave-scfeature"><input type="submit" name="submit" id="submit"
 								class="button button-primary wpscScan" value="Pages" 
 								<?php
 								if ( 'false' === $check_pages ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								></p>
@@ -1021,7 +1026,7 @@ function wpscx_admin_render() {
 								class="button button-primary wpscScan" value="Posts" 
 								<?php
 								if ( 'false' === $check_posts ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								></p>
@@ -1040,7 +1045,7 @@ function wpscx_admin_render() {
 								"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="SEO Titles"
 									<?php
 									if ( 'false' === $seo_titles || ! $wpscx_ent_included ) {
-										echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+										echo ' disabled';
 									}
 									?>
 									></p>
@@ -1054,7 +1059,7 @@ function wpscx_admin_render() {
 									value="SEO Descriptions" 
 									<?php
 									if ( 'false' === $seo_desc || ! $wpscx_ent_included ) {
-										echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+										echo ' disabled';
 									}
 									?>
 									></p>
@@ -1067,7 +1072,7 @@ function wpscx_admin_render() {
 								"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Media Files"
 									<?php
 									if ( 'false' === $check_media || ! $wpscx_ent_included ) {
-										echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+										echo ' disabled';
 									}
 									?>
 									></p>
@@ -1076,7 +1081,7 @@ function wpscx_admin_render() {
 								class="button button-primary wpscScan" value="Authors" 
 								<?php
 								if ( 'false' === $check_authors ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								></p>
@@ -1087,7 +1092,7 @@ function wpscx_admin_render() {
 									class="button button-primary wpscScan" value="Contact Form 7" 
 									<?php
 									if ( 'false' === $check_cf7 ) {
-										echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+										echo ' disabled';
 									}
 									?>
 									></p><?php } ?>
@@ -1106,7 +1111,7 @@ function wpscx_admin_render() {
 				"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Menus" 
 				<?php
 				if ( 'false' === $check_menus || ! $wpscx_ent_included ) {
-					echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+					echo ' disabled';
 				}
 				?>
 				></p>
@@ -1119,7 +1124,7 @@ function wpscx_admin_render() {
 				"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Tags" 
 				<?php
 				if ( 'false' === $tags || ! $wpscx_ent_included ) {
-					echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+					echo ' disabled';
 				}
 				?>
 				></p>
@@ -1132,7 +1137,7 @@ function wpscx_admin_render() {
 				"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Categories" 
 				<?php
 				if ( 'false' === $categories || ! $wpscx_ent_included ) {
-					echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+					echo ' disabled';
 				}
 				?>
 				></p>
@@ -1145,7 +1150,7 @@ function wpscx_admin_render() {
 				"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Sliders" 
 				<?php
 				if ( 'false' === $check_sliders || ! $wpscx_ent_included ) {
-					echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+					echo ' disabled';
 				}
 				?>
 				></p>
@@ -1162,7 +1167,7 @@ function wpscx_admin_render() {
 										value="WooCommerce Products" 
 										<?php
 										if ( 'false' === $check_ecommerce || ! $wpscx_ent_included ) {
-											echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+											echo ' disabled';
 										}
 										?>
 										></p><?php } ?>
@@ -1175,29 +1180,29 @@ function wpscx_admin_render() {
 				" value="Widgets" 
 				<?php
 				if ( 'false' === $check_widgets || ! $wpscx_ent_included ) {
-					echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+					echo ' disabled';
 				}
 				?>
 				></p>
-							<p class="submit" style="margin-left: -11px;"><span style="position: relative; left: 15px;"> -
+							<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><span style="position: relative; left: 15px;"> -
 								</span><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/clear-results.png'; ?>"
 									alt="Clear Spellcheck Results"
-									style="width: 20px; position: relative; top: 5px; left: 27px;" /><input type="submit"
-									name="submit" id="submit" style="padding-left: 30px; background-color: red;"
-									class="button button-primary" value="Clear Results"></p>
-							<p class="submit" style="margin-left: -11px;"><img
+									class="wpsc-action-icon wpsc-icon-clear-results" style="width: 20px; position: relative; top: 5px; left: 27px;" /><input type="submit"
+									name="submit" id="submit"
+									class="button button-primary wpsc-btn-clear-results" value="Clear Results"></p>
+							<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/see-results.png'; ?>"
 									alt="See Spellcheck Results"
-									style="width: 20px; position: relative; top: 5px; left: 26px;" /><input type="submit"
-									name="submit" id="submit" style="padding-left: 30px; background-color: red;"
-									class="button button-primary" value="See Scan Results"></p>
-							<p class="submit" style="margin-left: -11px;"><img
+									class="wpsc-action-icon wpsc-icon-see-results" style="width: 20px; position: relative; top: 5px; left: 26px;" /><input type="submit"
+									name="submit" id="submit"
+									class="button button-primary wpsc-btn-see-results" value="See Scan Results"></p>
+							<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/stop-scans.png'; ?>"
 									alt="Stop Current Scans"
-									style="width: 20px; position: relative; top: 5px; left: 25px;" /><input type="submit"
-									name="submit" id="submit" style="padding-left: 30px; background-color: red;"
-									class="button button-primary" value="Stop Scans"></p>
+									class="wpsc-action-icon wpsc-icon-stop-scans" style="width: 20px; position: relative; top: 5px; left: 25px;" /><input type="submit"
+									name="submit" id="submit"
+									class="button button-primary wpsc-btn-stop-scans" value="Stop Scans"></p>
 							<p class="submit" style="margin-left: -11px;"><a
 									href="/wp-admin/admin.php?page=wp-spellcheck-options.php" target="_blank"><img
 										src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../images/options.png'; ?>"
@@ -1268,30 +1273,23 @@ function wpscx_admin_render() {
 			}
 			if ( ( '' !== $message || isset( $ignore_message[0] ) || isset( $dict_message[0] ) || '' !== $mass_edit_message ) && 'empty' !== $scan_tab ) {
 				?>
-				<div style="text-align: center; background-color: white; padding: 5px; margin: 15px 0; width: 74%;"
-					class="wpsc-mesage-container">
+				<div class="wpsc-mesage-container" style="width: 74%;">
 					<?php
 					if ( isset( $ignore_message[0] ) ) {
 						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $ignore_message from ignore_word() returns hardcoded message templates, already escaped with esc_html()
-						echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . htmlspecialchars_decode( esc_html( $ignore_message[0] ) ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . htmlspecialchars_decode( esc_html( $ignore_message[0] ) ) . '</span></div>';
 					}
-					?>
-					<?php
 					if ( isset( $dict_message[0] ) ) {
 						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $dict_message from add_to_dictionary() returns hardcoded message templates, already escaped with esc_html()
-						echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . htmlspecialchars_decode( esc_html( $dict_message[0] ) ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . htmlspecialchars_decode( esc_html( $dict_message[0] ) ) . '</span></div>';
 					}
-					?>
-					<?php
 					if ( '' !== $message ) {
 						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $message contains hardcoded strings, already escaped with esc_html()
-						echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . htmlspecialchars_decode( esc_html( $message ) ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . htmlspecialchars_decode( esc_html( $message ) ) . '</span></div>';
 					}
-					?>
-					<?php
 					if ( '' !== $mass_edit_message ) {
 						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $mass_edit_message contains hardcoded strings, already escaped with esc_html()
-						echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . htmlspecialchars_decode( esc_html( $mass_edit_message ) ) . '</div>';
+						echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . htmlspecialchars_decode( esc_html( $mass_edit_message ) ) . '</span></div>';
 					}
 					?>
 				</div>
@@ -1314,7 +1312,7 @@ function wpscx_admin_render() {
 					value="<?php echo esc_attr( wp_create_nonce( 'wpsc-update-words' ) ); ?>" />
 				<input name="wpsc-edit-update-button" class="wpsc-edit-update-button" type="submit" value="Save all Changes"
 					class="button button-primary"
-					style="width: 16%; padding-top: 5px; padding-bottom: 5px; margin-left: 32.5%; display: block; background: #008200; border-color: #005200; color: white; font-weight: bold; position: absolute; margin-top: 7px;" />
+					style="width: 16%; padding-top: 5px; padding-bottom: 5px; margin-left: 32.5%; display: block; color: white; font-weight: bold; position: absolute; margin-top: 7px;" />
 				<div id="wpsc-table-results">
 					<?php
 					$list_table->display();
@@ -1325,19 +1323,20 @@ function wpscx_admin_render() {
 				$end_display = time();
 
 				?>
-				<p class="search-box" style="margin-bottom: 15px;">
-					<label class="screen-reader-text" for="search_id-search-input">search:</label>
-					<input type="search" id="search_id-search-input" name="s" value=""
-						placeholder="Search for Misspelled Words">
-					<input type="submit" id="search-submit" class="button" value="search">
-				</p>
-				<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button" type="submit" value="Save all Changes"
-					class="button button-primary"
-					style="width: 16%; padding-top: 5px; padding-bottom: 5px; margin-left: 31.5%; display: block;  background: #008200; border-color: #005200; color: white; font-weight: bold; position: absolute; margin-top: -31px;" />
+				<div class="wpsc-words-list-footer">
+					<p class="search-box bottom">
+						<label class="screen-reader-text" for="search_id-search-input">search:</label>
+						<input type="search" id="search_id-search-input" name="s" value=""
+							placeholder="Search for Misspelled Words">
+						<input type="submit" id="search-submit" class="button" value="search">
+					</p>
+					<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button bottom" type="submit" value="Save all Changes"
+						class="button button-primary" />
+				</div>
 			</form>
 
-			<div
-				style="padding: 15px; background: white; clear: both; width: 72%; font-family: helvetica, sans-serif; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);">
+			<div class="wpsc-stats-summary"
+				style="padding: 15px; clear: both; width: 72%; font-family: helvetica, sans-serif;">
 				<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $settings[45]->option_value ) . '</span>: ' . esc_html( $word_count ) . '</h3>'; ?>
 				<?php
 				if ( $settings[29]->option_value >= $page_count ) {
@@ -1406,7 +1405,7 @@ function wpscx_admin_render() {
 						/>Apply this change to the entire website
 							<?php
 							if ( ! $wpscx_ent_included ) {
-								echo "<span class='wpsc-mouseover-pro-feature-3' style='border-radius: 29px; color: #008200!important; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;'>?<span class='wpsc-mouseover-text-pro-feature-3' style='color: black!important;'>This is a pro version feature. <a href='https://www.wpspellcheck.com/pricing/' target='_blank'>Click Here</a> to upgrade</span></span></span>";
+								echo "<span class='wpsc-mouseover-pro-feature-3' style='border-radius: 29px; color: #008200!important; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;'>?<span class='wpsc-mouseover-text-pro-feature-3'>This is a pro version feature. <a href='https://www.wpspellcheck.com/pricing/' target='_blank'>Click Here</a> to upgrade</span></span></span>";
 							}
 							?>
 						</span>
@@ -1453,7 +1452,7 @@ function wpscx_admin_render() {
 									/>Apply this change to the entire website
 								<?php
 								if ( ! $wpscx_ent_included ) {
-									echo "<span class='wpsc-mouseover-pro-feature-2' style='border-radius: 29px; color: #008200!important; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;'>?<span class='wpsc-mouseover-text-pro-feature-2' style='color: black!important;'>This is a pro version feature.  <a href='https://www.wpspellcheck.com/pricing/' target='_blank'>Click Here</a> to upgrade</span></span></span>";
+									echo "<span class='wpsc-mouseover-pro-feature-2' style='border-radius: 29px; color: #008200!important; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;'>?<span class='wpsc-mouseover-text-pro-feature-2'>This is a pro version feature.  <a href='https://www.wpspellcheck.com/pricing/' target='_blank'>Click Here</a> to upgrade</span></span></span>";
 								}
 								?>
 							</div>
@@ -1503,7 +1502,7 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 				'wpsc_display_results' => wp_create_nonce( 'wpsc_display_results' ),
 				'wpsc_get_stats'       => wp_create_nonce( 'wpsc_get_stats' ),
 			),
-			'loadingGif'          => plugin_dir_url( __FILE__ ) . 'images/loading.gif',
+			'loadingGif'          => wpsc_get_loading_spinner_url(),
 			'version'             => $wpsc_version,
 		)
 	);
@@ -1519,27 +1518,21 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 		<p>Have you backed up your database? This will update all areas of your website that you have selected WP Spell
 			Check to scan. Are you sure you wish to proceed with the changes?</p>
 	</div>
-	<div class="wrap wpsc-table">
+	<div class="wrap wpsc-table wpsc-page-spell">
 		<?php if ( ( '' !== $message || '' !== $ignore_message[0] || '' !== $dict_message[0] || '' !== $mass_edit_message ) && 'empty' !== $_GET['wpsc-scan-tab'] ) { ?>
-			<div style="text-align: center; background-color: white; padding: 5px; margin: 15px 0; width: 74%;">
+			<div class="wpsc-mesage-container" style="width: 74%;">
 				<?php
 				if ( '' !== $message ) {
-					echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . esc_html( $message ) . '</div>';
+					echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $message ) . '</span></div>';
 				}
-				?>
-				<?php
 				if ( '' !== $mass_edit_message ) {
-					echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . esc_html( $mass_edit_message ) . '</div>';
+					echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $mass_edit_message ) . '</span></div>';
 				}
-				?>
-				<?php
 				if ( '' !== $ignore_message[0] ) {
-					echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . esc_html( $ignore_message[0] ) . '</div>';
+					echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $ignore_message[0] ) . '</span></div>';
 				}
-				?>
-				<?php
 				if ( '' !== $dict_message[0] ) {
-					echo "<div class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold;'>" . esc_html( $dict_message[0] ) . '</div>';
+					echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $dict_message[0] ) . '</span></div>';
 				}
 				?>
 			</div>
@@ -1557,7 +1550,7 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 			<input type="hidden" name="page" value="<?php echo esc_attr( wp_unslash( $_REQUEST['page'] ) ); ?>" />
 			<input name="wpsc-edit-update-button" class="wpsc-edit-update-button" type="submit" value="Save all Changes"
 				class="button button-primary"
-				style="width: 15%; margin-left: 32.5%; display: block; background: #008200; border-color: #005200; color: white; font-weight: bold; position: absolute; margin-top: 7px;" />
+				style="width: 15%; margin-left: 32.5%; display: block; color: white; font-weight: bold; position: absolute; margin-top: 7px;" />
 			<?php
 			$list_table->display();
 			?>
@@ -1567,15 +1560,16 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 			$end_display = time();
 
 			?>
-			<p class="search-box" style="margin-top: 0.7em;">
-				<label class="screen-reader-text" for="search_id-search-input">search:</label>
-				<input type="search" id="search_id-search-input" name="s" value=""
-					placeholder="Search for Misspelled Words">
-				<input type="submit" id="search-submit" class="button" value="search">
-			</p>
-			<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button" type="submit" value="Save all Changes"
-				class="button button-primary"
-				style="width: 15%; margin-left: 31.5%; display: block;  background: #008200; border-color: #005200; color: white; font-weight: bold; position: absolute; margin-top: -31px;" />
+			<div class="wpsc-words-list-footer">
+				<p class="search-box bottom">
+					<label class="screen-reader-text" for="search_id-search-input">search:</label>
+					<input type="search" id="search_id-search-input" name="s" value=""
+						placeholder="Search for Misspelled Words">
+					<input type="submit" id="search-submit" class="button" value="search">
+				</p>
+				<input name="wpsc-edit-update-buttom" class="wpsc-edit-update-button bottom" type="submit" value="Save all Changes"
+					class="button button-primary" />
+			</div>
 		</form>
 	</div>
 	<!-- Empty Fields  Tab -->
@@ -1654,7 +1648,8 @@ function wpscx_enqueue_results_styles( $hook ) {
 		// Ensure .pointer() is available (fixes "pointer is not a function" when core or other code calls it).
 		wp_enqueue_style( 'wp-pointer' );
 		wp_enqueue_script( 'wp-pointer' );
-		wp_enqueue_style( 'wpsc-admin-styles', plugin_dir_url( __DIR__ ) . 'css/admin-styles.css', array(), $wpsc_version );
+		// Load after wp-admin so inactive Pro button styles override WP 5.5+ disabled input styles (#f7f7f7 / #a0a5aa).
+		wp_enqueue_style( 'wpsc-admin-styles', plugin_dir_url( __DIR__ ) . 'css/admin-styles.css', array( 'wp-admin' ), $wpsc_version );
 		wp_enqueue_style( 'wpsc-sidebar', plugin_dir_url( __DIR__ ) . 'css/wpsc-sidebar.css', array(), $wpsc_version );
 		wp_enqueue_style( 'wpsc-sidebar-inline', plugin_dir_url( __DIR__ ) . 'admin/css/sidebar-inline.css', array( 'wpsc-sidebar' ), $wpsc_version );
 		wp_enqueue_style( 'wpsc-jquery-ui', plugin_dir_url( __DIR__ ) . 'css/wpscx-jquery-ui.css', array(), $wpsc_version );

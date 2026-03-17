@@ -130,7 +130,7 @@ function wpscx_render_options() {
 		if ( $wpscx_ent_included ) {
 			deactivate_plugins( WPSCX_PRO_LOC );
 		}
-		wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the WordPress plugin page' );
+		wp_die( 'WP Spell Check has been deactivated. If you wish to use the plugin again you may activate it on the <a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">WordPress plugin page</a>.' );
 	}
 
 	$next_scan = wp_next_scheduled( 'admincheckcode', array( 10, 1 ) );
@@ -284,7 +284,7 @@ function wpscx_render_options() {
 			echo 'True';
 		}
 
-			$message = "<h3 style='color: rgb(0, 115, 0);'>Plugin data has been successfully imported</h3>";
+			$message = '<h3>Plugin data has been successfully imported</h3>';
 
 		if ( true === $dict_display ) {
 			$message .= $dict_dupe;
@@ -617,6 +617,15 @@ function wpscx_render_options() {
 		} else {
 			$wpdb->update( $table_name, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_page_drafts' ) );
 		}
+		if ( isset( $_POST['wpsc_admin_theme'] ) ) {
+			$theme = sanitize_text_field( wp_unslash( $_POST['wpsc_admin_theme'] ) );
+			if ( in_array( $theme, array( 'light', 'dark' ), true ) ) {
+				$wpdb->update( $table_name, array( 'option_value' => $theme ), array( 'option_name' => 'wpsc_admin_theme' ) );
+				if ( function_exists( 'wpsc_clear_admin_theme_cache' ) ) {
+					wpsc_clear_admin_theme_cache();
+				}
+			}
+		}
 
 		if ( 'check-authors' === $_POST['check-authors-empty'] ) {
 			$wpdb->update( $table_name, array( 'option_value' => 'true' ), array( 'option_name' => 'check_authors_empty' ) );
@@ -841,21 +850,21 @@ function wpscx_render_options() {
 
 	?>
 	<?php // wpscx_show_feature_window(); ?>
-		<div class="wrap">
+		<div class="wrap wpsc-options-page">
 			<h2><a href="admin.php?page=wp-spellcheck.php"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/logo.png'; ?>" alt="WP Spell Check" /></a> <span style="position: relative; top: -8px;"> - Options</span></h2>
 					<?php
 					if ( '' !== $api_key && ! is_plugin_active( WPSCX_PRO_LOC ) ) {
-						echo "<div class='error' style='color: red; font-weight: bold; font-size: 14px'>WP Spell Check Pro Version must be active. Please activate WP Spell Check Pro</div>";
+						echo "<div class='wpsc-notice-error'>WP Spell Check Pro Version must be active. Please activate WP Spell Check Pro</div>";
 					} elseif ( ! $wpscx_key_valid && '' !== $api_key ) {
-						echo "<div class='error' style='color: red; font-weight: bold; font-size: 14px'>API Key not valid</div>";
+						echo "<div class='wpsc-notice-error'>API Key not valid</div>";
 					} elseif ( $wpscx_key_valid ) {
-						echo "<div class='updated' style='color: rgb(0, 115, 0); font-weight: bold; font-size: 14px'>API Key is valid</div>";
+						echo "<div class='wpsc-notice-success'>API Key is valid</div>";
 					}
 					?>
 		<?php
 		if ( '' !== $message ) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: $message contains hardcoded strings, already escaped with esc_html()
-			echo "<span class='wpsc-message'>" . htmlspecialchars_decode( esc_html( $message ) ) . '</span>';}
+			echo "<div class='wpsc-notice-success'><span class='wpsc-message'>" . htmlspecialchars_decode( esc_html( $message ) ) . '</span></div>';}
 		?>
 			<div class="wpsc-scan-nav-bar" style="width: 75%;">
 				<a href="#general-options" id="wpsc-general-options" 
@@ -899,12 +908,12 @@ function wpscx_render_options() {
 			?>
 			>
 							<div style="width: 75%; float: left;">
-			<table class="form-table wpsc-general-options-table" style="background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%); display: block; padding-top: 20px;" role="presentation"><tbody>
+			<table class="form-table wpsc-general-options-table wpsc-options-card" style="display: block; padding-top: 20px;" role="presentation"><tbody>
 							<?php
 							if ( ! $wpscx_ent_included ) {
 								?>
 								<tr><td>You're using WP Spell Check Base Version - no API key needed! <br><br>To unlock Pro features, <a target="_blank" href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>">Click here</a> to upgrade</td></tr><?php } ?>
-								<tr><td style="padding-top: 30px; width: 755px;"><label style="display: inline-block; margin-bottom: 6px;">Already Upgraded? Simply enter your API key in the box below<br>and make sure to install and activate the Pro plugin as well!</label><br /><input type="text" name="api_key" value="<?php echo esc_attr( $api_key ); ?>" placeholder="Paste your API key here"></td>
+								<tr><td style="padding-top: 30px; width: 755px;"><label for="wpsc-api-key" style="display: inline-block; margin-bottom: 6px;">Already Upgraded? Simply enter your API key in the box below<br>and make sure to install and activate the Pro plugin as well!</label><br /><input type="text" id="wpsc-api-key" name="api_key" value="<?php echo esc_attr( $api_key ); ?>" placeholder="Paste your API key here"></td>
 				<td style="padding-top: 30px;"><label style="display: inline-block; margin-bottom: 6px;">Language</label><br /><select style="display: inline-block; width: 140px; height: 27px; margin-top: 1px;" name="language_setting">
 <option value="en_CA" 
 	<?php
@@ -939,10 +948,24 @@ function wpscx_render_options() {
 					echo 'checked';}
 				?>
 				>Scan Post Drafts</td></tr>
+				<tr><td colspan="2"><hr style="width: 50%;"></td></tr>
+				<tr><td colspan="2"><p style="text-align: center; margin-top: -5px; font-weight: bold;">Theme Appearance</p></td></tr>
+				<tr><td><label for="wpsc-admin-theme">Theme</label></td>
+				<td>
+				<?php
+				$current_theme = function_exists( 'wpsc_get_effective_admin_theme' ) ? wpsc_get_effective_admin_theme() : 'dark';
+				?>
+				<div id="wpsc-admin-theme" class="wpsc-theme-toggle" role="group" aria-label="<?php esc_attr_e( 'Theme', 'wp-spell-check' ); ?>">
+					<input type="radio" id="wpsc-theme-light" name="wpsc_admin_theme" value="light" <?php echo ( 'light' === $current_theme ) ? 'checked' : ''; ?>>
+					<label for="wpsc-theme-light"><?php esc_html_e( 'Light', 'wp-spell-check' ); ?></label>
+					<input type="radio" id="wpsc-theme-dark" name="wpsc_admin_theme" value="dark" <?php echo ( 'dark' === $current_theme ) ? 'checked' : ''; ?>>
+					<label for="wpsc-theme-dark"><?php esc_html_e( 'Dark', 'wp-spell-check' ); ?></label>
+				</div>
+				</td></tr>
 				
 				<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 						</table>
-							<table class="form-table wpsc-general-options-table" style="background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%); margin-top: 20px; display: block; padding-top: 20px;" role="presentation"><tbody>
+							<table class="form-table wpsc-general-options-table wpsc-options-card" style="margin-top: 20px; display: block; padding-top: 20px;" role="presentation"><tbody>
 								<tr><td colspan="2"><p style="text-align: center; font-weight: bold;">Setup email notifications to get notified about errors on your website, especially broken HTML and broken shortcode notifications.</p></td></tr>
 				<tr><td><span style="display: inline-block; margin-bottom: 6px;"><input type="checkbox" name="email" value="email" 
 				<?php
@@ -981,6 +1004,8 @@ function wpscx_render_options() {
 	?>
 >
 	<?php
+	// Pro: only days; free: minutes, hours, days.
+	if ( ! $wpscx_ent_included ) {
 	?>
 	<option value="minutes"
 	<?php
@@ -994,9 +1019,12 @@ function wpscx_render_options() {
 		echo "selected='selected'";}
 	?>
 	>Hour(s)</option>
-	<option value="daily" 
 	<?php
-	if ( 'daily' === $scan_frequency_interval ) {
+	}
+	?>
+	<option value="daily"
+	<?php
+	if ( 'daily' === $scan_frequency_interval || ( $wpscx_ent_included && in_array( $scan_frequency_interval, array( 'minutes', 'hourly' ), true ) ) ) {
 		echo "selected='selected'";}
 	?>
 >Day(s)</option>
@@ -1030,7 +1058,7 @@ function wpscx_render_options() {
 				</tr>
 				<tr>
 					<?php wp_nonce_field( 'wpsc_export' ); ?>
-					<td><input type="submit" class="wpsc-export-data button button-primary" name="export" value="Export Plugin Data" style="background-color: #2271b1 !important; border-color: #2271b1 !important; color: #fff !important;"
+					<td><input type="submit" class="wpsc-export-data button button-primary" name="export" value="Export Plugin Data"
 					<?php
 					if ( ! $wpscx_ent_included ) {
 						echo 'disabled';}
@@ -1040,7 +1068,7 @@ function wpscx_render_options() {
 	if ( ! $wpscx_ent_included ) {
 		?>
 						<span class="wpsc-mouseover-export" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-export"><span style="display: block;text-align: center;font-size: 14px;padding: 10px 0 10px 0;background-color: #2271b1;color: white;margin-bottom: 8px;"> This is a Pro Feature</span><span style="padding: 0 10px; display: block;">To export plugin settings,  <a href="https://www.wpspellcheck.com/pricing/" target="_blank">Click Here</a> to upgrade to WP Spell Check Pro.</span></span><?php } ?></td>
-					<td><input type="submit" name="import" id="wpsc-import-button" value="Import Plugin Data" class="button button-primary" style="background-color: #2271b1 !important; border-color: #2271b1 !important; color: #fff !important;"
+					<td><input type="submit" name="import" id="wpsc-import-button" value="Import Plugin Data" class="button button-primary"
 					<?php
 					if ( ! $wpscx_ent_included ) {
 						echo 'disabled';
@@ -1058,7 +1086,7 @@ function wpscx_render_options() {
 								<tr><td style="color: red; font-weight: bold; font-size: 16px;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to send email reports and import/export your plugin data to or from other websites.</td></tr>
 								<?php } ?>
 								<tr><td colspan="2"><hr style="width: 50%;"></td></tr>
-				<tr><td colspan="3"  align="left"><input type="submit" name="uninstall" value="Clean up Database and Deactivate Plugin" /><span style="margin-left: 10px;">This will deactivate WP Spell Check on all sites on the network and clean up the database of any changes made by WP Spell Check. If you wish to use WP Spell Check again after, you may activate it on the WordPress plugins page</span></td></tr>
+				<tr><td colspan="3"  align="left"><input type="button" id="wpsc-uninstall-btn" class="button" value="Clean up Database and Deactivate Plugin" /><input type="hidden" name="uninstall" id="wpsc-uninstall-hidden" value="" /><span style="margin-left: 10px;">Removes all plugin data and deactivates the plugin.</span></td></tr>
 								<tr><td><a href="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'wpsc-data.ini'; ?>" download id='wpsc-settings-download' hidden></a></td></tr>
 			</tbody>
 			</table>
@@ -1070,7 +1098,7 @@ function wpscx_render_options() {
 				echo 'class="hidden"';}
 			?>
 			>
-				<table class="form-table" style="width: 75%; float: left; background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);" role="presentation"><tbody>
+				<table class="form-table wpsc-options-card" style="width: 75%; float: left;" role="presentation"><tbody>
 										<tr><td colspan="3"><h3>Select which parts of your website you'd like to check for spelling errors and click on the Update button</h3></td></tr>
 				<?php if ( $wpscx_ent_included ) { ?>
 				<tr><td><input type="checkbox" id="check-all" name="check-all" value="check-all">Select All</td></tr>
@@ -1303,18 +1331,18 @@ function wpscx_render_options() {
 					<span class='wpsc-mouseover-pro-feature' style='border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;'>?<span class="wpsc-mouseover-text-pro-feature"><span style="display: block;text-align: center;font-size: 14px;padding: 10px 0 10px 0;background-color: #2271b1;color: white;margin-bottom: 8px;"> This is a Pro Feature</span><span style="padding: 0 10px; display: block;">To highlight misspelled words, <a href="https://www.wpspellcheck.com/pricing/" target="_blank">Click Here</a> to upgrade to WP Spell Check Pro.</span></span></span><?php } ?></td></tr>
 								<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 								<tr><td colspan="3"><hr style="width: 50%;"></td></tr>
-					<tr style="background: white;"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan the following</h3></td></tr>
-					<tr style="background: white;"><td>WordPress Menus</td><td>Page Titles</td><td>Post Titles</td></tr>
-					<tr style="background: white;"><td>Tags</td><td>Tag Descriptions</td><td>Tag Slugs</td></tr>
-					<tr style="background: white;"><td>Category Slugs</td><td>Categories</td><td>Category Descriptions</td></tr>
-					<tr style="background: white;"><td>SEO Descriptions</td><td>SEO Titles</td><td>Page Slugs</td></tr>
-					<tr style="background: white;"><td>Post Slugs</td><td>Sliders</td><td>Media Files</td></tr>
-					<tr style="background: white;"><td>WooCommerce Products</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan the following</h3></td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>WordPress Menus</td><td>Page Titles</td><td>Post Titles</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>Tags</td><td>Tag Descriptions</td><td>Tag Slugs</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>Category Slugs</td><td>Categories</td><td>Category Descriptions</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>SEO Descriptions</td><td>SEO Titles</td><td>Page Slugs</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>Post Slugs</td><td>Sliders</td><td>Media Files</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>WooCommerce Products</td></tr>
 				<?php } ?>
 				<?php
 				if ( $wpscx_ent_included ) {
 					?>
-					<tr><td colspan="3"  align="left"><span style="font-size: 14px; font-weight: bold; color: red;">Warning: When updating <span style="color: black; text-decoration: underline;">page/post slugs</span>, some links contained within the theme may not be updated. Consult your webmaster before updating page/post slugs.<br /><a href="https://www.wpspellcheck.com/about/faqs#update-slugs" target="_blank">Click here to learn more</a></span><br /><br /><span style="font-size: 14px; font-weight: bold; color: red;">When updating <span style="color: black; text-decoration: underline;">Media filenames</span> this may cause images to stop working on your website. This does not apply to descriptions, alternate text, or captions.</span></td></tr> <?php } ?>
+					<tr><td colspan="3"  align="left"><span style="font-size: 14px; font-weight: bold; color: red;">Warning: When updating <span class="wpsc-warning-highlight" style="color: black; text-decoration: underline;">page/post slugs</span>, some links contained within the theme may not be updated. Consult your webmaster before updating page/post slugs.</span><br /><br /><span style="font-size: 14px; font-weight: bold; color: red;">When updating <span class="wpsc-warning-highlight" style="color: black; text-decoration: underline;">Media filenames</span> this may cause images to stop working on your website. This does not apply to descriptions, alternate text, or captions.</span></td></tr> <?php } ?>
 			</tbody></table>
 		</div>
 		<div id="wpsc-empty-options-tab" 
@@ -1323,7 +1351,7 @@ function wpscx_render_options() {
 			echo 'class="hidden"';}
 		?>
 		>
-				<table class="form-table" style="width: 75%; float: left; background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);" role="presentation"><tbody>
+				<table class="form-table wpsc-options-card" style="width: 75%; float: left;" role="presentation"><tbody>
 									<tr><td colspan="3"><h3>Select which parts of your website you'd like to audit for SEO Empty Fields to improve your SEO. <a href="https://www.wpspellcheck.com/plugin-support/how-to-improve-wordpress-seo/" target="_blank">See Video</a></h3></td></tr>
 				<tr><td><input type="checkbox" id="check-all-empty" name="check-all-empty" value="check-all-empty">Select All</td></tr>
 				<?php if ( $wpscx_ent_included ) { ?>
@@ -1416,10 +1444,10 @@ function wpscx_render_options() {
 					>Post Titles</td></tr>
 								<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 								<tr><td colspan="3"><hr style="width: 50%;"></td></tr>
-					<tr style="background: white;"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=seo_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan the following</h3></td></tr>
-					<tr style="background: white;"><td>WordPress Menus</td><td>Tag Descriptions</td><td>Category Descriptions</td></tr>
-					<tr style="background: white;"><td>Page SEO</td><td>Post SEO</td><td>Media Files SEO</td></tr>
-					<tr style="background: white;"><td>Media Files</td><td colspan="2">WooCommerce Products</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=seo_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan the following</h3></td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>WordPress Menus</td><td>Tag Descriptions</td><td>Category Descriptions</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>Page SEO</td><td>Post SEO</td><td>Media Files SEO</td></tr>
+					<tr class="wpsc-upgrade-pro-row"><td>Media Files</td><td colspan="2">WooCommerce Products</td></tr>
 				<?php } ?>
 			</tbody></table>
 		</div>
@@ -1429,7 +1457,7 @@ function wpscx_render_options() {
 			echo 'class="hidden"';}
 		?>
 		>
-			<table class="form-table" style="width: 75%; float: left; background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);" role="presentation"><tbody>
+			<table class="form-table wpsc-options-card" style="width: 75%; float: left;" role="presentation"><tbody>
 								<tr><td colspan="3" style="padding-bottom: 0px;"><h3>Select whether you want to which parts of your website you'd like to scan for grammar errors. Right  now our plugin checks for the following rules: Complex Expression, Hidden Verb, Passive Voice, Possessive Ending, Redundant Expression, Contractions</h3></td></tr>
 																<tr><td colspan="3" style="padding-top: 0px;"><h3 style="font-size: 17px;">The WP Spell Check Grammar feature is designed to work with WordPress Classic Editor. You will need to have it active in order to see the Grammar Scan results</h3></td></tr>
 				<tr><td><div style="margin-top: 5px;"></div></td></tr>
@@ -1450,7 +1478,7 @@ function wpscx_render_options() {
 							<?php
 							if ( ! $wpscx_ent_included ) {
 								?>
-								<tr style="background: white;"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan your entire site</h3></td></tr><?php } ?>
+								<tr class="wpsc-upgrade-pro-row"><td colspan="3"><h3 style="color: red;"><a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeoptions&utm_medium=spellcheck_options&utm_content=<?php echo esc_attr( $wpsc_version ); ?>" target="_blank">Upgrade to Pro</a> to scan your entire site</h3></td></tr><?php } ?>
 				<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 			</table>
 		</div>
@@ -1460,7 +1488,7 @@ function wpscx_render_options() {
 			echo 'class="hidden"';}
 		?>
 		>
-			<table class="form-table" style="width: 75%; float: left; background: white; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);" role="presentation"><tbody>
+			<table class="form-table wpsc-options-card" style="width: 75%; float: left;" role="presentation"><tbody>
 				<tr><td><div style="margin-top: 5px;"></div></td></tr>
 				<tr>
 					<td>Use OpenDyslexic Font<br />You can use the OpenDyslexic font on the website or on both the website and the admin. The OpenDyslexic font is designed to help people with dyslexia with their reading.</td>
@@ -1479,6 +1507,62 @@ function wpscx_render_options() {
 				<tr colspan="2"><td><input type="submit" name="submit" value="Update" class="button button-primary" /></td></tr>
 			</table>
 		</div>
+		<div id="wpsc-uninstall-modal" class="wpsc-uninstall-modal" role="dialog" aria-labelledby="wpsc-uninstall-modal-title" aria-modal="true" style="display: none;">
+			<div class="wpsc-uninstall-modal-overlay"></div>
+			<div class="wpsc-uninstall-modal-content">
+				<h2 id="wpsc-uninstall-modal-title" class="wpsc-uninstall-modal-title">Confirm cleanup and deactivation</h2>
+				<p class="wpsc-uninstall-modal-message">This will clean your Dictionary and ignore list and all plugin data, then deactivate the plugin. Are you sure you want to continue?</p>
+				<div class="wpsc-uninstall-modal-actions">
+					<button type="button" class="button button-primary wpsc-uninstall-modal-yes">Yes, continue</button>
+					<button type="button" class="button wpsc-uninstall-modal-no">Cancel</button>
+				</div>
+			</div>
+		</div>
+		<style>
+			.wpsc-uninstall-modal { position: fixed; inset: 0; z-index: 100000; align-items: center; justify-content: center; }
+			.wpsc-uninstall-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+			.wpsc-uninstall-modal-content { position: relative; background: #b32d2e; color: #fff; padding: 24px 28px; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); max-width: 420px; margin: 20px; }
+			.wpsc-uninstall-modal-title { margin: 0 0 12px 0; font-size: 1.25em; color: #fff; }
+			.wpsc-uninstall-modal-message { margin: 0 0 20px 0; line-height: 1.5; }
+			.wpsc-uninstall-modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+			.wpsc-uninstall-modal-yes { background: #fff; color: #b32d2e; border-color: #fff; }
+			.wpsc-uninstall-modal-yes:hover { background: #f0f0f0; color: #8a2324; border-color: #f0f0f0; }
+			.wpsc-uninstall-modal-no { background: transparent; color: #fff; border-color: rgba(255,255,255,0.7); }
+			.wpsc-uninstall-modal-no:hover { background: rgba(255,255,255,0.15); color: #fff; }
+		</style>
+		<script>
+		(function() {
+			function initUninstallModal() {
+				var modal = document.getElementById('wpsc-uninstall-modal');
+				var btn = document.getElementById('wpsc-uninstall-btn');
+				var hidden = document.getElementById('wpsc-uninstall-hidden');
+				var form = document.getElementById('wpsc-options-form') || (document.forms && document.forms['options']);
+				var overlay = modal ? modal.querySelector('.wpsc-uninstall-modal-overlay') : null;
+				var yesBtn = modal ? modal.querySelector('.wpsc-uninstall-modal-yes') : null;
+				var noBtn = modal ? modal.querySelector('.wpsc-uninstall-modal-no') : null;
+				function showModal() { if (modal) { modal.style.display = 'flex'; } }
+				function hideModal() { if (modal) { modal.style.display = 'none'; } }
+				function confirmUninstall(e) {
+					if (e) { e.preventDefault(); }
+					if (hidden && form) {
+						hidden.value = 'Clean up Database and Deactivate Plugin';
+						hideModal();
+						// Use native submit so it runs even if jQuery or another script overrides form.submit
+						HTMLFormElement.prototype.submit.call(form);
+					}
+				}
+				if (btn) { btn.addEventListener('click', showModal); }
+				if (overlay) { overlay.addEventListener('click', hideModal); }
+				if (yesBtn) { yesBtn.addEventListener('click', confirmUninstall); }
+				if (noBtn) { noBtn.addEventListener('click', hideModal); }
+			}
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', initUninstallModal);
+			} else {
+				initUninstallModal();
+			}
+		})();
+		</script>
 		</form>
 	<?php include 'sidebar.php'; ?>
 </div>

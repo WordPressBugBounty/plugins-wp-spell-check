@@ -1,89 +1,455 @@
-.request-feature-container { position: fixed; bottom: 0em; right: 50%; margin-right: -200px; z-index: 9999999; width: 400px; background: white; }
-.request-feature-popup { border-right: 2px darkgray solid; border-left: 2px darkgray solid; border-top: 2px darkgrey solid; border-top-left-radius: 15px; border-top-right-radius: 15px; padding: 8px; font-size: 1.3em; text-align: center; margin-bottom: -14px; }
-.request-feature-popup p { font-size: 12px; }
-.request-feature-popup .close-popup { position:absolute; top: 5px; right: 11px; text-decoration: none; }
-.request-feature-popup button { padding: 5px 30px; background-color: #0096ff; color: white; border-radius: 5px; }
-.request-feature { border-right: 2px darkgray solid; border-left: 2px darkgray solid; text-align: center; box-shadow: black 1px -2px 1px;  }
-.request-feature a { margin: 0 16px; font-size: 1.4em; line-height: 1.4em; }
-.newsletter-submit { background: #228CD8; color: white; padding: 5px; border-radius: 5px; font-weight: bold; }
-.wpsc-row .Ignore,.wpsc-row span.Add.to.Dictionary, span.wpsc-mass-edit { color: Black; }
-.wpsc-highlight-row, .wpsc-highlight-row a { color: #008200!important; font-weight: bold; font-size: 14px; }
-.wpsc-unselected-row { opacity: 0.55; }
-.wpsc-suggestion-content span, .wpsc-edit-content span, .wpsc-edit-content label { color: #008200; }
-.wpsc-scan-buttons input[disabled],.wpsc-scan-buttons input:disabled { background: darkgrey!important; color: white!important; border-color: grey!important; }
-.wpsc-table .tablenav { float: none!important; display: inline-block; }
-.wpsc-table .fb-comments, .wpsc-table .fb-comments iframe[style] {width: 100% !important;}
-.wpsc-scan-buttons input#submit:active { margin-top: -7px; }
-.wpsc-edit-update-button { margin: 12px 0px; }
-#wp-admin-bar-WP_Spell_Check ul { z-index: 9999999999; }
-.wpsc-suggestion-content span { font-weight: bold; color: red!important; }
-
-/* HTML Results Page Styles */
-input[type=submit] {
-	border-radius: 32px !important;
-	box-shadow: none !important;
-	text-shadow: none !important;
-	border: none !important;
+.request-feature-container {
+  position: fixed;
+  bottom: 0em;
+  right: 50%;
+  margin-right: -200px;
+  z-index: 9999999;
+  width: 400px;
+  background: white;
+}
+.request-feature-popup {
+  border-right: 2px darkgray solid;
+  border-left: 2px darkgray solid;
+  border-top: 2px darkgrey solid;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  padding: 8px;
+  font-size: 1.3em;
+  text-align: center;
+  margin-bottom: -14px;
+}
+.request-feature-popup p {
+  font-size: 12px;
+}
+.request-feature-popup .close-popup {
+  position: absolute;
+  top: 5px;
+  right: 11px;
+  text-decoration: none;
+}
+.request-feature-popup button {
+  padding: 5px 30px;
+  background-color: #0096ff;
+  color: white;
+  border-radius: 5px;
+}
+.request-feature {
+  border-right: 2px darkgray solid;
+  border-left: 2px darkgray solid;
+  text-align: center;
+  box-shadow: black 1px -2px 1px;
+}
+.request-feature a {
+  margin: 0 16px;
+  font-size: 1.4em;
+  line-height: 1.4em;
+}
+.newsletter-submit {
+  background: #228cd8;
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+.wpsc-row .Ignore,
+.wpsc-row span.Add.to.Dictionary,
+span.wpsc-mass-edit {
+  color: Black;
+}
+.wpsc-highlight-row,
+.wpsc-highlight-row a {
+  color: var(--wpsc-color-success) !important;
+  font-weight: bold;
+  font-size: 14px;
+}
+.wpsc-unselected-row {
+  opacity: 0.55;
+}
+.wpsc-edit-content span,
+.wpsc-edit-content label {
+  color: var(--wpsc-color-success);
+}
+.wpsc-suggestion-content span {
+  font-weight: bold;
+  color: red !important;
+}
+/* Inactive Pro / disabled scan buttons - same shape/shadow as active, gray gradient (Spell + SEO) */
+.wpsc-scan-buttons input[disabled],
+.wpsc-scan-buttons input:disabled {
+  background: var(--wpsc-btn-disabled-bg) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
 }
 
-.search-box input[type=submit] {
-	color: white;
-	background-color: #00A0D2;
-	border-color: #0073AA;
+/* Spell Check page: override WP core disabled styles (wp 5.5+ uses #f7f7f7/#a0a5aa). Higher specificity so our gray gradient wins. */
+#wpsc-scan-results-tab .wpsc-scan-buttons input[type="submit"][disabled],
+#wpsc-scan-results-tab .wpsc-scan-buttons input[type="submit"]:disabled {
+  background: linear-gradient(180deg, #8b8e8d 0%, #6c6f6e 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
+}
+
+.wpsc-table .tablenav {
+  float: none !important;
+  display: inline-block;
+}
+
+/* Dictionary page: search form above results table - no top margin */
+.wrap.wpsc-table form.wpsc-dictionary-search-form {
+  margin-top: 0;
+}
+
+.wpsc-table .fb-comments,
+.wpsc-table .fb-comments iframe[style] {
+  width: 100% !important;
+}
+/* Save All Changes - green gradient, same shape as other primary buttons */
+.wpsc-edit-update-button {
+  margin: 12px 0px;
+  background: var(--wpsc-btn-save-bg) !important;
+  border: none !important;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
+  color: #fff !important;
+}
+.wpsc-edit-update-button:hover {
+  filter: brightness(1.05);
+}
+#wp-admin-bar-WP_Spell_Check ul {
+  z-index: 9999999999;
+}
+
+/* WPSC button design tokens - update one place for shared style; colors per page */
+:root {
+  --wpsc-btn-bg: #2271b1;
+  --wpsc-btn-border: #2271b1;
+  --wpsc-btn-bg-hover: #135e96;
+  --wpsc-btn-border-hover: #135e96;
+  --wpsc-btn-bg-active: #0a4b78;
+  --wpsc-btn-border-active: #0a4b78;
+  --wpsc-search-btn-bg: linear-gradient(180deg, #54c6eb 0%, #3498db 100%);
+  --wpsc-search-btn-border: #0073aa;
+  --wpsc-scan-btn-bg: #ffb01f;
+  --wpsc-btn-disabled-bg: linear-gradient(180deg, #8b8e8d 0%, #6c6f6e 100%);
+  --wpsc-btn-save-bg: linear-gradient(180deg, #58d68d 0%, #27ae60 100%);
+  --wpsc-btn-uninstall-bg: #646970;
+  --wpsc-btn-uninstall-bg-hover: #50575e;
+  --wpsc-btn-uninstall-bg-active: #3c434a;
+  --wpsc-btn-uninstall-bg-gradient: linear-gradient(
+    180deg,
+    #7a7f85 0%,
+    #646970 100%
+  );
+  --wpsc-btn-uninstall-bg-hover-gradient: linear-gradient(
+    180deg,
+    #5c6166 0%,
+    #50575e 100%
+  );
+  --wpsc-btn-uninstall-bg-active-gradient: linear-gradient(
+    180deg,
+    #4a4f55 0%,
+    #3c434a 100%
+  );
+  /* Cards/containers - unified modern radius and shadow */
+  --wpsc-card-radius: 8px;
+  --wpsc-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  /* Success green */
+  --wpsc-color-success: #008200;
+  /* Message/status colors */
+  --wpsc-msg-success: rgb(0, 115, 0);
+  --wpsc-msg-info: rgb(0, 150, 255);
+  --wpsc-msg-error: rgb(225, 0, 0);
+  --wpsc-msg-highlight: rgb(115, 1, 154);
+  /* Nav bar */
+  --wpsc-nav-border: #bbb;
+  /* Tooltips */
+  --wpsc-tooltip-border: #008200;
+  --wpsc-tooltip-radius: 7px;
+  --wpsc-tooltip-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%);
+  /* Primary button shape */
+  --wpsc-btn-padding: 0 10px;
+  --wpsc-btn-radius: 3px;
+  --wpsc-btn-font-size: 13px;
+  --wpsc-btn-min-height: 30px;
+  /* Page background - off-white, matches zebra #fff7f0 */
+  --wpsc-page-bg: #faf8f6;
+  /* Card and table zebra - themeable */
+  --wpsc-card-bg: #fff;
+  --wpsc-zebra-even: #fff;
+  --wpsc-zebra-odd: #fff7f0;
+  --wpsc-nav-selected-bg: #fff;
+  --wpsc-nav-inactive-bg: #ede6df;
+  /* Button depth and gradient tokens - reduced radius per design */
+  --wpsc-btn-radius-modern: 5px;
+  --wpsc-btn-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  /* Action button gradients: Clear=orange, See=blue, Stop=red */
+  --wpsc-btn-clear-bg: linear-gradient(180deg, #f89a42 0%, #e67e22 100%);
+  --wpsc-btn-see-bg: linear-gradient(180deg, #54c6eb 0%, #3498db 100%);
+  --wpsc-btn-stop-bg: linear-gradient(180deg, #eb5454 0%, #e74c3c 100%);
+}
+
+/* Page background - off-white for all plugin admin pages */
+.wrap.wpsc-table,
+.wrap.wpsc-options-page {
+  background-color: var(--wpsc-page-bg);
+}
+
+/* Single base rule: all plugin admin buttons get modern shape, shadow, default gradient */
+.wrap.wpsc-table input[type="submit"],
+.wrap.wpsc-table button.button-primary,
+.wrap.wpsc-options-page input[type="submit"],
+.wrap.wpsc-options-page button.button-primary {
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
+  border: none;
+  background: var(--wpsc-btn-see-bg);
+  color: #fff;
+  text-shadow: none;
+  min-height: var(--wpsc-btn-min-height);
+  padding: var(--wpsc-btn-padding);
+}
+.wrap.wpsc-table input[type="submit"]:hover,
+.wrap.wpsc-table button.button-primary:hover,
+.wrap.wpsc-options-page input[type="submit"]:hover,
+.wrap.wpsc-options-page button.button-primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Options page - primary Save/Update button (green gradient override only) */
+.wpsc-options-page .button-primary[name="submit"],
+.wpsc-options-page input[type="submit"].button-primary {
+  background: linear-gradient(180deg, #58d68d 0%, #27ae60 100%) !important;
+}
+
+/* Options page - Send Test button text always white (overrides WP disabled gray) */
+.wpsc-options-page #test-email,
+.wpsc-options-page input[name="test-email"] {
+  color: #fff !important;
+}
+
+/* Options page - Send Test, Export, Import buttons: blue gradient (same style as other primary buttons) */
+.wpsc-options-page #test-email,
+.wpsc-options-page input.wpsc-export-data.button-primary,
+.wpsc-options-page #wpsc-import-button {
+  background: linear-gradient(180deg, #5dade2 0%, #2980b9 100%) !important;
+  border-color: #2980b9 !important;
+  color: #fff !important;
+}
+
+/* Zebra striping - all plugin wp-list-tables (Options, Spell, SEO, Grammar, Dictionary, Ignore) */
+.wpsc-options-page .wp-list-table tbody tr,
+.wpsc-table .wp-list-table tbody tr,
+#wpsc-table-results .wp-list-table tbody tr,
+#wpgc-scan-results-tab .wp-list-table tbody tr {
+  background-color: var(--wpsc-zebra-even);
+}
+.wpsc-options-page .wp-list-table tbody tr.alternate,
+.wpsc-table .wp-list-table tbody tr.alternate,
+#wpsc-table-results .wp-list-table tbody tr.alternate,
+#wpgc-scan-results-tab .wp-list-table tbody tr.alternate {
+  background-color: var(--wpsc-zebra-odd);
+}
+
+/* Unified card/panel styles - scan containers, stats summary, options page cards */
+.wpsc-scan-container,
+.wpsc-stats-summary,
+.wpsc-options-card {
+  background: var(--wpsc-card-bg);
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+}
+
+/* Success/error confirmation notices - theme-aligned, used across Options, Dictionary, Ignore, Spell/SEO results */
+.wpsc-notice-success,
+.wpsc-notice-success .wpsc-message {
+  color: var(--wpsc-msg-success);
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1.5;
+}
+.wpsc-notice-success {
+  padding: 12px 16px;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+  background: var(--wpsc-card-bg);
+  border-left: 4px solid var(--wpsc-color-success);
+  border-right: 4px solid var(--wpsc-color-success);
+}
+.wpsc-notice-error,
+.wpsc-notice-error .wpsc-message {
+  color: var(--wpsc-msg-error);
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1.5;
+}
+.wpsc-notice-error {
+  padding: 12px 16px;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+  background: var(--wpsc-card-bg);
+  border-left: 4px solid var(--wpsc-msg-error);
+  border-right: 4px solid var(--wpsc-msg-error);
+}
+
+/* Message container - shared wrapper for notice blocks (JS targets .wpsc-mesage-container) */
+.wpsc-mesage-container {
+  text-align: center;
+  background: var(--wpsc-card-bg);
+  padding: 12px 16px;
+  margin: 15px 0;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+}
+.wpsc-mesage-container .wpsc-notice-success,
+.wpsc-mesage-container .wpsc-notice-error {
+  margin-bottom: 8px;
+}
+.wpsc-mesage-container .wpsc-notice-success:last-child,
+.wpsc-mesage-container .wpsc-notice-error:last-child {
+  margin-bottom: 0;
+}
+
+/* Upgrade to Pro section rows - white in light theme (dark theme overrides in admin-theme-dark.css) */
+.wpsc-upgrade-pro-row,
+.wpsc-upgrade-pro-row td {
+  background: #fff;
+}
+/* Optional stats cards with gradient backgrounds (errors=red, pages=blue, posts=orange) */
+.wpsc-stats-card {
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-btn-shadow);
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: bold;
+}
+.wpsc-stats-card-errors {
+  background: linear-gradient(180deg, #eb5454 0%, #c0392b 100%);
+}
+.wpsc-stats-card-pages {
+  background: linear-gradient(180deg, #54c6eb 0%, #2980b9 100%);
+}
+.wpsc-stats-card-posts {
+  background: linear-gradient(180deg, #f89a42 0%, #d35400 100%);
+}
+
+/* Action buttons: gradient + hover only (shape from base); icon padding */
+.wpsc-btn-clear-results,
+.wpsc-clear-results-button {
+  background: var(--wpsc-btn-clear-bg) !important;
+  font-weight: bold;
+  padding-left: 30px !important;
+  padding-right: 14px;
+}
+.wpsc-btn-clear-results:hover,
+.wpsc-clear-results-button:hover {
+  filter: brightness(1.05);
+}
+.wpsc-btn-see-results,
+.wpsc-see-results-button {
+  background: var(--wpsc-btn-see-bg) !important;
+  font-weight: bold;
+  padding-left: 30px !important;
+  padding-right: 14px;
+}
+.wpsc-btn-see-results:hover,
+.wpsc-see-results-button:hover {
+  filter: brightness(1.05);
+}
+.wpsc-btn-stop-scans,
+.wpsc-stop-scans-button {
+  background: var(--wpsc-btn-stop-bg) !important;
+  font-weight: bold;
+  padding-left: 30px !important;
+  padding-right: 14px;
+}
+.wpsc-btn-stop-scans:hover,
+.wpsc-stop-scans-button:hover {
+  filter: brightness(1.05);
+}
+/* Action button icon spacing - icon left, text does not overlap */
+.wpsc-scan-buttons p.submit .wpsc-btn-clear-results,
+.wpsc-scan-buttons p.submit .wpsc-btn-see-results,
+.wpsc-scan-buttons p.submit .wpsc-btn-stop-scans,
+.wpsc-scan-buttons p.submit .wpsc-clear-results-button,
+.wpsc-scan-buttons p.submit .wpsc-see-results-button,
+.wpsc-scan-buttons p.submit .wpsc-stop-scans-button {
+  padding-left: 30px !important;
+}
+/* White icons on gradient action buttons */
+.wpsc-scan-buttons .wpsc-icon-clear-results,
+.wpsc-scan-buttons .wpsc-icon-see-results {
+  filter: brightness(0) invert(1);
+}
+.wpsc-scan-buttons .wpsc-icon-stop-scans {
+  filter: brightness(0) invert(1);
+}
+
+#wpsc-empty-fields-tab {
+  --wpsc-btn-bg: #73019a;
+  --wpsc-btn-border: #51006e;
+  --wpsc-btn-bg-hover: #9100c3;
+  --wpsc-btn-border-hover: #9100c3;
+  --wpsc-btn-bg-active: #51006d;
+  --wpsc-btn-border-active: #51006d;
+}
+
+/* Search button in tables - blue gradient (shape from base; Spell/Grammar/Broken Code/Dictionary/Ignore) */
+.wrap.wpsc-table .search-box input[type="submit"],
+.wrap.wpsc-options-page .search-box input[type="submit"] {
+  background: var(--wpsc-search-btn-bg) !important;
+  color: #fff;
+  border: none;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
+}
+.wrap.wpsc-table .search-box input[type="submit"]:hover,
+.wrap.wpsc-options-page .search-box input[type="submit"]:hover {
+  filter: brightness(1.05);
 }
 
 #cb-select-all-1,
 #cb-select-all-2 {
-	display: none;
+  display: none;
 }
 
-/* Dictionary Page - Add to Dictionary Button */
-#add-to-dictionary input[type=submit] {
-	background: #2271b1 !important;
-	border-color: #2271b1 !important;
-	border-width: 1px !important;
-	border-style: solid !important;
-	border-radius: 3px !important;
-	color: #fff !important;
-	text-decoration: none;
-	font-size: 13px;
-	line-height: 2.15384615;
-	min-height: 30px;
-	margin: 0;
-	padding: 0 10px;
-	cursor: pointer;
-	white-space: nowrap;
-	box-sizing: border-box;
-	box-shadow: none;
-	text-shadow: none;
+/* Dictionary / Ignore - green gradient override only (shape from base) */
+#add-to-dictionary input[type="submit"],
+#add-to-ignore input[type="submit"],
+#add-to-dictionary .search-box input[type="submit"],
+#add-to-ignore .search-box input[type="submit"] {
+  background: linear-gradient(180deg, #58d68d 0%, #27ae60 100%) !important;
 }
-
-#add-to-dictionary input[type=submit]:hover {
-	background: #135e96 !important;
-	border-color: #135e96 !important;
-	color: #fff !important;
+#add-to-dictionary input[type="submit"]:hover,
+#add-to-ignore input[type="submit"]:hover,
+#add-to-dictionary .search-box input[type="submit"]:hover,
+#add-to-ignore .search-box input[type="submit"]:hover {
+  filter: brightness(1.05);
 }
-
-#add-to-dictionary input[type=submit]:active {
-	background: #0a4b78 !important;
-	border-color: #0a4b78 !important;
-	color: #fff !important;
+#add-to-dictionary input[type="submit"]:active,
+#add-to-ignore input[type="submit"]:active,
+#add-to-dictionary .search-box input[type="submit"]:active,
+#add-to-ignore .search-box input[type="submit"]:active {
+  filter: brightness(0.98);
 }
 
 td.word {
-	font-size: 15px;
+  font-size: 15px;
 }
 
 p.submit {
-	display: inline-block;
-	margin-left: 10px;
+  display: inline-block;
+  margin-left: 10px;
 }
 
 h3.sc-message {
-	width: 49%;
-	display: inline-block;
-	padding-left: 8px;
-	font-weight: normal;
+  width: 49%;
+  display: inline-block;
+  padding-left: 8px;
+  font-weight: normal;
 }
 
 .wpsc-mouseover-text-page,
@@ -96,726 +462,804 @@ h3.sc-message {
 .wpsc-mouseover-text-scfeature-2,
 .wpsc-mouseover-text-change,
 .wpsc-mouseover-text-change-2 {
-	color: black;
-	font-size: 12px;
-	width: 225px;
-	display: none;
-	position: absolute;
-	margin: 0px;
-	padding: 0px 0px 15px 0px;
-	border: 2px solid #008200;
-	border-radius: 7px;
-	opacity: 0;
-	background: white;
-	z-index: -100;
-	box-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%);
-	font-weight: bold;
-	max-width: 205px;
-	overflow: hidden;
-	box-sizing: border-box;
-	left: -9999px;
-	top: -9999px;
+  color: black;
+  font-size: 12px;
+  width: 225px;
+  display: none;
+  position: absolute;
+  margin: 0px;
+  padding: 0px 0px 15px 0px;
+  border: 2px solid var(--wpsc-tooltip-border);
+  border-radius: var(--wpsc-tooltip-radius);
+  opacity: 0;
+  background: white;
+  z-index: -100;
+  box-shadow: var(--wpsc-tooltip-shadow);
+  font-weight: bold;
+  max-width: 205px;
+  overflow: hidden;
+  box-sizing: border-box;
+  left: -9999px;
+  top: -9999px;
 }
 
 .wpsc-mouseover-text-refresh {
-	color: black;
-	font-size: 12px;
-	width: 225px;
-	display: inline-block;
-	position: absolute;
-	margin: -13px 0 0 -290px;
-	padding: 5px 15px 5px 30px;
-	border: 1px solid #008200;
-	border-radius: 50px;
-	box-shadow: #008200 1px 1px 1px;
-	font-weight: bold;
-	opacity: 0;
-	background: white;
-	z-index: -100;
+  color: black;
+  font-size: 12px;
+  width: 225px;
+  display: inline-block;
+  position: absolute;
+  margin: -13px 0 0 -290px;
+  padding: 5px 15px 5px 30px;
+  border: 1px solid var(--wpsc-tooltip-border);
+  border-radius: 50px;
+  box-shadow: var(--wpsc-tooltip-border) 1px 1px 1px;
+  font-weight: bold;
+  opacity: 0;
+  background: white;
+  z-index: -100;
 }
 
 .wpsc-row .row-actions,
 .wpsc-row .row-actions * {
-	visibility: visible !important;
-	left: 0 !important;
+  visibility: visible !important;
+  left: 0 !important;
 }
 
 #current-page-selector {
-	width: 12%;
+  width: 12%;
 }
 
 .hidden {
-	display: none;
+  display: none;
 }
 
 .wpsc-scan-nav-bar {
-	border-bottom: 1px solid #BBB;
+  border-bottom: 1px solid var(--wpsc-nav-border);
 }
 
 .wpsc-scan-nav-bar a {
-	text-decoration: none;
-	margin: 5px 1px -1px 1px;
-	padding: 8px;
-	border: 1px solid #BBB;
-	display: inline-block;
-	font-weight: bold;
-	color: black;
-	font-size: 14px;
-	height: 16px;
-	border-radius: 5px 5px 0 0;
+  text-decoration: none;
+  margin: 5px 1px -1px 1px;
+  padding: 8px;
+  border: 1px solid var(--wpsc-nav-border);
+  display: inline-block;
+  font-weight: bold;
+  color: black;
+  font-size: 14px;
+  height: 16px;
+  border-radius: var(--wpsc-card-radius) var(--wpsc-card-radius) 0 0;
 }
 
 .wpsc-scan-nav-bar a.selected {
-	border-bottom: 1px solid white;
-	background: white;
+  border-bottom: 1px solid var(--wpsc-nav-selected-bg);
+  background: var(--wpsc-nav-selected-bg);
+}
+
+/* Inactive nav tabs - light orange tint (matches page bg), black text (base) */
+.wpsc-scan-nav-bar a:not(.selected) {
+  background: var(--wpsc-nav-inactive-bg);
+  color: #333;
 }
 
 /* Ignore List Page - Override margin to match original inline styles */
 .wpsc-ignore-page .wpsc-scan-nav-bar a {
-	margin: 5px 5px -2px 5px;
+  margin: 5px 5px -2px 5px;
 }
 
-/* Ignore List Page - Add to Ignore List Button Styling */
-#add-to-ignore input[type=submit] {
-	background: #2271b1 !important;
-	border-color: #2271b1 !important;
-	border-width: 1px !important;
-	border-style: solid !important;
-	border-radius: 3px !important;
-	color: #fff !important;
-	text-decoration: none;
-	font-size: 13px;
-	line-height: 2.15384615;
-	min-height: 30px;
-	margin: 0;
-	padding: 0 10px;
-	cursor: pointer;
-	white-space: nowrap;
-	box-sizing: border-box;
-	box-shadow: none;
-	text-shadow: none;
+/* Keep search box below the results table (no overlap when table is empty) */
+.wpsc-ignore-page #wpsc-words-tab form#words-list + form {
+  margin-top: 10px !important;
 }
 
-#add-to-ignore input[type=submit]:hover {
-	background: #135e96 !important;
-	border-color: #135e96 !important;
-	color: #fff !important;
+/* Dictionary page - same fix for search box below results table */
+.wpsc-table:not(.wpsc-ignore-page) form#words-list + form {
+  margin-top: 10px !important;
 }
 
-#add-to-ignore input[type=submit]:active {
-	background: #0a4b78 !important;
-	border-color: #0a4b78 !important;
-	color: #fff !important;
+/* SEO tab - primary buttons purple gradient override only (exclude action buttons + disabled; inactive pro stay gray) */
+#wpsc-empty-fields-tab
+  .button-primary:not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled) {
+  background: linear-gradient(180deg, #af7ac5 0%, #7d3c98 100%) !important;
 }
-
-#wpsc-empty-fields-tab .button-primary {
-	background: #73019a;
-	border-color: #51006E;
-	text-shadow: 1px 1px #51006d;
-	box-shadow: 0 1px 0 #51006d;
+#wpsc-empty-fields-tab
+  .button-primary:not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled):hover {
+  filter: brightness(1.05);
 }
-
-#wpsc-empty-fields-tab .button-primary:hover {
-	background: #9100c3
-}
-
-#wpsc-empty-fields-tab .button-primary:active {
-	background: #51006d;
+#wpsc-empty-fields-tab
+  .button-primary:not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled):active {
+  filter: brightness(0.98);
 }
 
 .wpsc-scan-buttons input#submit:active {
-	margin-top: -7px;
+  margin-top: -7px;
 }
 
 #wphc-scan-results-tab .wp-list-table th {
-	text-align: center;
+  text-align: center;
 }
 
 .wpgc-desc .wpgc-desc-content {
-	display: none;
+  display: none;
 }
 
 .wpgc-desc-hover {
-	display: block !important;
-	position: relative;
-	top: -125px;
-	left: -55px;
-	width: 125px;
-	padding: 0px;
-	margin: 0px;
-	z-index: 100;
-	height: 0px !important;
+  display: block !important;
+  position: relative;
+  top: -125px;
+  left: -55px;
+  width: 125px;
+  padding: 0px;
+  margin: 0px;
+  z-index: 100;
+  height: 0px !important;
 }
 
 .wpgc-desc {
-	position: absolute;
-	bottom: 0px;
-	margin-right: -4px;
-	width: 125px;
+  position: absolute;
+  bottom: 0px;
+  margin-right: -4px;
+  width: 125px;
 }
 
 #wpsc-table-results table {
-	border-radius: 5px;
-	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
 }
 
 .wpsc-button-greyout,
 .wpsc-button-greyout:hover {
-	background: darkgrey !important
+  background: darkgrey !important;
 }
 
 /* Empty Results Page Specific Styles */
 #wpsc-empty-fields-tab span.wpsc-bulk {
-	display: none;
+  display: none;
 }
 
 span.wpsc-bulk {
-	color: black;
+  color: black;
 }
 
 input.edit-seo-title,
 input.edit-seo-desc {
-	border-width: 3px !important;
-	border-color: orange;
+  border-width: 3px !important;
+  border-color: orange;
 }
 
 /* Options Page Specific Styles */
 td {
-	padding-left: 25px !important;
-	max-width: 755px;
+  padding-left: 25px !important;
+  max-width: 755px;
 }
 
 .wpsc-message h3 {
-	color: rgb(0, 200, 0);
-	font-size: 20px;
-	font-weight: bold;
+  color: var(--wpsc-msg-success);
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .wpsc-mouseover-text-pro-feature,
+.wpsc-mouseover-text-pro-feature-2,
+.wpsc-mouseover-text-pro-feature-3,
 .wpsc-mouseover-text-freq,
 .wpsc-mouseover-text-email,
 .wpsc-mouseover-text-import,
 .wpsc-mouseover-text-export {
-	color: black;
-	font-size: 12px;
-	width: 225px;
-	display: inline-block;
-	position: absolute;
-	margin: 0px;
-	padding: 0px 0px 15px 0px;
-	border: 2px solid #008200;
-	border-radius: 7px;
-	opacity: 0;
-	background: white;
-	z-index: -100;
-	box-shadow: 2px 2px 10px 3px rgb(0 0 0 / 75%);
-	font-weight: bold;
-	max-width: 205px;
+  color: black;
+  font-size: 12px;
+  width: 225px;
+  display: inline-block;
+  position: absolute;
+  margin: 0px;
+  padding: 0px 0px 15px 0px;
+  border: 2px solid var(--wpsc-tooltip-border);
+  border-radius: var(--wpsc-tooltip-radius);
+  opacity: 0;
+  background: white;
+  z-index: -100;
+  box-shadow: var(--wpsc-tooltip-shadow);
+  font-weight: bold;
+  max-width: 205px;
+  text-align: center;
 }
 
-/* Options Page - Uninstall Button Styling */
-#wpsc-options-form input[name="uninstall"] {
-	background: #646970 !important;
-	border-color: #646970 !important;
-	border-width: 1px !important;
-	border-style: solid !important;
-	border-radius: 8px !important;
-	color: #fff !important;
-	text-decoration: none;
-	font-size: 13px;
-	line-height: 2.15384615;
-	min-height: 30px;
-	margin: 0;
-	padding: 0 10px;
-	cursor: pointer;
-	white-space: nowrap;
-	box-sizing: border-box;
-	box-shadow: 0 1px 0 #646970;
-	text-shadow: none;
-	font-weight: 400;
+/* Options Page - Uninstall button: same shape/shadow/gradient style as other plugin buttons, gray color kept */
+/* #wpsc-uninstall-btn is the visible trigger; input[name="uninstall"] is the hidden field used on submit */
+#wpsc-options-form input[name="uninstall"]:not([type="hidden"]),
+#wpsc-options-form #wpsc-uninstall-btn {
+  border-radius: var(--wpsc-btn-radius-modern) !important;
+  box-shadow: var(--wpsc-btn-shadow) !important;
+  border: none !important;
+  background: var(--wpsc-btn-uninstall-bg-gradient) !important;
+  color: #fff !important;
+  text-shadow: none;
+  min-height: var(--wpsc-btn-min-height);
+  padding: var(--wpsc-btn-padding);
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  font-size: var(--wpsc-btn-font-size);
+  font-weight: 400;
+  margin: 0;
 }
 
-#wpsc-options-form input[name="uninstall"]:hover {
-	background: #50575e !important;
-	border-color: #50575e !important;
-	color: #fff !important;
-	box-shadow: 0 1px 0 #50575e;
+#wpsc-options-form input[name="uninstall"]:not([type="hidden"]):hover,
+#wpsc-options-form #wpsc-uninstall-btn:hover {
+  background: var(--wpsc-btn-uninstall-bg-hover-gradient) !important;
+  filter: brightness(1.05);
 }
 
-#wpsc-options-form input[name="uninstall"]:active,
-#wpsc-options-form input[name="uninstall"]:focus {
-	background: #3c434a !important;
-	border-color: #3c434a !important;
-	color: #fff !important;
-	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
+#wpsc-options-form input[name="uninstall"]:not([type="hidden"]):active,
+#wpsc-options-form input[name="uninstall"]:not([type="hidden"]):focus,
+#wpsc-options-form #wpsc-uninstall-btn:active,
+#wpsc-options-form #wpsc-uninstall-btn:focus {
+  background: var(--wpsc-btn-uninstall-bg-active-gradient) !important;
+  filter: brightness(0.98);
 }
 
 /* Spell Check Scan Results Page Specific Styles */
 /* These styles are scoped to .wpsc-table to avoid conflicts with other pages */
-.wpsc-table .search-box input[type=submit] {
-	color: white;
-	background-color: #00A0D2;
-	border-color: #0073AA;
+/* Tablenav Save button uses base blue; search uses scoped search override above */
+
+/* Root cause: top Save button is position:absolute so its 32.5% was relative to a wider ancestor. Make form the containing block so both buttons use the same width for alignment. */
+#wpsc-scan-results-tab #words-list,
+.wpsc-page-spell #words-list {
+  position: relative;
+}
+
+/* Spell Check results: bottom row below table. Same alignment as top: Save 16% width, 32.5% from left; Search right. */
+#wpsc-scan-results-tab .wpsc-words-list-footer {
+  clear: both;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+#wpsc-scan-results-tab .wpsc-words-list-footer .search-box.bottom {
+  float: right;
+  margin: 0;
+}
+
+#wpsc-scan-results-tab .wpsc-words-list-footer .wpsc-edit-update-button.bottom {
+  width: 16%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 32.5%;
+  margin-top: 12px;
+  margin-bottom: 0;
+  display: block;
+  background: var(--wpsc-btn-save-bg) !important;
+  border: none !important;
+  color: white;
+  font-weight: bold;
+}
+
+/* Same footer alignment as scan-results tab: Save 16% width, 32.5% from left (matches top button); Search right. */
+.wpsc-page-spell .wpsc-words-list-footer {
+  clear: both;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+.wpsc-page-spell .wpsc-words-list-footer .search-box.bottom {
+  float: right;
+  margin: 0;
+}
+
+.wpsc-page-spell .wpsc-words-list-footer .wpsc-edit-update-button.bottom {
+  width: 16%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 32.5%;
+  margin-top: 12px;
+  margin-bottom: 0;
+  display: block;
+  background: var(--wpsc-btn-save-bg) !important;
+  border: none !important;
+  color: white;
+  font-weight: bold;
 }
 
 .wpsc-table #cb-select-all-1,
 .wpsc-table #cb-select-all-2 {
-	display: none;
+  display: none;
 }
 
 .wpsc-table td.word {
-	font-size: 15px;
+  font-size: 15px;
 }
 
 .wpsc-table p.submit {
-	display: inline-block;
-	margin-left: 8px;
+  display: inline-block;
+  margin-left: 8px;
 }
 
 .wpsc-table h3.sc-message {
-	width: 49%;
-	display: inline-block;
-	font-weight: normal;
-	padding-left: 8px;
+  width: 49%;
+  display: inline-block;
+  font-weight: normal;
+  padding-left: 8px;
 }
 
 .wpsc-table .wpsc-mouseover-text-page,
 .wpsc-table .wpsc-mouseover-text-post,
 .wpsc-table .wpsc-mouseover-text-refresh {
-	color: black;
-	font-size: 12px;
-	width: 225px;
-	display: inline-block;
-	position: absolute;
-	margin: -13px 0 0 -280px;
-	padding: 5px;
-	border: 1px solid black;
-	border-radius: 50px;
-	opacity: 0;
-	background: white;
-	z-index: -100;
-	box-shadow: black 1px 1px 1px;
+  color: black;
+  font-size: 12px;
+  width: 225px;
+  display: inline-block;
+  position: absolute;
+  margin: -13px 0 0 -280px;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 50px;
+  opacity: 0;
+  background: white;
+  z-index: -100;
+  box-shadow: black 1px 1px 1px;
 }
 
 .wpsc-table .wpsc-row .row-actions,
 .wpsc-table .wpsc-row .row-actions * {
-	visibility: visible !important;
-	left: 0 !important;
+  visibility: visible !important;
+  left: 0 !important;
 }
 
 .wpsc-table #current-page-selector {
-	width: 12%;
+  width: 12%;
 }
 
 .wpsc-table .hidden {
-	display: none;
+  display: none;
 }
 
 .wpsc-table .wpsc-scan-nav-bar {
-	border-bottom: 1px solid #BBB;
+  border-bottom: 1px solid var(--wpsc-nav-border);
 }
 
 .wpsc-table .wpsc-scan-nav-bar a {
-	text-decoration: none;
-	margin: 5px 5px -1px 5px;
-	padding: 8px;
-	border: 1px solid #BBB;
-	display: inline-block;
-	font-weight: bold;
-	color: black;
-	font-size: 14px;
+  text-decoration: none;
+  margin: 5px 5px -1px 5px;
+  padding: 8px;
+  border: 1px solid var(--wpsc-nav-border);
+  display: inline-block;
+  font-weight: bold;
+  color: black;
+  font-size: 14px;
 }
 
 .wpsc-table .wpsc-scan-nav-bar a.selected {
-	border-bottom: 1px solid white;
-	background: white;
+  border-bottom: 1px solid var(--wpsc-nav-selected-bg);
+  background: var(--wpsc-nav-selected-bg);
 }
 
-.wpsc-table #wpsc-empty-fields-tab .button-primary {
-	background: #73019a;
-	border-color: #51006E;
-	text-shadow: 1px 1px #51006d;
-	box-shadow: 0 1px 0 #51006d;
-}
-
-.wpsc-table #wpsc-empty-fields-tab .button-primary:hover {
-	background: #9100c3
-}
-
-.wpsc-table #wpsc-empty-fields-tab .button-primary:active {
-	background: #51006d;
+.wpsc-table .wpsc-scan-nav-bar a:not(.selected) {
+  background: var(--wpsc-nav-inactive-bg);
+  color: #333;
 }
 
 .wpsc-table .wpsc-scan-buttons input#submit:active {
-	margin-top: -7px;
+  margin-top: -7px;
 }
 
 .wpsc-table #wpsc-empty-fields-tab span.wpsc-bulk {
-	display: none;
+  display: none;
 }
 
 .wpsc-table span.wpsc-bulk {
-	color: black;
+  color: black;
 }
 
 .wpsc-table th#count {
-	width: 80px;
+  width: 80px;
 }
 
 /* Grammar Page Specific Styles */
 /* Enqueue early via admin_enqueue_scripts hook to prevent FOUC */
 /* Override scoped mouseover refresh style for grammar page */
 .wpsc-table .wpsc-mouseover-text-refresh {
-	margin: -13px 0 0 -270px;
-	padding: 3px;
-	border-radius: 10px;
+  margin: -13px 0 0 -270px;
+  padding: 3px;
+  border-radius: 10px;
 }
 
 #wpgc-scan-results-tab .wp-list-table th {
-	text-align: center;
-}
-
-.wpgc-desc-hover {
-	display: block !important;
-	position: relative;
-	top: -125px;
-	left: -55px;
-	width: 125px;
-	padding: 0px;
-	margin: 0px;
-	z-index: 100;
-	height: 0px !important;
+  text-align: center;
 }
 
 #wpgc-scan-results-tab .wp-list-table td:not(.column-page) {
-	text-align: center;
+  text-align: center;
 }
 
+/* Base Entire Site button - default orange; shape from base; overridden per page below */
 .wpscScanSite {
-	background-color: #ffb01f;
-	border-color: #ffb01f;
-	box-shadow: 0px 1px 0px #ffb01f;
-	text-shadow: 1px 1px 1px #ffb01f;
-	font-weight: bold;
+  background: var(--wpsc-scan-btn-bg) !important;
+  font-weight: bold;
+}
+/* Per-page unique "Entire Site" button colors */
+.wpsc-page-spell .wpscScanSite:not(:disabled) {
+  background: linear-gradient(180deg, #f89a42 0%, #e67e22 100%) !important;
+}
+/* Spell Check page - scan buttons orange gradient override only */
+.wpsc-page-spell .wpsc-scan-buttons input.wpscScan:not(:disabled) {
+  background: linear-gradient(180deg, #f89a42 0%, #e67e22 100%) !important;
+}
+.wpsc-page-spell .wpsc-scan-buttons input.wpscScan:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+.wpsc-page-grammar .wpscScanSite:not(:disabled) {
+  background: linear-gradient(180deg, #5dade2 0%, #2980b9 100%) !important;
+}
+/* Grammar page - scan buttons blue gradient override only */
+.wpsc-page-grammar .wpsc-scan-buttons input.wpscScan:not(:disabled) {
+  background: linear-gradient(180deg, #5dade2 0%, #2980b9 100%) !important;
+}
+.wpsc-page-grammar .wpsc-scan-buttons input.wpscScan:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+.wpsc-page-seo .wpscScanSite:not(:disabled),
+#wpsc-empty-fields-tab .wpscScanSite:not(:disabled) {
+  background: linear-gradient(180deg, #af7ac5 0%, #7d3c98 100%) !important;
+}
+.wpsc-page-html .wpscScanSite:not(:disabled),
+.wpsc-html-results-page .wpscScanSite:not(:disabled) {
+  background: linear-gradient(180deg, #eb5454 0%, #e74c3c 100%) !important;
+}
+/* Broken Code page - scan buttons red gradient (Entire Site, Broken HTML, Broken Shortcodes) */
+.wpsc-page-html .wpsc-scan-buttons input.wpscScan:not(:disabled),
+.wpsc-html-results-page .wpsc-scan-buttons input.wpscScan:not(:disabled) {
+  background: linear-gradient(180deg, #eb5454 0%, #e74c3c 100%) !important;
+}
+.wpsc-page-html .wpsc-scan-buttons input.wpscScan:not(:disabled):hover,
+.wpsc-html-results-page .wpsc-scan-buttons input.wpscScan:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+
+/* Broken Code page - horizontal spacing between scan buttons (Entire Site, Broken HTML, Broken Shortcodes) */
+.wpsc-html-results-page
+  .wpsc-scan-buttons
+  p.submit:has(.wpscScan)
+  + p.submit:has(.wpscScan) {
+  margin-left: 12px !important;
 }
 
 /* SEO Page Specific Styles - Scoped to #wpsc-empty-fields-tab */
 #wpsc-empty-fields-tab .wpsc-seo-page-title {
-	position: relative;
-	top: -8px;
+  position: relative;
+  top: -8px;
 }
 
 #wpsc-empty-fields-tab .wpsc-seo-instructions {
-	margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 #wpsc-empty-fields-tab .wpsc-seo-instructions span {
-	display: block;
+  display: block;
 }
 
 #wpsc-empty-fields-tab .wpsc-pro-feature-header {
-	display: block;
-	text-align: center;
-	font-size: 14px;
-	padding: 10px 0;
-	background-color: #2271b1;
-	color: white;
-	margin-bottom: 8px;
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 0;
+  background-color: var(--wpsc-btn-bg);
+  color: white;
+  margin-bottom: 8px;
 }
 
 #wpsc-empty-fields-tab .wpsc-pro-feature-content {
-	padding: 0 10px;
-	display: block;
+  padding: 0 10px;
+  display: block;
 }
 
 #wpsc-empty-fields-tab .wpsc-save-key-button {
-	margin-left: 0;
+  margin-left: 0;
+  background: linear-gradient(180deg, #af7ac5 0%, #7d3c98 100%) !important;
+  color: #fff !important;
+  border: none;
 }
 
 #wpsc-empty-fields-tab .wpsc-openai-key-row {
-	display: flex;
-	align-items: center;
-	gap: 15px;
-	flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 #wpsc-empty-fields-tab .wpsc-scan-container {
-	border-radius: 5px;
-	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
-	background: white;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+  background: white;
 }
 
 #wpsc-empty-fields-tab .wpsc-scan-buttons {
-	padding-left: 8px;
-	padding-top: 5px;
+  padding-left: 8px;
+  padding-top: 5px;
 }
 
-/* Disabled/inactive buttons should be grey like spell check page */
+/* Disabled/inactive Pro buttons - same gradient styling as Spell Check page */
 #wpsc-empty-fields-tab .wpsc-scan-buttons input[disabled],
 #wpsc-empty-fields-tab .wpsc-scan-buttons input:disabled {
-	background: darkgrey !important;
-	color: white !important;
-	border-color: grey !important;
+  background: var(--wpsc-btn-disabled-bg) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
 }
 
-/* Ensure Entire Site button keeps orange color */
-#wpsc-empty-fields-tab .wpscScanSite:not(:disabled) {
-	background-color: #ffb01f !important;
-	border-color: #ffb01f !important;
-	box-shadow: 0px 1px 0px #ffb01f !important;
-	text-shadow: 1px 1px 1px #ffb01f !important;
-	font-weight: bold !important;
-	color: white !important;
-}
+/* Entire Site on SEO page uses .wpsc-page-seo gradient above */
 
-/* Ensure purple buttons (Authors, Page Titles, Post Titles) keep purple - only when enabled */
-#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled) {
-	background: #73019a !important;
-	border-color: #51006E !important;
-	text-shadow: 1px 1px #51006d !important;
-	box-shadow: 0 1px 0 #51006d !important;
-	color: white !important;
+/* SEO scan buttons (Authors, Page Titles, etc.) - purple gradient override only; action buttons (Clear/See/Stop) use global orange/blue/red */
+#wpsc-empty-fields-tab
+  .wpsc-scan-buttons
+  .button-primary:not(.wpscScanSite):not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled) {
+  background: linear-gradient(180deg, #af7ac5 0%, #7d3c98 100%) !important;
 }
-
-#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled):hover {
-	background: #9100c3 !important;
+#wpsc-empty-fields-tab
+  .wpsc-scan-buttons
+  .button-primary:not(.wpscScanSite):not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled):hover {
+  filter: brightness(1.05);
 }
-
-#wpsc-empty-fields-tab .wpsc-scan-buttons .button-primary:not(.wpscScanSite):not(:disabled):active {
-	background: #51006d !important;
+#wpsc-empty-fields-tab
+  .wpsc-scan-buttons
+  .button-primary:not(.wpscScanSite):not(.wpsc-btn-clear-results):not(
+    .wpsc-clear-results-button
+  ):not(.wpsc-btn-see-results):not(.wpsc-see-results-button):not(
+    .wpsc-btn-stop-scans
+  ):not(.wpsc-stop-scans-button):not(:disabled):active {
+  filter: brightness(0.98);
 }
 
 #wpsc-empty-fields-tab .wpsc-scan-buttons h3:first-child {
-	margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 #wpsc-empty-fields-tab .wpsc-scan-buttons h3.scan-label {
-	display: inline-block;
+  display: inline-block;
 }
 
 #wpsc-empty-fields-tab .wpsc-action-buttons .submit {
-	margin-left: -11px;
+  margin-left: -11px;
 }
 
 #wpsc-empty-fields-tab .wpsc-action-dash {
-	position: relative;
-	left: 15px;
+  position: relative;
+  left: 15px;
 }
 
 #wpsc-empty-fields-tab .wpsc-action-icon {
-	width: 20px;
-	position: relative;
-	top: 5px;
+  width: 20px;
+  position: relative;
+  top: 5px;
 }
 
 #wpsc-empty-fields-tab .wpsc-action-icon.clear-results {
-	left: 27px;
-	filter: brightness(0) invert(1);
+  left: 27px;
+  filter: brightness(0) invert(1);
 }
 
 #wpsc-empty-fields-tab .wpsc-action-icon.see-results {
-	left: 26px;
-	filter: brightness(0) invert(1);
+  left: 26px;
+  filter: brightness(0) invert(1);
 }
 
 #wpsc-empty-fields-tab .wpsc-action-icon.stop-scans {
-	left: 25px;
-	filter: brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(7151%) hue-rotate(357deg) brightness(95%) contrast(118%);
+  left: 25px;
+  filter: brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(7151%)
+    hue-rotate(357deg) brightness(95%) contrast(118%);
 }
 
-#wpsc-empty-fields-tab .wpsc-clear-results-button,
-#wpsc-empty-fields-tab .wpsc-see-results-button,
-#wpsc-empty-fields-tab .wpsc-stop-scans-button {
-	padding-left: 30px;
-	background-color: red !important;
-	border-color: red !important;
-	color: white !important;
-}
+/* Action buttons use global gradient classes - no override needed */
 
 #wpsc-empty-fields-tab .wpsc-options-icon {
-	width: 30px;
-	position: relative;
-	top: 11px;
-	left: 20px;
-	padding: 0px;
-	border-radius: 25px;
+  width: 30px;
+  position: relative;
+  top: 11px;
+  left: 20px;
+  padding: 0px;
+  border-radius: 25px;
 }
 
 #wpsc-empty-fields-tab .wpsc-stats-container {
-	padding: 5px;
-	font-size: 12px;
+  padding: 5px;
+  font-size: 12px;
 }
 
 #wpsc-empty-fields-tab .empty-eps-message.hidden {
-	display: none;
+  display: none;
 }
 
 #wpsc-empty-fields-tab .wpsc-mesage-container {
-	text-align: center;
-	background-color: white;
-	padding: 5px;
-	margin: 15px 0;
+  width: 74%;
 }
 
-#wpsc-empty-fields-tab .wpsc-message {
-	width: 74%;
-	font-size: 1.3em;
-	color: rgb(0, 115, 0);
-	font-weight: bold;
+#wpsc-empty-fields-tab .wpsc-mesage-container .wpsc-message {
+  width: 100%;
 }
 
 #wpsc-empty-fields-tab #words-list {
-	width: 75%;
-	float: left;
-	margin-top: 10px;
-	margin-bottom: 10px;
+  position: relative;
+  width: 75%;
+  float: left;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #wpsc-empty-fields-tab .search-box.top {
-	position: relative;
-	margin-top: 8px;
+  position: relative;
+  margin-top: 8px;
 }
 
-#wpsc-empty-fields-tab .search-box.bottom {
-	margin-top: -3em;
+/* SEO page footer: always below table (no overlap); search right, Save button centered. */
+#wpsc-empty-fields-tab .wpsc-words-list-footer {
+  clear: both;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+#wpsc-empty-fields-tab .wpsc-words-list-footer .search-box.bottom {
+  float: right;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 #wpsc-empty-fields-tab .wpsc-edit-update-button.top {
-	width: 16%;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	margin-left: 32.5%;
-	display: block;
-	background: #008200;
-	border-color: #005200;
-	color: white;
-	font-weight: bold;
-	position: absolute;
-	margin-top: 7px;
+  width: 16%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 32.5%;
+  display: block;
+  background: var(--wpsc-btn-save-bg) !important;
+  border: none !important;
+  color: white;
+  font-weight: bold;
+  position: absolute;
+  margin-top: 7px;
 }
 
-#wpsc-empty-fields-tab .wpsc-edit-update-button.bottom {
-	width: 16%;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	margin-left: 31.5%;
-	display: block;
-	background: #008200;
-	border-color: #005200;
-	color: white;
-	font-weight: bold;
-	position: absolute;
-	margin-top: -31px;
+#wpsc-empty-fields-tab .wpsc-words-list-footer .wpsc-edit-update-button.bottom {
+  width: 16%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 32.5%;
+  margin-top: 12px;
+  margin-bottom: 0;
+  display: block;
+  background: var(--wpsc-btn-save-bg) !important;
+  border: none !important;
+  color: white;
+  font-weight: bold;
+  position: relative;
 }
 
 #wpsc-empty-fields-tab .wpsc-stats-summary {
-	padding: 15px;
-	background: white;
-	clear: both;
-	width: 72%;
-	font-family: helvetica, sans-serif;
-	border-radius: 5px;
-	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+  padding: 15px;
+  background: white;
+  clear: both;
+  width: 72%;
+  font-family: helvetica, sans-serif;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
 }
 
 #wpsc-empty-fields-tab .wpsc-edit-content h4 {
-	display: inline-block;
+  display: inline-block;
 }
 
 #wpsc-empty-fields-tab .wpsc-edit-content h4.seo {
-	font-size: 14px;
-	font-weight: bold;
-	margin: 0.5em 0;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0.5em 0;
 }
 
 #wpsc-empty-fields-tab .wpsc-edit-field {
-	margin-left: 3em;
+  margin-left: 3em;
 }
 
 #wpsc-empty-fields-tab .wpsc-edit-field.seo {
-	margin: 0 0 1em 1em;
-	width: 90%;
+  margin: 0 0 1em 1em;
+  width: 90%;
 }
 
 #wpsc-empty-fields-tab .wpsc-buttons .clear {
-	clear: both;
+  clear: both;
 }
 
 #wpsc-empty-fields-tab .wpsc-generate-seo-button {
-	background: #008200;
-	margin-left: 10px;
-	color: white;
-	border: none;
-	font-weight: bold;
+  background: var(--wpsc-color-success);
+  margin-left: 10px;
+  color: white;
+  border: none;
+  font-weight: bold;
 }
 
 #wpsc-empty-fields-tab .seo-progress {
-	margin-left: 1em;
-	display: none;
+  margin-left: 1em;
+  display: none;
 }
 
 /* SEO Page Message color classes - scoped to prevent conflicts */
 #wpsc-empty-fields-tab .sc-message {
-	color: rgb(0, 150, 255);
-	font-weight: bold;
+  color: var(--wpsc-msg-info);
+  font-weight: bold;
 }
 
 /* Pro Version error message should be red - must override .sc-message */
 #wpsc-empty-fields-tab .sc-message.error,
 #wpsc-empty-fields-tab h3.sc-message.error {
-	color: rgb(225, 0, 0) !important;
+  color: var(--wpsc-msg-error) !important;
 }
 
 #wpsc-empty-fields-tab .sc-factor {
-	color: rgb(115, 1, 154);
-	font-size: 1.4em;
+  color: var(--wpsc-msg-highlight);
+  font-size: 1.4em;
 }
 
 #wpsc-empty-fields-tab .sc-time {
-	color: rgb(0, 115, 0);
+  color: var(--wpsc-msg-success);
 }
 
 #wpsc-empty-fields-tab .sc-type {
-	color: rgb(0, 115, 0);
+  color: var(--wpsc-msg-success);
 }
 
 #wpsc-empty-fields-tab .sc-type span {
-	color: rgb(115, 1, 154);
-	font-weight: bold;
+  color: var(--wpsc-msg-highlight);
+  font-weight: bold;
 }
 
 #wpsc-empty-fields-tab .sc-page,
 #wpsc-empty-fields-tab .sc-post,
 #wpsc-empty-fields-tab .sc-media {
-	color: rgb(0, 115, 0);
+  color: var(--wpsc-msg-success);
 }
 
 #wpsc-empty-fields-tab .wpsc-message.error {
-	color: rgb(225, 0, 0);
+  color: var(--wpsc-msg-error);
 }
 
 #wpsc-empty-fields-tab .wpsc-message.error-red,
 #wpsc-empty-fields-tab .error-red {
-	color: red;
+  color: red;
 }
 
 #wpsc-empty-fields-tab .wpsc-mouseover-button-refresh {
-	border-radius: 29px;
-	border: 1px solid green;
-	display: inline-block;
-	margin-left: 10px;
-	padding: 4px 10px;
-	cursor: help;
+  border-radius: 29px;
+  border: 1px solid var(--wpsc-color-success);
+  display: inline-block;
+  margin-left: 10px;
+  padding: 4px 10px;
+  cursor: help;
 }
 
 #wpsc-empty-fields-tab .wpsc-mouseover-button-page,
 #wpsc-empty-fields-tab .wpsc-mouseover-button-post {
-	border-radius: 29px;
-	border: 1px solid green;
-	display: inline-block;
-	margin-left: 10px;
-	padding: 4px 10px;
-	cursor: help;
+  border-radius: 29px;
+  border: 1px solid var(--wpsc-color-success);
+  display: inline-block;
+  margin-left: 10px;
+  padding: 4px 10px;
+  cursor: help;
 }
 
 /* HTML Results Page (wp-spellcheck-html.php) Specific Styles */
@@ -823,182 +1267,226 @@ td {
 
 /* Dialog element */
 .wpsc-html-results-page #wpsc-dialog-confirm {
-	display: none;
+  display: none;
 }
 
 /* H2 title span */
 .wpsc-html-results-page h2 span {
-	position: relative;
-	top: -8px;
+  position: relative;
+  top: -8px;
 }
 
 /* Table column spans */
 .wpsc-html-results-page .wpsc-row span {
-	color: silver;
+  color: silver;
 }
 
 /* Main scan container */
 #wphc-scan-results-tab .wpsc-scan-container {
-	border-radius: 5px;
-	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
-	background: white;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
+  background: white;
 }
 
 /* Scan buttons container */
 #wphc-scan-results-tab .wpsc-scan-buttons {
-	padding-left: 8px;
-	padding-top: 5px;
+  padding-left: 8px;
+  padding-top: 5px;
 }
 
 /* H3 headings in scan section */
 #wphc-scan-results-tab .wpsc-scan-buttons h3 {
-	margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 #wphc-scan-results-tab .wpsc-scan-buttons h3:first-child {
-	padding-top: 10px;
+  padding-top: 10px;
 }
 
 #wphc-scan-results-tab .wpsc-scan-buttons h3.scan-label {
-	display: inline-block;
+  display: inline-block;
 }
 
-/* Orange scan buttons */
-.wpsc-html-results-page .wpscScan,
-.wpsc-html-results-page .wpscScanSite {
-	background-color: #ffb01f !important;
-	border-color: #ffb01f !important;
-	box-shadow: 0px 1px 0px #ffb01f !important;
-	text-shadow: 1px 1px 1px #ffb01f !important;
-	font-weight: bold !important;
+/* Broken Code page - scan buttons (Broken HTML, Broken Shortcodes) red gradient */
+.wpsc-html-results-page .wpscScan:not(.wpscScanSite) {
+  background: linear-gradient(180deg, #eb5454 0%, #e74c3c 100%) !important;
+}
+.wpsc-html-results-page .wpscScan:not(.wpscScanSite):hover {
+  filter: brightness(1.05);
 }
 
 /* Action button wrappers */
 #wphc-scan-results-tab .wpsc-scan-buttons p.submit.wpsc-action-button-wrapper {
-	margin-left: -11px;
+  margin-left: -11px;
 }
 
 /* Action dash span */
 #wphc-scan-results-tab .wpsc-action-dash {
-	position: relative;
-	left: 15px;
+  position: relative;
+  left: 15px;
 }
 
 /* Action icons */
 #wphc-scan-results-tab .wpsc-icon-clear-results {
-	width: 20px;
-	position: relative;
-	top: 5px;
-	left: 27px;
+  width: 20px;
+  position: relative;
+  top: 5px;
+  left: 27px;
 }
 
 #wphc-scan-results-tab .wpsc-icon-see-results {
-	width: 20px;
-	position: relative;
-	top: 5px;
-	left: 26px;
+  width: 20px;
+  position: relative;
+  top: 5px;
+  left: 26px;
 }
 
 #wphc-scan-results-tab .wpsc-icon-stop-scans {
-	width: 20px;
-	position: relative;
-	top: 5px;
-	left: 25px;
+  width: 20px;
+  position: relative;
+  top: 5px;
+  left: 25px;
 }
 
 /* Red action buttons */
-#wphc-scan-results-tab .wpsc-button-red {
-	padding-left: 30px !important;
-	background-color: red !important;
-	border-color: red !important;
-	color: white !important;
-}
+/* Action buttons use .wpsc-btn-clear-results, .wpsc-btn-see-results, .wpsc-btn-stop-scans */
 
 /* Options icon */
 #wphc-scan-results-tab .wpsc-options-icon {
-	width: 30px;
-	position: relative;
-	top: 11px;
-	left: 20px;
-	padding: 0px;
-	border-radius: 25px;
+  width: 30px;
+  position: relative;
+  top: 11px;
+  left: 20px;
+  padding: 0px;
+  border-radius: 25px;
 }
 
 /* Stats container */
 #wphc-scan-results-tab .wpsc-stats-container {
-	padding: 5px;
-	font-size: 12px;
+  padding: 5px;
+  font-size: 12px;
 }
 
 /* Message H3 elements */
 .wpsc-html-results-page .sc-message {
-	color: rgb(0, 115, 0);
+  color: var(--wpsc-msg-success);
 }
 
 .wpsc-html-results-page .sc-message.sc-time {
-	color: rgb(0, 115, 0);
+  color: var(--wpsc-msg-success);
 }
 
 .wpsc-html-results-page .sc-message.error {
-	color: rgb(225, 0, 0);
+  color: var(--wpsc-msg-error);
 }
 
 .wpsc-html-results-page .sc-message span.wpsc-site-span {
-	color: rgb(0, 150, 255);
-	font-weight: bold;
+  color: var(--wpsc-msg-info);
+  font-weight: bold;
 }
 
 .wpsc-html-results-page .sc-type span {
-	color: rgb(0, 150, 255);
-	font-weight: bold;
+  color: var(--wpsc-msg-info);
+  font-weight: bold;
 }
 
 /* Words list form */
 .wpsc-html-results-page #words-list {
-	width: 75%;
-	float: left;
-	margin-top: 10px;
+  width: 75%;
+  float: left;
+  margin-top: 10px;
 }
 
 /* Search boxes */
 .wpsc-html-results-page .search-box:first-of-type {
-	position: relative;
-	margin-top: 0.5em;
+  position: relative;
+  margin-top: 0.5em;
 }
 
 .wpsc-html-results-page .search-box:last-of-type {
-	margin-top: 0.7em;
+  margin-top: 0.7em;
 }
 
 /* Stats summary div */
 .wpsc-html-results-page .wpsc-stats-summary {
-	padding: 15px;
-	background: white;
-	clear: both;
-	width: 72%;
-	font-family: helvetica, sans-serif;
-	border-radius: 5px;
-	box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);
+  padding: 15px;
+  background: white;
+  clear: both;
+  width: 72%;
+  font-family: helvetica, sans-serif;
+  border-radius: var(--wpsc-card-radius);
+  box-shadow: var(--wpsc-card-shadow);
 }
 
 /* Non-pro form */
 .wpsc-html-results-page form[action*="admin.php"]:not(#words-list) {
-	width: 75%;
-	float: left;
-	margin-top: 10px;
+  width: 75%;
+  float: left;
+  margin-top: 10px;
 }
 
 /* Non-pro submit button */
 .wpsc-html-results-page form[action*="admin.php"]:not(#words-list) p.submit {
-	margin: 0px;
+  margin: 0px;
 }
 
 /* Examples heading */
 .wpsc-html-results-page .wpsc-examples-heading {
-	color: red;
+  color: red;
 }
 
 /* Error message */
 .wpsc-html-results-page .wpsc-error-message {
-	color: red;
+  color: red;
+}
+
+/* Loading spinner - SVG, size via CSS only, rotation animation */
+.wpsc-loading-spinner {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  animation: wpsc-spin 0.8s linear infinite;
+}
+@keyframes wpsc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Theme Appearance toggle - sliding switch Light | Dark */
+.wpsc-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--wpsc-nav-border, #ddd);
+  border-radius: var(--wpsc-btn-radius-modern);
+  padding: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.wpsc-theme-toggle input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.wpsc-theme-toggle label {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  margin: 0;
+  color: #555;
+}
+.wpsc-theme-toggle input#wpsc-theme-light:checked + label {
+  background: #fff;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.wpsc-theme-toggle input#wpsc-theme-dark:checked + label {
+  background: linear-gradient(135deg, #0a0a0f 0%, #100921 50%, #1a1137 100%);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }

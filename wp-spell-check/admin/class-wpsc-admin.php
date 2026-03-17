@@ -71,20 +71,111 @@ class Wpscx_Admin {
 		$plugin = plugin_basename( __FILE__ );
 
 		add_filter( 'admin_footer_text', array( $this, 'admin_footer' ), 1, 2 );
+		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_theme' ), 20 );
 		add_action( 'admin_notices', array( $this, 'nag_api_invalid' ) );
+	}
+
+	/**
+	 * Add body class on plugin admin pages for consistent page background styling.
+	 *
+	 * @since 10.1
+	 * @param string $classes Space-separated list of body classes.
+	 * @return string
+	 */
+	function admin_body_class( $classes ) {
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return $classes;
+		}
+		// All WPSC menu pages and Settings subpages (Options, Uninstall).
+		$is_wpsc = ( strpos( $screen->id, 'wp-spellcheck' ) !== false
+			|| strpos( $screen->id, 'wpsc' ) !== false );
+		if ( $is_wpsc ) {
+			$theme = function_exists( 'wpsc_get_effective_admin_theme' ) ? wpsc_get_effective_admin_theme() : 'dark';
+			if ( 'system' === $theme ) {
+				$theme_class = ' wpsc-theme-system';
+			} elseif ( 'light' === $theme ) {
+				$theme_class = ' wpsc-theme-light';
+			} else {
+				$theme_class = ' wpsc-theme-dark';
+			}
+			return $classes . ' wpsc-admin-page' . $theme_class;
+		}
+		return $classes;
+	}
+
+	/**
+	 * Inline critical dark-theme CSS so first paint is dark (avoids white flash while admin-theme-dark.css loads).
+	 *
+	 * @since 11.0
+	 * @param string $theme 'dark' or 'system'.
+	 * @return string CSS to inject.
+	 */
+	private function get_critical_dark_css( $theme ) {
+		$dark_bg = '#100921';
+		$dark_text = '#e0e0e0';
+		if ( 'dark' === $theme ) {
+			return 'body.wpsc-admin-page.wpsc-theme-dark{background-color:' . $dark_bg . '}'
+				. 'body.wpsc-admin-page.wpsc-theme-dark #wpcontent{background-color:' . $dark_bg . '!important}'
+				. 'body.wpsc-admin-page.wpsc-theme-dark .wrap.wpsc-table,'
+				. 'body.wpsc-admin-page.wpsc-theme-dark .wrap.wpsc-options-page{background-color:' . $dark_bg . ';color:' . $dark_text . '}';
+		}
+		// System: same rules inside prefers-color-scheme so first paint is dark when OS is dark.
+		return '@media(prefers-color-scheme:dark){'
+			. 'body.wpsc-admin-page.wpsc-theme-system{background-color:' . $dark_bg . '}'
+			. 'body.wpsc-admin-page.wpsc-theme-system #wpcontent{background-color:' . $dark_bg . '!important}'
+			. 'body.wpsc-admin-page.wpsc-theme-system .wrap.wpsc-table,'
+			. 'body.wpsc-admin-page.wpsc-theme-system .wrap.wpsc-options-page{background-color:' . $dark_bg . ';color:' . $dark_text . '}}';
+	}
+
+	/**
+	 * Enqueue dark theme stylesheet when admin theme is dark or system (system uses media query for prefers-color-scheme).
+	 * Inlines critical dark CSS so the first paint is dark and avoids a white flash (FOUC).
+	 *
+	 * @since 11.0
+	 */
+	function enqueue_admin_theme() {
+		$screen = get_current_screen();
+		if ( ! $screen ) {
+			return;
+		}
+		$is_wpsc = ( strpos( $screen->id, 'wp-spellcheck' ) !== false || strpos( $screen->id, 'wpsc' ) !== false );
+		$theme = function_exists( 'wpsc_get_effective_admin_theme' ) ? wpsc_get_effective_admin_theme() : 'dark';
+		if ( ! $is_wpsc || ! in_array( $theme, array( 'dark', 'system' ), true ) ) {
+			return;
+		}
+		// Inline critical dark rules so they apply before admin-theme-dark.css loads (prevents white flash on refresh).
+		wp_add_inline_style( 'wpsc-admin-styles', $this->get_critical_dark_css( $theme ) );
+		global $wpsc_version;
+		wp_enqueue_style(
+			'wpsc-admin-theme-dark',
+			plugin_dir_url( dirname( __FILE__ ) ) . 'css/admin-theme-dark.css',
+			array( 'wpsc-admin-styles' ),
+			$wpsc_version
+		);
 	}
 
 	function nag_api_invalid() {
 		global $wpdb;
 		global $wpscx_ent_included;
 		$options_table = $wpdb->prefix . 'spellcheck_options';
+
+		// Do not show "API Key not entered" on the same request where the user just submitted the options form.
+		// admin_notices runs before the options callback, so the DB is not yet updated; suppress to avoid a false nag.
+		$is_options_page_post = isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'wp-spellcheck-options.php' && ! empty( $_POST ) && isset( $_POST['api_key'] );
+		if ( $is_options_page_post ) {
+			return;
+		}
+
 		if ( is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) {
 			$pro_active = true;
 		} else {
 			$pro_active = false; }
 
 		$result = $wpdb->get_results( "SELECT * FROM $options_table WHERE option_name = 'api_key'" );
-		if ( '' !== $result[0]->option_value ) {
+		$key_value = ( ! empty( $result ) && isset( $result[0]->option_value ) ) ? $result[0]->option_value : '';
+		if ( '' !== $key_value ) {
 			$api_entered = false;
 		} else {
 			$api_entered = true; }

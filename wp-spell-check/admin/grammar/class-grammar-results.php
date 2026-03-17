@@ -79,8 +79,9 @@ class Wpgcx_Table extends WP_List_Table {
 			$item['ID'] = '';
 		}
 
-		$actions = array(
-			'Edit' => sprintf( '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" class="wpsc-edit-button-grammar" target="_blank">Edit</a>' ),
+		$edit_url = get_edit_post_link( (int) $item['page_id'], 'raw' );
+		$actions  = array(
+			'Edit' => sprintf( '<a href="%s" class="wpsc-edit-button-grammar" target="_blank">Edit</a>', esc_url( $edit_url ) ),
 		);
 
 		return sprintf(
@@ -110,7 +111,6 @@ class Wpgcx_Table extends WP_List_Table {
 	function get_columns() {
 		global $wpdb;
 		global $wpscx_ent_included;
-		wpscx_set_global_vars();
 		global $wpgc_settings;
 
 		$options_list = $wpgc_settings;
@@ -137,7 +137,7 @@ class Wpgcx_Table extends WP_List_Table {
 		static $row_class = 'wpsc-row';
 		$row_class        = ( '' === $row_class ? ' class="alternate"' : '' );
 
-		echo '<tr class="wpsc-row" id="wpsc-row-' . esc_html( $item['id'] ) . '">';
+		echo '<tr class="wpsc-row' . ( '' !== $row_class ? ' alternate' : '' ) . '" id="wpsc-row-' . esc_attr( $item['id'] ) . '">';
 		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
@@ -265,14 +265,14 @@ function wpgcx_render_results() {
 	$total_posts  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
 
 	$pro_word_count = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name='pro_error_count';" );
-	$pro_words      = $pro_word_count[0]->option_value;
+	$pro_words      = ( ! empty( $pro_word_count ) && isset( $pro_word_count[0]->option_value ) ) ? $pro_word_count[0]->option_value : '0';
 
 	$scan_message = 'No scan currently running';
 
 	$scan_progress = $wpdb->get_results( "SELECT * FROM $options_table WHERE option_name='scan_running'" );
 
-	if ( 'true' === $scan_progress[0]->option_value && isset( $_GET['wpsc-script'] ) && 'noscript' !== $_GET['wpsc-script'] ) {
-		$scan_message = '<img src="' . esc_url( plugin_dir_url( __FILE__ ) ) . 'images/loading.gif" alt="Scan in Progress" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . $options_list[7]->option_value . '</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck-grammar.php">Click here</a> to see scan results.';
+	if ( ! empty( $scan_progress ) && isset( $scan_progress[0]->option_value ) && 'true' === $scan_progress[0]->option_value && isset( $_GET['wpsc-script'] ) && 'noscript' !== $_GET['wpsc-script'] ) {
+		$scan_message = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . ( isset( $options_list[7]->option_value ) ? $options_list[7]->option_value : '' ) . '</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck-grammar.php">Click here</a> to see scan results.';
 	}
 
 	$check_scan = wpgcx_check_scan_progress();
@@ -326,7 +326,7 @@ function wpgcx_render_results() {
 		'wpgcGrammarResults',
 		array(
 			'scan_in_progress'                   => $check_scan ? true : false,
-			'loading_gif_url'                    => esc_url( plugin_dir_url( __FILE__ ) . 'images/loading.gif' ),
+			'loading_gif_url'                    => esc_url( wpsc_get_loading_spinner_url() ),
 			'ajax_url'                           => admin_url( WPSC_ADMIN_AJAX ),
 			'classic_active'                     => $classic_active,
 			'auto_click_enabled'                 => ( isset( $_GET['action'] ) && isset( $_GET['submit'] ) && 'check' === $_GET['action'] && 'Entire Site' === $_GET['submit'] && $classic_active ),
@@ -349,7 +349,7 @@ function wpgcx_render_results() {
 		$wpdb->update($options_table, array('option_value' => 'true'), array('option_name' => 'post_running'));
 		$wpdb->update($options_table, array('option_value' => 'Posts'), array('option_name' => 'last_scan_type'));
 		$wpdb->update($options_table, array("option_value" => '0'), array("option_name" => "last_scan_errors"));
-		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Posts</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
+		$scan_message = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Posts</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
 		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
@@ -369,7 +369,7 @@ function wpgcx_render_results() {
 		$wpdb->update($options_table, array('option_value' => 'true'), array('option_name' => 'page_running'));
 		$wpdb->update($options_table, array('option_value' => 'Pages'), array('option_name' => 'last_scan_type'));
 		$wpdb->update($options_table, array("option_value" => '0'), array("option_name" => "last_scan_errors"));
-		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Pages</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
+		$scan_message = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Pages</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
 		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
@@ -384,7 +384,7 @@ function wpgcx_render_results() {
 		$time_estimate= wpscx_time_elapsed($time_estimate);
 
 		$wpdb->update($options_table, array('option_value' => 0), array('option_name' => 'pro_error_count'));
-		$scan_message = '<img src="'. esc_url(plugin_dir_url( __FILE__ )) . 'images/loading.gif" alt="Scan in Progress" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Entire Site</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
+		$scan_message = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Entire Site</span>. Estimated time for completion is ' . $time_estimate. ' seconds. The page will automatically refresh when the scan has finished.';
 
 		wp_enqueue_script( 'wpgc-results-ajax', plugin_dir_url( __FILE__ ) . '/wpgc-ajax.js', array('jquery') );
 		wp_localize_script( 'wpgc-results-ajax', 'wpgcx_gram_ajax_object', array(
@@ -438,7 +438,7 @@ function wpgcx_render_results() {
 	<div id="wpsc-dialog-confirm" title="Are you sure?" style="display: none;">
 		<p>Would you like to Proceed with the changes?</p>
 	</div>
-	<div class="wrap wpsc-table">
+	<div class="wrap wpsc-table wpsc-page-grammar">
 		<h2><a href="admin.php?page=wp-spellcheck-grammar.php"><img
 					src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/logo.png'; ?>"
 					alt="WP Spell Check" /></a> <span style="position: relative; top: -8px;"> - Grammar Scan Results</span>
@@ -465,18 +465,17 @@ function wpgcx_render_results() {
 		?>
 		>
 			<form action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" method='GET'>
-				<div style="border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%); background: white;">
+				<div class="wpsc-scan-container">
 					<div class="wpsc-scan-buttons" style="padding-left: 8px;">
 						<h3 style="margin-bottom: 0px; padding-top: 10px;">Click on the buttons below to grammar check your
 							pages and/or pots.</h3>
 						<h3 style="display: inline-block;">Scan:</h3>
 						<p class="submit"><input
-								style="background-color: #ffb01f; border-color: #ffb01f; box-shadow: 0px 1px 0px #ffb01f; text-shadow: 1px 1px 1px #ffb01f; font-weight: bold;"
 								type="submit" name="submit" id="submit" class="button button-primary wpscScan wpscScanSite"
 								value="Entire Site" 
 								<?php
 								if ( ! $classic_active ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								>
@@ -485,7 +484,7 @@ function wpgcx_render_results() {
 								class="button button-primary wpscScan" value="Pages" 
 								<?php
 								if ( 'false' === $options_list[0]->option_value || ! $classic_active ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								>
@@ -494,30 +493,27 @@ function wpgcx_render_results() {
 								class="button button-primary wpscScan" value="Posts" 
 								<?php
 								if ( 'false' === $options_list[1]->option_value || ! $classic_active ) {
-									echo "style='background: darkgrey!important; color: white!important; border-color: grey!important;' disabled";
+									echo ' disabled';
 								}
 								?>
 								>
 						</p>
-						<p class="submit" style="margin-left: -11px;"><span style="position: relative; left: 15px;"> -
+						<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><span style="position: relative; left: 15px;"> -
 							</span><img
 								src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../../images/clear-results.png'; ?>"
 								alt="Clear Error Results"
-								style="width: 20px; position: relative; top: 5px; left: 27px;" /><input type="submit"
-								name="submit" id="submit" class="button button-primary"
-								style="padding-left: 30px; background-color: red;" value="Clear Results"></p>
-						<p class="submit" style="margin-left: -11px;"><img
+								class="wpsc-action-icon wpsc-icon-clear-results" style="width: 20px; position: relative; top: 5px; left: 27px;" /><input type="submit"
+								name="submit" id="submit" class="button button-primary wpsc-btn-clear-results" value="Clear Results"></p>
+						<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><img
 								src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../../images/see-results.png'; ?>"
 								alt="See Error Results"
-								style="width: 20px; position: relative; top: 5px; left: 26px;" /><input type="submit"
-								name="submit" id="submit" class="button button-primary"
-								style="padding-left: 30px; background-color: red;" value="See Scan Results"></p>
-						<p class="submit" style="margin-left: -11px;"><img
+								class="wpsc-action-icon wpsc-icon-see-results" style="width: 20px; position: relative; top: 5px; left: 26px;" /><input type="submit"
+								name="submit" id="submit" class="button button-primary wpsc-btn-see-results" value="See Scan Results"></p>
+						<p class="submit wpsc-action-button-wrapper" style="margin-left: -11px;"><img
 								src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../../images/stop-scans.png'; ?>"
 								alt="Stop Current Scans"
-								style="width: 20px; position: relative; top: 5px; left: 25px;" /><input type="submit"
-								name="submit" id="submit" class="button button-primary"
-								style="padding-left: 30px; background-color: red;" value="Stop Scans"></p>
+								class="wpsc-action-icon wpsc-icon-stop-scans" style="width: 20px; position: relative; top: 5px; left: 25px;" /><input type="submit"
+								name="submit" id="submit" class="button button-primary wpsc-btn-stop-scans" value="Stop Scans"></p>
 						<p class="submit" style="margin-left: -11px;"><a
 								href="/wp-admin/admin.php?page=wp-spellcheck-options.php" target="_blank"><img
 									src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . '../../images/options.png'; ?>"
@@ -563,7 +559,7 @@ function wpgcx_render_results() {
 			</form>
 
 			<div
-				style="padding: 15px; background: white; clear: both; width: 72%; font-family: helvetica, sans-serif; border-radius: 5px; box-shadow: 0px 0px 10px 0px rgb(0 0 0 / 50%);">
+				class="wpsc-stats-summary" style="padding: 15px; clear: both; width: 72%; font-family: helvetica, sans-serif;">
 				<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $options_list[7]->option_value ) . '</span>: ' . esc_html( $options_list[6]->option_value ) . '</h3>'; ?>
 				<?php echo "<h3 class='sc-message sc-page' style='color: rgb(0, 115, 0);'>Pages scanned: " . esc_html( $options_list[4]->option_value ) . '/' . esc_html( $total_pages ) . '</h3>'; ?>
 				<?php echo "<h3 class='sc-message sc-post' style='color: rgb(0, 115, 0);'>Posts scanned: " . esc_html( $options_list[5]->option_value ) . '/' . esc_html( $total_posts ) . '</h3>'; ?>

@@ -184,7 +184,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = $wpscx_base_page_max;
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
 
 		if ( null === $wpsc_haystack ) {
 					$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
@@ -470,6 +469,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		set_time_limit( 600 );
 		$sql_count = 0;
 
+		wpscx_set_global_vars();
+
 		$max_pages = intval( $wpsc_settings[138]->option_value );
 
 		if ( null === $wpsc_haystack ) {
@@ -482,7 +483,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 		}
 
-		wpscx_set_global_vars();
 		global $wpsc_settings;
 
 		$total_words = 0;
@@ -492,7 +492,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		$max_time    = ini_get( 'max_execution_time' );
 		if ( ! $is_running ) {
-			wpscx_set_global_vars();
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
@@ -580,7 +579,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		$max_time    = ini_get( 'max_execution_time' );
 		if ( ! $is_running ) {
-			wpscx_set_global_vars();
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
@@ -717,7 +715,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		$word_count  = 0;
 		if ( ! $is_running ) {
-			wpscx_set_global_vars();
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			$start_time = time();
 		}
@@ -921,7 +918,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -1024,7 +1020,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -1513,12 +1508,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -1687,12 +1676,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -1704,7 +1687,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -1713,11 +1695,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$tags_list = SplFixedArray::fromArray( get_tags() );
 		++$sql_count;
-
-		$loc = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Options Array: " . print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 			$words = array();
@@ -1845,12 +1822,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -1862,7 +1833,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2104,12 +2074,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 				$wpscx_dict_list = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list       = $wpdb->get_results( "SELECT * FROM $words_table WHERE ignore_word=true;" );
-		$loc                     = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		if ( null === $wpsc_haystack ) {
 			$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 			$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
@@ -2234,12 +2198,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -2252,7 +2210,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2326,12 +2283,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -2344,7 +2295,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2424,12 +2374,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -2441,7 +2385,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2501,12 +2444,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -2518,7 +2455,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -2714,12 +2650,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -2739,7 +2669,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -3008,12 +2937,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
-
 		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
 		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
 
@@ -3032,7 +2955,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -3116,11 +3038,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -3141,7 +3058,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
@@ -3220,11 +3136,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc               = __DIR__ . WPSCX_DEBUG_LOC;
-		// $debug_file = fopen($loc, 'a');
-		// $debug_var = fwrite( $debug_file, "Post Content Ignore List: " . sizeof((array)$wpscx_ignore_list) . "          Dictionary List: " . sizeof((array)$wpscx_dict_list) . "          Options: " . sizeof((array)$wpsc_settings) . "          Grammar Options: " . sizeof((array)$wpgc_settings) . "\r\n" );
-		// $debug_var = fwrite( $debug_file, print_r($wpsc_settings, true) . "\r\n" );
-		// fclose($debug_file);
 
 		wpscx_set_global_vars();
 		global $wpsc_settings;
@@ -3245,7 +3156,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			$start_time = time();
-			wpscx_set_global_vars();
 		}
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;

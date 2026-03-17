@@ -19,6 +19,7 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 	}
 
 	function wpscx_scan_all_eps() {
+		wpscx_set_global_vars();
 		$start     = round( microtime( true ), 5 );
 		$sql_count = 0;
 		$page_list = null;
@@ -26,9 +27,6 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 		global $wpscx_ent_included;
 		global $wpsc_settings;
 				$is_running = null;
-		if ( sizeof( (array) $wpsc_settings ) < 1 ) {
-			wpscx_set_global_vars();
-		}
 
 		ini_set( 'memory_limit', '1024M' ); // Sets the PHP memory limit
 		set_time_limit( 600 );
@@ -47,8 +45,6 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 		$post_count  = 0;
 		$word_count  = 0;
 		$error_count = 0;
-
-		wpscx_set_global_vars();
 
 		if ( 'true' === $wpsc_settings[136]->option_value ) {
 			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {

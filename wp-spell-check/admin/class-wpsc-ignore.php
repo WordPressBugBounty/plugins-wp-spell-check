@@ -347,34 +347,21 @@ function wpscx_ignore_render() {
 					alt="WP Spell Check" /></a> <span style="position: relative; top: -8px;"> - Ignore List</span></h2>
 		<?php
 		if ( '' !== $message || '' !== $added_message || '' !== $ignore_error_message || '' !== $dict_error_message ) {
-			echo '<div style="background-color: white; padding: 5px;">';
-		}
-		?>
-		<?php
-		if ( '' !== $message ) {
-			echo "<span class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold; float: left; width: 100%; line-height: 1.5em;'>" . esc_html( $message ) . ' have been added to the ignore list</span>';
-		}
-		?>
-		<?php
-		if ( '' !== $added_message && strpos( $added_message, ', ' ) !== false ) {
-			echo "<span class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold; float: left; width: 100%; line-height: 1.5em;'>" . esc_html( $added_message ) . ' have been added to the ignore list</span>';
-		} elseif ( '' !== $added_message ) {
-			echo "<span class='wpsc-message' style='font-size: 1.3em; color: rgb(0, 115, 0); font-weight: bold; float: left; width: 100%; line-height: 1.5em;'>" . esc_html( $added_message ) . ' has been added to the ignore list</span>';
-		}
-		?>
-		<?php
-		if ( '' !== $ignore_error_message ) {
-			echo "<span class='wpsc-message' style='font-size: 1.3em; color: rgb(200, 0, 0); font-weight: bold; float: left; width: 100%; line-height: 1.5em;'>The following words were already found in the ignore list: " . esc_html( $ignore_error_message ) . '</span>';
-		}
-		?>
-		<?php
-		if ( '' !== $dict_error_message ) {
-			echo "<span class='wpsc-message' style='font-size: 1.3em; color: rgb(200, 0, 0); font-weight: bold; float: left; width: 100%; line-height: 1.5em;'>The following words were already found in the dictionary: " . esc_html( $dict_error_message ) . '</span>';
-		}
-		?>
-		<div style="clear: both;"></div>
-		<?php
-		if ( '' !== $message || '' !== $added_message || '' !== $ignore_error_message || '' !== $dict_error_message ) {
+			echo '<div class="wpsc-mesage-container">';
+			if ( '' !== $message ) {
+				echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $message ) . ' have been added to the ignore list</span></div>';
+			}
+			if ( '' !== $added_message && strpos( $added_message, ', ' ) !== false ) {
+				echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $added_message ) . ' have been added to the ignore list</span></div>';
+			} elseif ( '' !== $added_message ) {
+				echo '<div class="wpsc-notice-success"><span class="wpsc-message">' . esc_html( $added_message ) . ' has been added to the ignore list</span></div>';
+			}
+			if ( '' !== $ignore_error_message ) {
+				echo '<div class="wpsc-notice-error"><span class="wpsc-message">The following words were already found in the ignore list: ' . esc_html( $ignore_error_message ) . '</span></div>';
+			}
+			if ( '' !== $dict_error_message ) {
+				echo '<div class="wpsc-notice-error"><span class="wpsc-message">The following words were already found in the dictionary: ' . esc_html( $dict_error_message ) . '</span></div>';
+			}
 			echo '</div>';
 		}
 		?>
@@ -412,7 +399,7 @@ function wpscx_ignore_render() {
 				<input type="submit" name="submit" value="Add to Ignore List" />
 			</form>
 			<?php include 'sidebar.php'; ?>
-			<form method-"POST" style="position:absolute; right: 26%; margin-top: 7px;">
+			<form method-"POST" style="position:absolute; right: 26%; margin-top: 0px;">
 				<input type="hidden" name="page" value="wp-spellcheck-ignore.php" />
 				<?php $list_table->search_box( 'Search My Ignore List', 'search_id' ); ?>
 			</form>
