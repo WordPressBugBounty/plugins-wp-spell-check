@@ -313,8 +313,10 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'Ultimate SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'Ultimate SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
-		} elseif ( 'Slider Title' === $item['page_type'] || 'Slider Caption' === $item['page_type'] || 'Smart Slider Title' === $item['page_type'] || 'Smart Slider Caption' === $item['page_type'] ) {
+		} elseif ( 'Slider Title' === $item['page_type'] || 'Slider Caption' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( 'Smart Slider Title' === $item['page_type'] || 'Smart Slider Caption' === $item['page_type'] || 'Smart Slider Group' === $item['page_type'] || 'Smart Slider Content' === $item['page_type'] ) {
+			$output = '<a href="/wp-admin/admin.php?page=smart-slider3" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Media Title' === $item['page_type'] || 'Media Description' === $item['page_type'] || 'Media Caption' === $item['page_type'] || 'Media Alternate Text' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Tag Title' === $item['page_type'] || 'Tag Description' === $item['page_type'] || WPSCX_TAG === $item['page_type'] ) {
@@ -1141,19 +1143,24 @@ function wpscx_admin_render() {
 				}
 				?>
 				></p>
+						<?php
+						// Only show the Sliders scan button when at least one supported slider plugin is active.
+						if ( is_plugin_active( 'smart-slider-3/smart-slider-3.php' ) ) {
+							?>
 							<p class="submit 
-				<?php
-				if ( ! $wpscx_ent_included ) {
-					echo 'wpsc-mouseover-scfeature-2';
-				}
-				?>
-				"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Sliders" 
-				<?php
-				if ( 'false' === $check_sliders || ! $wpscx_ent_included ) {
-					echo ' disabled';
-				}
-				?>
-				></p>
+						<?php
+						if ( ! $wpscx_ent_included ) {
+							echo 'wpsc-mouseover-scfeature-2';
+						}
+						?>
+						"><input type="submit" name="submit" id="submit" class="button button-primary wpscScan" value="Sliders" 
+						<?php
+						if ( 'false' === $check_sliders || ! $wpscx_ent_included ) {
+							echo ' disabled';
+						}
+						?>
+						></p>
+						<?php } ?>
 							<?php
 							if ( is_plugin_active( 'woocommerce/woocommerce.php' ) || is_plugin_active( 'wp-e-commerce/wp-shopping-cart.php' ) ) {
 								?>

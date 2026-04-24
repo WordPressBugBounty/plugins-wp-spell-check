@@ -3,99 +3,190 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Admin notice toggles — set true / false here (defaults: both on).
+| Override anytime from wp-config.php before wp-settings.php loads, e.g.:
+| define( 'WPSC_BANNER_SHOW_REVIEW_NOTICE', false );
+| define( 'WPSC_BANNER_SHOW_UPGRADE_NOTICE', false );
+|--------------------------------------------------------------------------
+*/
+if ( ! defined( 'WPSC_BANNER_SHOW_REVIEW_NOTICE' ) ) {
+	define( 'WPSC_BANNER_SHOW_REVIEW_NOTICE', true );
+}
+if ( ! defined( 'WPSC_BANNER_SHOW_UPGRADE_NOTICE' ) ) {
+	define( 'WPSC_BANNER_SHOW_UPGRADE_NOTICE', true );
+}
+
 class Wpscx_Banner {
 
 	function __construct() {}
 
+	/**
+	 * Output timed review / upgrade admin notices (manage_options only).
+	 *
+	 * @since 11.0
+	 */
 	function check_inactive_notice() {
-		global $current_user;
-		$user_id     = $current_user->ID;
-		$show_notice = false;
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'spellcheck_options';
-
-		$last_active = ( time() + ( 60 ) );
-
-		$first_notice  = ( time() + ( 60 * 60 * 24 * 5 ) );
-		$second_notice = ( time() + ( 60 * 60 * 24 * 20 ) );
-		$third_notice  = ( time() + ( 60 * 60 * 24 * 30 ) );
-		$last_notices  = ( time() + ( 60 * 60 * 24 * 30 ) );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		if ( WPSC_BANNER_SHOW_UPGRADE_NOTICE ) {
+			$this->check_upgrade_message();
+		}
+		if ( WPSC_BANNER_SHOW_REVIEW_NOTICE ) {
+			$this->check_review_notice();
+		}
 	}
 
+	/**
+	 * Bump review-dismiss tier (0–4) after remind / never-again.
+	 *
+	 * @since 11.0
+	 * @param int $user_id User ID.
+	 */
+	private function wpsc_bump_review_dismiss_tier( $user_id ) {
+		$times_dismissed = get_user_meta( $user_id, 'wpsc_times_dismissed_review', true );
+		if ( '' === $times_dismissed ) {
+			$times_dismissed = '0';
+		}
+		if ( '0' === $times_dismissed ) {
+			$next = '1';
+		} elseif ( '1' === $times_dismissed ) {
+			$next = '2';
+		} elseif ( '2' === $times_dismissed ) {
+			$next = '3';
+		} elseif ( '3' === $times_dismissed ) {
+			$next = '4';
+		} else {
+			$next = '4';
+		}
+		update_user_meta( $user_id, 'wpsc_times_dismissed_review', $next );
+	}
 
+	/**
+	 * Bump Pro upgrade notice dismiss tier (uses wpsc_pro_dismissed).
+	 *
+	 * @since 11.0
+	 * @param int $user_id User ID.
+	 */
+	private function wpsc_bump_pro_dismiss_tier( $user_id ) {
+		$times_dismissed = get_user_meta( $user_id, 'wpsc_pro_dismissed', true );
+		if ( '' === $times_dismissed ) {
+			$times_dismissed = '0';
+		}
+		if ( '0' === $times_dismissed ) {
+			$next = '1';
+		} elseif ( '1' === $times_dismissed ) {
+			$next = '2';
+		} elseif ( '2' === $times_dismissed ) {
+			$next = '3';
+		} elseif ( '3' === $times_dismissed ) {
+			$next = '4';
+		} else {
+			$next = '4';
+		}
+		update_user_meta( $user_id, 'wpsc_pro_dismissed', $next );
+	}
 
+	/**
+	 * Parse Upgrade day offsets from stored notice timing string.
+	 *
+	 * @since 11.0
+	 * @param int $user_id User ID.
+	 * @return int[] Four day offsets.
+	 */
+	private function wpsc_get_upgrade_day_intervals( $user_id ) {
+		$defaults = array( 0, 3, 12, 30 );
+		$input    = $this->get_notice_timing( $user_id );
+		$lines    = preg_split( '/\r\n|\n|\r/', $input );
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( '' === $line || false === strpos( $line, 'Upgrade:' ) ) {
+				continue;
+			}
+			$nums = trim( str_replace( 'Upgrade:', '', $line ) );
+			$list = array_map( 'intval', explode( ',', $nums ) );
+			if ( count( $list ) >= 4 ) {
+				return array_slice( $list, 0, 4 );
+			}
+			break;
+		}
+		return $defaults;
+	}
 
 	function show_review_notice() {
-		global $current_user;
 		global $wpsc_upgrade_show;
-		$user_id = $current_user->ID;
-		if ( ! isset( $_GET['page'] ) ) {
-			$_GET['page'] = '';
+		if ( ! empty( $wpsc_upgrade_show ) ) {
+			return;
 		}
-		$page = sanitize_text_field( wp_unslash( $_GET['page'] ) );
 
-		if ( '' !== $page ) {
-			$page = '&page=' . $page;
-		}
-			$output = '';
-		if ( ! preg_match( '/hide-message/m', $output ) && ! $wpsc_upgrade_show ) {
-			echo esc_html( $output );
-		}
+		$reviews_url = 'https://wordpress.org/support/plugin/wp-spell-check/reviews/';
+		$remind_url  = wp_nonce_url(
+			add_query_arg( 'wpsc_ignore_review_notice', '1' ),
+			'wpsc_dismiss_review',
+			'_wpsc_review_nonce'
+		);
+		$hide_url    = wp_nonce_url(
+			add_query_arg( 'wpsc_ignore_review_notice', '2' ),
+			'wpsc_dismiss_review',
+			'_wpsc_review_nonce'
+		);
+
+		printf(
+			'<div class="wpsc-promo-notice wpsc-promo-notice--review" role="region" aria-label="%1$s"><div class="wpsc-promo-notice__inner"><div class="wpsc-promo-notice__badge" aria-hidden="true"><span class="dashicons dashicons-star-filled"></span></div><div class="wpsc-promo-notice__body"><p class="wpsc-promo-notice__title">%2$s</p><p class="wpsc-promo-notice__text">%3$s</p></div><div class="wpsc-promo-notice__actions"><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--primary" href="%4$s" target="_blank" rel="noopener noreferrer">%5$s</a><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--ghost" href="%6$s">%7$s</a><a class="wpsc-promo-notice__link" href="%8$s">%9$s</a></div></div></div>',
+			esc_attr__( 'Review request', 'wp-spell-check' ),
+			esc_html__( 'Enjoying WP Spell Check?', 'wp-spell-check' ),
+			esc_html__( 'A quick rating on WordPress.org helps others discover the plugin and supports ongoing development.', 'wp-spell-check' ),
+			esc_url( $reviews_url ),
+			esc_html__( 'Rate on WordPress.org', 'wp-spell-check' ),
+			esc_url( $remind_url ),
+			esc_html__( 'Remind me later', 'wp-spell-check' ),
+			esc_url( $hide_url ),
+			esc_html__( 'Don\'t show again', 'wp-spell-check' )
+		);
 	}
 
 	function ignore_review_notice() {
-		global $current_user;
-		$user_id = $current_user->ID;
-		if ( isset( $_GET['wpsc_ignore_review_notice'] ) && '1' === $_GET['wpsc_ignore_review_notice'] ) {
-			add_user_meta( $user_id, 'wpsc_ignore_review_notice', 'true', true );
-			update_user_meta( $user_id, 'wpsc_ignore_review_notice', 'true' );
-
-			$notice_date = time();
-			add_user_meta( $user_id, 'wpsc_review_date', $notice_date, true );
-			update_user_meta( $user_id, 'wpsc_review_date', $notice_date );
-
-			$times_dismissed = get_user_meta( $user_id, 'wpsc_times_dismissed_review', true );
-			if ( '0' === $times_dismissed ) {
-				$times_dismissed = '1';
-			}
-			if ( '1' === $times_dismissed ) {
-				$times_dismissed = '2';
-			}
-			if ( '2' === $times_dismissed ) {
-				$times_dismissed = '3';
-			}
-			if ( '3' === $times_dismissed ) {
-				$times_dismissed = '4';
-			}
-			update_user_meta( $user_id, 'wpsc_times_dismissed_review', $times_dismissed );
-		} elseif ( isset( $_GET['wpsc_ignore_review_notice'] ) && '2' === $_GET['wpsc_ignore_review_notice'] ) {
-			add_user_meta( $user_id, 'wpsc_ignore_review_notice', 'hide', true );
-			update_user_meta( $user_id, 'wpsc_ignore_review_notice', 'hide' );
-
-			$notice_date = time();
-			add_user_meta( $user_id, 'wpsc_review_date', $notice_date, true );
-			update_user_meta( $user_id, 'wpsc_review_date', $notice_date );
-
-			$times_dismissed = get_user_meta( $user_id, 'wpsc_times_dismissed_review', true );
-			if ( '0' === $times_dismissed ) {
-				$times_dismissed = '1';
-			}
-			if ( '1' === $times_dismissed ) {
-				$times_dismissed = '2';
-			}
-			if ( '2' === $times_dismissed ) {
-				$times_dismissed = '3';
-			}
-			if ( '3' === $times_dismissed ) {
-				$times_dismissed = '4';
-			}
-			update_user_meta( $user_id, 'wpsc_times_dismissed_review', $times_dismissed );
+		if ( ! WPSC_BANNER_SHOW_REVIEW_NOTICE ) {
+			return;
 		}
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce verified below; redirect removes args.
+		if ( ! isset( $_GET['wpsc_ignore_review_notice'], $_GET['_wpsc_review_nonce'] ) ) {
+			return;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpsc_review_nonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'wpsc_dismiss_review' ) ) {
+			return;
+		}
+		$which = sanitize_text_field( wp_unslash( $_GET['wpsc_ignore_review_notice'] ) );
+		if ( '1' !== $which && '2' !== $which ) {
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		if ( '2' === $which ) {
+			update_user_meta( $user_id, 'wpsc_ignore_review_notice', 'hide' );
+		} else {
+			update_user_meta( $user_id, 'wpsc_ignore_review_notice', 'true' );
+		}
+		update_user_meta( $user_id, 'wpsc_review_date', time() );
+		$this->wpsc_bump_review_dismiss_tier( $user_id );
+
+		wp_safe_redirect( remove_query_arg( array( 'wpsc_ignore_review_notice', '_wpsc_review_nonce' ) ) );
+		exit;
 	}
 
 	function get_notice_timing( $user_id ) {
-			$notice_timing      = get_user_meta( $user_id, 'wpsc_notice_timing', true );
-			$notice_timing_date = get_user_meta( $user_id, 'wpsc_notice_timing_date', true );
+		$notice_timing      = get_user_meta( $user_id, 'wpsc_notice_timing', true );
+		$notice_timing_date = get_user_meta( $user_id, 'wpsc_notice_timing_date', true );
 
 		if ( '' === $notice_timing_date ) {
 			$notice_timing_date = time();
@@ -103,23 +194,24 @@ class Wpscx_Banner {
 		}
 		if ( '' === $notice_timing ) {
 			$input = "Survey: 1,7,7,7;\r\nUpgrade: 0,3,12,30;";
-
 			add_user_meta( $user_id, 'wpsc_notice_timing', $input, true );
+			$notice_timing = $input;
 		}
 
-			$time = ( time() - ( 60 * 60 * 7 ) );
+		$time = ( time() - ( 60 * 60 * 7 ) );
 		if ( $time <= $notice_timing_date ) {
 			$input = "Survey: 1,7,7,7;\r\nUpgrade: 0,3,12,30;";
-
 			update_user_meta( $user_id, 'wpsc_notice_timing', $input, true );
 			return $input;
-		} else {
-			return $notice_timing;
 		}
+		return $notice_timing;
 	}
 
 	function check_review_notice() {
-		if ( ! ini_get( 'allow_url_fopen' ) ) {
+		if ( ! WPSC_BANNER_SHOW_REVIEW_NOTICE ) {
+			return;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -130,6 +222,10 @@ class Wpscx_Banner {
 		$ignore_review   = get_user_meta( $user_id, 'wpsc_ignore_review_notice', true );
 		$times_dismissed = get_user_meta( $user_id, 'wpsc_times_dismissed_review', true );
 
+		if ( 'hide' === $ignore_review ) {
+			return;
+		}
+
 		$show_notice = false;
 
 		if ( '' === $notice_date ) {
@@ -139,19 +235,26 @@ class Wpscx_Banner {
 
 		if ( '' === $times_dismissed ) {
 			add_user_meta( $user_id, 'wpsc_times_dismissed_review', '0', true );
+			$times_dismissed = '0';
 		}
 
-				$input = $this->get_notice_timing( $user_id );
+		$input = $this->get_notice_timing( $user_id );
 
-		$timing         = explode( ';', $input );
-		$timing_numbers = str_replace( 'Survey: ', '', $timing[0] );
-		$timing_list    = explode( ',', $timing_numbers );
+		$timing = explode( ';', $input );
+		if ( empty( $timing[0] ) ) {
+			return;
+		}
+		$timing_numbers = str_replace( 'Survey: ', '', trim( $timing[0] ) );
+		$timing_list    = array_map( 'intval', explode( ',', $timing_numbers ) );
+		while ( count( $timing_list ) < 4 ) {
+			$timing_list[] = 7;
+		}
 
-		$time          = $notice_date;
-		$first_notice  = ( time() - ( 60 * 60 * 24 * intval( $timing_list[0] ) ) );
-		$second_notice = ( time() - ( 60 * 60 * 24 * intval( $timing_list[1] ) ) );
-		$third_notice  = ( time() - ( 60 * 60 * 24 * intval( $timing_list[2] ) ) );
-		$last_notices  = ( time() - ( 60 * 60 * 24 * intval( $timing_list[3] ) ) );
+		$time          = (int) $notice_date;
+		$first_notice  = ( time() - ( 60 * 60 * 24 * $timing_list[0] ) );
+		$second_notice = ( time() - ( 60 * 60 * 24 * $timing_list[1] ) );
+		$third_notice  = ( time() - ( 60 * 60 * 24 * $timing_list[2] ) );
+		$last_notices  = ( time() - ( 60 * 60 * 24 * $timing_list[3] ) );
 
 		if ( '0' === $times_dismissed ) {
 			if ( $first_notice > $time ) {
@@ -168,36 +271,37 @@ class Wpscx_Banner {
 		} elseif ( $last_notices > $time ) {
 			$show_notice = true;
 		}
+
+		if ( $show_notice ) {
+			$this->show_review_notice();
+		}
 	}
 
 
 	function ignore_notice() {
-		global $current_user;
-		$user_id = $current_user->ID;
-		if ( isset( $_GET['wpsc_pro_ignore_notice'] ) && '1' === $_GET['wpsc_pro_ignore_notice'] ) {
-			add_user_meta( $user_id, 'wpsc_pro_ignore_notice', 'true', true );
-			update_user_meta( $user_id, 'wpsc_pro_ignore_notice', 'true' );
-
-			$notice_date = time();
-			update_user_meta( $user_id, 'wpsc_pro_notice_date', $notice_date );
-
-			$times_dismissed = get_user_meta( $user_id, 'wpsc_pro_times_dismissed', true );
-			if ( '0' === $times_dismissed ) {
-				$times_dismissed = '1';
-			}
-			if ( '1' === $times_dismissed ) {
-				$times_dismissed = '2';
-			}
-			if ( '2' === $times_dismissed ) {
-				$times_dismissed = '3';
-			}
-			if ( '4' === $times_dismissed ) {
-				$times_dismissed = '4';
-			}
-			update_user_meta( $user_id, 'wpsc_pro_times_dismissed', $times_dismissed );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce verified below.
+		if ( ! isset( $_GET['wpsc_pro_ignore_notice'], $_GET['_wpsc_pro_notice_nonce'] ) ) {
+			return;
 		}
-	}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpsc_pro_notice_nonce'] ) ), 'wpsc_dismiss_pro_notice' ) ) {
+			return;
+		}
+		if ( '1' !== sanitize_text_field( wp_unslash( $_GET['wpsc_pro_ignore_notice'] ) ) ) {
+			return;
+		}
 
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, 'wpsc_pro_ignore_notice', 'true' );
+		update_user_meta( $user_id, 'wpsc_pro_notice_date', time() );
+		$this->wpsc_bump_pro_dismiss_tier( $user_id );
+
+		wp_safe_redirect( remove_query_arg( array( 'wpsc_pro_ignore_notice', '_wpsc_pro_notice_nonce' ) ) );
+		exit;
+	}
 
 
 
@@ -292,28 +396,67 @@ class Wpscx_Banner {
 	}
 
 	function ignore_upgrade_notice() {
-		global $current_user;
-		$user_id = $current_user->ID;
-		if ( isset( $_GET['wpsc_ignore_upgrade_notice'] ) && '1' === $_GET['wpsc_ignore_upgrade_notice'] ) {
-			delete_user_meta( $user_id, 'wpsc_update_notice_date' );
-			add_user_meta( $user_id, 'wpsc_update_notice_date', time(), true );
+		if ( ! WPSC_BANNER_SHOW_UPGRADE_NOTICE ) {
+			return;
 		}
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce verified below.
+		if ( ! isset( $_GET['wpsc_ignore_upgrade_notice'], $_GET['_wpsc_upgrade_notice_nonce'] ) ) {
+			return;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpsc_upgrade_notice_nonce'] ) ), 'wpsc_dismiss_upgrade_notice' ) ) {
+			return;
+		}
+		if ( '1' !== sanitize_text_field( wp_unslash( $_GET['wpsc_ignore_upgrade_notice'] ) ) ) {
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		delete_user_meta( $user_id, 'wpsc_update_notice_date' );
+		update_user_meta( $user_id, 'wpsc_update_notice_date', time() );
+
+		wp_safe_redirect( remove_query_arg( array( 'wpsc_ignore_upgrade_notice', '_wpsc_upgrade_notice_nonce' ) ) );
+		exit;
 	}
 
 	function show_upgrade_message() {
 		global $wpsc_upgrade_show;
 		$wpsc_upgrade_show = true;
-		if ( ! isset( $_GET['page'] ) ) {
-			$_GET['page'] = '';
-		}
-		$page   = sanitize_text_field( wp_unslash( $_GET['page'] ) );
-		$output = '';
-		echo esc_html( $output );
+
+		global $wpsc_version;
+		$ver         = is_string( $wpsc_version ) ? $wpsc_version : '';
+		$product_url = 'https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgrade_admin_notice&utm_medium=admin_notice&utm_content=' . rawurlencode( $ver );
+
+		$dismiss_url = wp_nonce_url(
+			add_query_arg( 'wpsc_pro_ignore_notice', '1' ),
+			'wpsc_dismiss_pro_notice',
+			'_wpsc_pro_notice_nonce'
+		);
+
+		printf(
+			'<div class="wpsc-promo-notice wpsc-promo-notice--upgrade" role="region" aria-label="%1$s"><div class="wpsc-promo-notice__inner"><div class="wpsc-promo-notice__badge" aria-hidden="true"><span class="dashicons dashicons-awards"></span></div><div class="wpsc-promo-notice__body"><p class="wpsc-promo-notice__title">%2$s</p><p class="wpsc-promo-notice__text">%3$s</p></div><div class="wpsc-promo-notice__actions"><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--primary" href="%4$s" target="_blank" rel="noopener noreferrer">%5$s</a><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--ghost" href="%6$s">%7$s</a></div></div></div>',
+			esc_attr__( 'Upgrade to Pro', 'wp-spell-check' ),
+			esc_html__( 'Unlock WP Spell Check Pro', 'wp-spell-check' ),
+			esc_html__( 'Scan your entire site, catch more issues, and use advanced checks built for serious sites.', 'wp-spell-check' ),
+			esc_url( $product_url ),
+			esc_html__( 'Explore Pro features', 'wp-spell-check' ),
+			esc_url( $dismiss_url ),
+			esc_html__( 'Dismiss', 'wp-spell-check' )
+		);
 	}
 
 	function check_upgrade_message() {
-		if ( ! ini_get( 'allow_url_fopen' ) ) {
+		if ( ! WPSC_BANNER_SHOW_UPGRADE_NOTICE ) {
 			return;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
 		global $current_user;
@@ -324,7 +467,12 @@ class Wpscx_Banner {
 		$user_id         = $current_user->ID;
 		$notice_date     = get_user_meta( $user_id, 'wpsc_pro_notice_date', true );
 		$times_dismissed = get_user_meta( $user_id, 'wpsc_pro_dismissed', true );
-		$show_notice     = false;
+		$legacy_tier     = get_user_meta( $user_id, 'wpsc_pro_times_dismissed', true );
+		if ( '' === $times_dismissed && '' !== $legacy_tier ) {
+			update_user_meta( $user_id, 'wpsc_pro_dismissed', (string) $legacy_tier );
+			$times_dismissed = (string) $legacy_tier;
+		}
+		$show_notice = false;
 
 		if ( '' === $notice_date ) {
 			$notice_date = time();
@@ -333,13 +481,15 @@ class Wpscx_Banner {
 
 		if ( '' === $times_dismissed ) {
 			add_user_meta( $user_id, 'wpsc_pro_dismissed', '0', true );
+			$times_dismissed = '0';
 		}
 
-		$time          = $notice_date;
-		$first_notice  = ( time() - ( 60 * 60 * 24 * 0 ) );
-		$second_notice = ( time() - ( 60 * 60 * 24 * 3 ) );
-		$third_notice  = ( time() - ( 60 * 60 * 24 * 12 ) );
-		$last_notices  = ( time() - ( 60 * 60 * 24 * 30 ) );
+		$u_days        = $this->wpsc_get_upgrade_day_intervals( $user_id );
+		$time          = (int) $notice_date;
+		$first_notice  = ( time() - ( 60 * 60 * 24 * $u_days[0] ) );
+		$second_notice = ( time() - ( 60 * 60 * 24 * $u_days[1] ) );
+		$third_notice  = ( time() - ( 60 * 60 * 24 * $u_days[2] ) );
+		$last_notices  = ( time() - ( 60 * 60 * 24 * $u_days[3] ) );
 
 		if ( '0' === $times_dismissed ) {
 			if ( $first_notice > $time ) {
@@ -357,9 +507,8 @@ class Wpscx_Banner {
 			$show_notice = true;
 		}
 
-		if ( ( current_user_can( 'manage_options' ) ) && ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) && ! is_plugin_active( 'wp-spell-check-enterprise/wpspellcheckenterprise.php' ) && $show_notice && ! $wpscx_ent_included ) {
+		if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) && ! is_plugin_active( 'wp-spell-check-enterprise/wpspellcheckenterprise.php' ) && $show_notice && ! $wpscx_ent_included ) {
 			$this->show_upgrade_message();
 		}
 	}
 }
-

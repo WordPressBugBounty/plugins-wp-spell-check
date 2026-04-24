@@ -54,6 +54,9 @@ $users = get_users();
 foreach ( $users as $user ) {
 	delete_user_meta( $user->ID, 'wpsc_pro_notice_date' );
 	delete_user_meta( $user->ID, 'wpsc_pro_dismissed' );
+	delete_user_meta( $user->ID, 'wpsc_pro_times_dismissed' );
+	delete_user_meta( $user->ID, 'wpsc_notice_timing' );
+	delete_user_meta( $user->ID, 'wpsc_notice_timing_date' );
 	delete_user_meta( $user->ID, 'wpsc_ignore_review_notice' );
 	delete_user_meta( $user->ID, 'wpsc_review_date' );
 	delete_user_meta( $user->ID, 'wpsc_times_dismissed_review' );

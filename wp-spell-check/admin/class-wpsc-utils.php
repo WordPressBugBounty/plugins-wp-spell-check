@@ -821,22 +821,42 @@ class Wpscx_Results_Utils {
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'Smart Slider Caption' === $page_types[ $x ] ) {
 
-				$slider_table = $wpdb->prefix . 'wp_nextend2_smartsliders_slides';
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'wp_nextend2_smartsliders_slides'
-				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT slide FROM ' . $slider_table . ' WHERE id=%s', $page_names[ $x ] ) );
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $menu_result[0]->slide ) );
+				$slider_table = $wpdb->prefix . 'nextend2_smartslider3_slides';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'nextend2_smartslider3_slides'
+				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT description FROM ' . $slider_table . ' WHERE id=%s', $page_names[ $x ] ) );
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $menu_result[0]->description ) );
 
 				$wpdb->update( $slider_table, array( 'description' => $updated_content ), array( 'id' => $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'Smart Slider Title' === $page_types[ $x ] ) {
 
-				$slider_table = $wpdb->prefix . 'wp_nextend2_smartsliders_slides';
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'wp_nextend2_smartsliders_slides'
+				$slider_table = $wpdb->prefix . 'nextend2_smartslider3_slides';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'nextend2_smartslider3_slides'
 				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT title FROM ' . $slider_table . ' WHERE id=%s', $page_names[ $x ] ) );
 				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $menu_result[0]->title ) );
 
 				$wpdb->update( $slider_table, array( 'title' => $updated_content ), array( 'id' => $page_names[ $x ] ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( 'Smart Slider Group' === $page_types[ $x ] ) {
+
+				$sliders_table = $wpdb->prefix . 'nextend2_smartslider3_sliders';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'nextend2_smartslider3_sliders'
+				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT title FROM ' . $sliders_table . ' WHERE id=%s', $page_names[ $x ] ) );
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $menu_result[0]->title ) );
+
+				$wpdb->update( $sliders_table, array( 'title' => $updated_content ), array( 'id' => $page_names[ $x ] ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( 'Smart Slider Content' === $page_types[ $x ] ) {
+
+				$slider_table = $wpdb->prefix . 'nextend2_smartslider3_slides';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'nextend2_smartslider3_slides'
+				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT slide FROM ' . $slider_table . ' WHERE id=%s', $page_names[ $x ] ) );
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $menu_result[0]->slide ) );
+
+				$wpdb->update( $slider_table, array( 'slide' => $updated_content ), array( 'id' => $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'Media Alternate Text' === $page_types[ $x ] ) {

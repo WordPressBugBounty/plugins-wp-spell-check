@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Name: WP Spell Check
  * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
- * Version: 11.0
+ * Version: 11.1
  * Author: WP Spell Check
  * Author URI: https://www.wpspellcheck.com
  * License: GPLv2 or later
@@ -173,6 +173,10 @@ function wpscx_enqueue_global_admin_styles() {
 	if ( current_user_can( 'administrator' ) || current_user_can( 'editor' ) || current_user_can( 'author' ) || current_user_can( 'contributor' ) ) {
 		wp_enqueue_style( 'global-admin-styles', plugin_dir_url( __FILE__ ) . 'css/global-admin-styles.css', array(), $wpsc_version );
 	}
+	// Matches Wpscx_Banner notices (manage_options); Dashicons for badge icons.
+	if ( current_user_can( 'manage_options' ) ) {
+		wp_enqueue_style( 'wpsc-promo-notices', plugin_dir_url( __FILE__ ) . 'css/wpsc-promo-notices.css', array( 'dashicons' ), $wpsc_version );
+	}
 }
 add_action( 'admin_enqueue_scripts', 'wpscx_enqueue_global_admin_styles', 1 );
 
@@ -245,7 +249,7 @@ function wpscx_set_global_vars() {
 	global $wpsc_version;
 	global $wpsc_globals_loaded;
 
-	$wpsc_version = '11.0';
+	$wpsc_version = '11.1';
 
 	// Return early if globals are already loaded to prevent duplicate queries
 	if ( isset( $wpsc_globals_loaded ) && $wpsc_globals_loaded === true ) {

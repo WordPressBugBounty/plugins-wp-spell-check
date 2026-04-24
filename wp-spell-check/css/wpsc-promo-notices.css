@@ -1,0 +1,322 @@
+/**
+ * Timed review + Pro upgrade admin notices (modern card layout).
+ * Light: default. Dark: plugin admin when body.wpsc-theme-dark or system + prefers-color-scheme: dark.
+ *
+ * @since 11.0
+ */
+
+.wpsc-promo-notice {
+	--wpsc-promo-surface: #fff;
+	--wpsc-promo-surface-subtle: #f6f7f7;
+	--wpsc-promo-border: rgba(0, 0, 0, 0.08);
+	--wpsc-promo-border-strong: #dcdcde;
+	--wpsc-promo-text: #1d2327;
+	--wpsc-promo-muted: #646970;
+	--wpsc-promo-accent: #2271b1;
+	--wpsc-promo-accent-2: #135e96;
+	--wpsc-promo-accent-soft: rgba(34, 113, 177, 0.12);
+	--wpsc-promo-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
+	--wpsc-promo-radius: 12px;
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #e8f0fe 0%, #f0e8ff 100%);
+	--wpsc-promo-icon-color: #2271b1;
+
+	box-sizing: border-box;
+	margin: 6px 0 16px;
+	padding: 0;
+	border: 1px solid var(--wpsc-promo-border-strong);
+	border-radius: var(--wpsc-promo-radius);
+	background: var(--wpsc-promo-surface);
+	box-shadow: var(--wpsc-promo-shadow);
+	overflow: hidden;
+	position: relative;
+}
+
+.wpsc-promo-notice::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	background: linear-gradient(180deg, var(--wpsc-promo-accent) 0%, var(--wpsc-promo-accent-2) 100%);
+	border-radius: var(--wpsc-promo-radius) 0 0 var(--wpsc-promo-radius);
+}
+
+.wpsc-promo-notice__inner {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 16px 18px 16px 22px;
+	flex-wrap: wrap;
+}
+
+.wpsc-promo-notice__badge {
+	flex-shrink: 0;
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	background: var(--wpsc-promo-icon-bg);
+	color: var(--wpsc-promo-icon-color);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	line-height: 1;
+}
+
+.wpsc-promo-notice__badge .dashicons {
+	width: 24px;
+	height: 24px;
+	font-size: 24px;
+}
+
+.wpsc-promo-notice__body {
+	flex: 1;
+	min-width: 200px;
+}
+
+.wpsc-promo-notice__title {
+	margin: 0 0 4px;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--wpsc-promo-text);
+	letter-spacing: -0.01em;
+}
+
+.wpsc-promo-notice__text {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--wpsc-promo-muted);
+}
+
+.wpsc-promo-notice__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	margin-top: 4px;
+}
+
+@media (min-width: 783px) {
+	.wpsc-promo-notice__inner {
+		flex-wrap: nowrap;
+		align-items: center;
+	}
+
+	.wpsc-promo-notice__actions {
+		width: auto;
+		margin-top: 0;
+		margin-left: auto;
+		justify-content: flex-end;
+	}
+
+	/* Pro upgrade: copy + buttons on one row, vertically centered, with a tab’s space after text. */
+	.wpsc-promo-notice--upgrade .wpsc-promo-notice__inner {
+		align-items: center;
+	}
+	.wpsc-promo-notice--upgrade .wpsc-promo-notice__body {
+		flex: 0 1 auto;
+		align-self: center;
+	}
+	.wpsc-promo-notice--upgrade .wpsc-promo-notice__actions {
+		margin-left: 24px; /* ~one tab past the text (in addition to flex gap) */
+		margin-top: 0;
+		justify-content: flex-start;
+		align-self: center;
+		flex-shrink: 0;
+	}
+}
+
+.wpsc-promo-notice__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 14px;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	border-radius: 8px;
+	border: 1px solid transparent;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+	cursor: pointer;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.wpsc-promo-notice__btn--primary {
+	background: var(--wpsc-promo-accent);
+	border-color: var(--wpsc-promo-accent);
+	color: #fff;
+}
+
+.wpsc-promo-notice__btn--primary:hover,
+.wpsc-promo-notice__btn--primary:focus {
+	background: var(--wpsc-promo-accent-2);
+	border-color: var(--wpsc-promo-accent-2);
+	color: #fff;
+	box-shadow: 0 2px 6px rgba(34, 113, 177, 0.35);
+}
+
+.wpsc-promo-notice__btn--primary:focus {
+	outline: 2px solid var(--wpsc-promo-accent-soft);
+	outline-offset: 2px;
+}
+
+/* Primary CTAs are <a>; beat admin-theme-dark `body...wpsc-theme-dark a` (0,2,2). */
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn--primary,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:link,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:visited,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:hover,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:focus {
+	color: #fff;
+}
+
+.wpsc-promo-notice__btn--ghost {
+	background: var(--wpsc-promo-surface-subtle);
+	border-color: var(--wpsc-promo-border-strong);
+	color: var(--wpsc-promo-text);
+	box-shadow: none;
+}
+
+.wpsc-promo-notice__btn--ghost:hover,
+.wpsc-promo-notice__btn--ghost:focus {
+	background: #f0f0f1;
+	border-color: #c3c4c7;
+	color: var(--wpsc-promo-text);
+}
+
+.wpsc-promo-notice__link {
+	font-size: 13px;
+	color: var(--wpsc-promo-muted);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.wpsc-promo-notice__link:hover,
+.wpsc-promo-notice__link:focus {
+	color: var(--wpsc-promo-accent);
+}
+
+/* Pro upgrade variant — brand green accent */
+.wpsc-promo-notice--upgrade {
+	--wpsc-promo-accent: #00a32a;
+	--wpsc-promo-accent-2: #007017;
+	--wpsc-promo-accent-soft: rgba(0, 163, 42, 0.18);
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #e6f9ec 0%, #d8f5e5 100%);
+	--wpsc-promo-icon-color: #00a32a;
+}
+
+.wpsc-promo-notice--upgrade::before {
+	background: linear-gradient(180deg, #27ae60 0%, #00a32a 100%);
+}
+
+.wpsc-promo-notice--upgrade .wpsc-promo-notice__btn--primary:hover,
+.wpsc-promo-notice--upgrade .wpsc-promo-notice__btn--primary:focus {
+	box-shadow: 0 2px 6px rgba(0, 163, 42, 0.35);
+}
+
+/* Review variant — WP blue / soft violet icon */
+.wpsc-promo-notice--review {
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #e7f0ff 0%, #ede8ff 100%);
+	--wpsc-promo-icon-color: #3858e9;
+}
+
+.wpsc-promo-notice--review::before {
+	background: linear-gradient(180deg, #3858e9 0%, #2271b1 100%);
+}
+
+/* -------------------------------------------------------------------------
+ * Plugin admin dark theme (matches admin-theme-dark.css palette)
+ * ------------------------------------------------------------------------- */
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice {
+	--wpsc-promo-surface: #1e1638;
+	--wpsc-promo-surface-subtle: #251d45;
+	--wpsc-promo-border: rgba(255, 255, 255, 0.1);
+	--wpsc-promo-border-strong: rgba(255, 255, 255, 0.14);
+	--wpsc-promo-text: #ececf1;
+	--wpsc-promo-muted: #a59bbf;
+	--wpsc-promo-accent: #6b7eeb;
+	--wpsc-promo-accent-2: #9a80ff;
+	--wpsc-promo-accent-soft: rgba(107, 126, 235, 0.35);
+	--wpsc-promo-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #2a2450 0%, #352866 100%);
+	--wpsc-promo-icon-color: #b4b8ff;
+	border-color: var(--wpsc-promo-border-strong);
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--upgrade {
+	--wpsc-promo-accent: #34d399;
+	--wpsc-promo-accent-2: #6ee7b7;
+	--wpsc-promo-accent-soft: rgba(52, 211, 153, 0.35);
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #1a3d32 0%, #1e4d3d 100%);
+	--wpsc-promo-icon-color: #6ee7b7;
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--upgrade::before {
+	background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost {
+	background: rgba(255, 255, 255, 0.06);
+	border-color: rgba(255, 255, 255, 0.18);
+	color: var(--wpsc-promo-text);
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost:hover,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost:focus {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice {
+		--wpsc-promo-surface: #1e1638;
+		--wpsc-promo-surface-subtle: #251d45;
+		--wpsc-promo-border: rgba(255, 255, 255, 0.1);
+		--wpsc-promo-border-strong: rgba(255, 255, 255, 0.14);
+		--wpsc-promo-text: #ececf1;
+		--wpsc-promo-muted: #a59bbf;
+		--wpsc-promo-accent: #6b7eeb;
+		--wpsc-promo-accent-2: #9a80ff;
+		--wpsc-promo-accent-soft: rgba(107, 126, 235, 0.35);
+		--wpsc-promo-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+		--wpsc-promo-icon-bg: linear-gradient(145deg, #2a2450 0%, #352866 100%);
+		--wpsc-promo-icon-color: #b4b8ff;
+		border-color: var(--wpsc-promo-border-strong);
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice--upgrade {
+		--wpsc-promo-accent: #34d399;
+		--wpsc-promo-accent-2: #6ee7b7;
+		--wpsc-promo-accent-soft: rgba(52, 211, 153, 0.35);
+		--wpsc-promo-icon-bg: linear-gradient(145deg, #1a3d32 0%, #1e4d3d 100%);
+		--wpsc-promo-icon-color: #6ee7b7;
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice--upgrade::before {
+		background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice__btn--ghost {
+		background: rgba(255, 255, 255, 0.06);
+		border-color: rgba(255, 255, 255, 0.18);
+		color: var(--wpsc-promo-text);
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice__btn--ghost:hover,
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice__btn--ghost:focus {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.28);
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice a.wpsc-promo-notice__btn--primary,
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:link,
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:visited,
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:hover,
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice a.wpsc-promo-notice__btn--primary:focus {
+		color: #fff;
+	}
+}

@@ -17,7 +17,10 @@ class Wpscx_Menu {
 
 	function add_menu() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Conditional check only, not processing form data
-		if ( ! isset( $_POST['uninstall'] ) ) {
+		// Use empty() instead of isset(): the options form always submits the hidden uninstall field with value="",
+		// so isset() incorrectly blocked menu registration on every Update click. empty() correctly allows
+		// the menu to register for empty values while still skipping it for the actual uninstall action string.
+		if ( empty( $_POST['uninstall'] ) ) {
 			global $wpscx_ent_included;
 
 			if ( $wpscx_ent_included ) {

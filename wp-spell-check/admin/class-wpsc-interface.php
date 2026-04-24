@@ -30,7 +30,9 @@ class Wpscx_Wordpress_Interface {
 		}
 		add_action( 'admin_head', array( $menu, 'menu_script' ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Conditional check only, not processing form data
-		if ( ! isset( $_POST['uninstall'] ) && current_user_can( 'manage_options' ) ) {
+		// Use empty() instead of isset(): the options form always submits the hidden uninstall field with value="",
+		// so isset() incorrectly blocked the toolbar menu on every Update click.
+		if ( empty( $_POST['uninstall'] ) && current_user_can( 'manage_options' ) ) {
 			add_action( 'admin_bar_menu', array( $menu, 'add_toolbar_menu' ), 999 );
 		}
 	}

@@ -183,8 +183,10 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
 	} elseif ( 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'Ultimate SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'Ultimate SEO Title' === $type || 'SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = $blog . '/wp-admin/post.php?post=' . $id . '&action=edit';
-	} elseif ( 'Slider Title' === $type || 'Slider Caption' === $type || 'Smart Slider Title' === $type || 'Smart Slider Caption' === $type ) {
+	} elseif ( 'Slider Title' === $type || 'Slider Caption' === $type ) {
 		$url = $blog . '/wp-admin/post.php?post=' . $id . '&action=edit';
+	} elseif ( 'Smart Slider Title' === $type || 'Smart Slider Caption' === $type || 'Smart Slider Group' === $type || 'Smart Slider Content' === $type ) {
+		$url = $blog . '/wp-admin/admin.php?page=smart-slider3';
 	} elseif ( 'Media Title' === $type || 'Media Description' === $type || 'Media Caption' === $type || 'Media Alternate Text' === $type ) {
 		$url = $blog . '/wp-admin/post.php?post=' . $id . '&action=edit';
 	} elseif ( 'Tag Title' === $type || 'Tag Description' === $type || 'Tag Slug' === $type ) {
@@ -922,113 +924,6 @@ function wpscx_show_feature_window() {
 	echo"</div>";*/
 }
 
-function wpscx_check_broken_code_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-	$start     = round( microtime( true ), 5 );
-	$sql_count = 0;
-	$page_list = null;
-	global $wpscx_scan_delay;
-	global $wpscx_ent_included;
-	global $wpsc_settings;
-	wpscx_set_global_vars();
-
-	// if (!$is_running) sleep($wpscx_scan_delay);
-
-	ini_set( 'memory_limit', '1024M' ); // Sets the PHP memory limit
-	set_time_limit( 600 );
-	global $wpdb;
-
-	$table_name    = $wpdb->prefix . 'spellcheck_html';
-	$options_table = $wpdb->prefix . 'spellcheck_options';
-	$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-	$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
-	$page_table    = $wpdb->prefix . 'posts';
-
-	$max_pages = ( isset( $wpsc_settings[138] ) && $wpsc_settings[138] ) ? intval( $wpsc_settings[138]->option_value ) : 0;
-
-	$total_words = 0;
-	$page_count  = 0;
-	$post_count  = 0;
-	$word_count  = 0;
-	$error_count = 0;
-
-	if ( isset( $wpsc_settings[136] ) && $wpsc_settings[136] && 'true' === $wpsc_settings[136]->option_value ) {
-		$post_status = " AND (post_status='publish' OR post_status='draft')";
-	} else {
-		$post_status = " AND post_status='publish'";
-	}
-
-	// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $post_status is one of two hardcoded strings from lines 955/957, no user input.
-	$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content FROM $page_table WHERE (post_type='page' OR post_type='post')$post_status" ) );
-	++$sql_count;
-
-	if ( true !== $is_running ) {
-		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-		++$sql_count;
-		$start_time = time();
-	}
-	$ind_start_time = time();
-
-	$max_time = ini_get( 'max_execution_time' );
-
-	$divi_check = wp_get_theme();
-
-	global $wpscx_ignore_list;
-	global $wpscx_dict_list;
-	global $wpsc_settings;
-	$error_list = new SplFixedArray( 1 );
-
-	for ( $x = 0; $x < $page_list->getSize(); $x++ ) {
-		if ( 'page' === $page_list[ $x ]->post_type ) {
-			++$page_count;
-		} else {
-			++$post_count;
-		}
-
-		$words_content = $page_list[ $x ]->post_content;
-		$words_content = do_shortcode( $words_content );
-		$words_content = wpscx_content_filter( $words_content );
-		$words_content = wpbc_clean_all( $words_content, $wpsc_settings );
-
-		preg_match_all( '/&lt;.+&gt;/', $words_content, $html_errors );
-
-		if ( sizeof( (array) $html_errors ) !== 0 ) {
-			foreach ( $html_errors as $html_error ) {
-				if ( is_array( $html_error ) && isset( $html_error[0] ) && '' !== $html_error[0] ) {
-					$hold    = new SplFixedArray( 1 );
-					$hold[0] = $html_error[0];
-
-					$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-					$error_list[ $error_count ] = $hold;
-
-					++$error_count;
-				}
-			}
-		}
-
-		preg_match_all( '/\[.*?\]/', $words_content, $shortcode_errors );
-
-		if ( sizeof( (array) $shortcode_errors ) !== 0 ) {
-			foreach ( $shortcode_errors as $shortcode_error ) {
-				if ( is_array( $shortcode_error ) && isset( $shortcode_error[0] ) && '' !== $shortcode_error[0] && strpos( $shortcode_error[0], 'vc' ) === false ) {
-					$hold    = new SplFixedArray( 1 );
-					$hold[0] = $shortcode_error[0];
-
-					$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-					$error_list[ $error_count ] = $hold;
-					++$error_count;
-				}
-			}
-		}
-		unset( $page_list[ $x ] );
-	}
-
-	$end = round( microtime( true ), 5 );
-	if ( $log_debug ) {
-		wpscx_print_debug( 'Broken Code EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
-	}
-
-	return $error_list->getSize();
-}
 
 function wphcx_check_scan_progress() {
 	global $wpdb;
