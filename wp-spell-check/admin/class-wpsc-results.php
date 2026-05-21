@@ -311,14 +311,14 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="/wp-admin/nav-menus.php?action=edit&menu=' . $item['page_id'] . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
 		} elseif ( 'Contact Form 7' === $item['page_type'] || 'Contact Form 7 Auto Response' === $item['page_type'] || 'Contact Form 7 Form' === $item['page_type'] || 'Contact Form 7 Email Notification' === $item['page_type'] ) {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
-		} elseif ( 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'Ultimate SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'Ultimate SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
-			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
-		} elseif ( 'Slider Title' === $item['page_type'] || 'Slider Caption' === $item['page_type'] ) {
-			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
+			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '"  target="_blank">View</a>';
 		} elseif ( 'Smart Slider Title' === $item['page_type'] || 'Smart Slider Caption' === $item['page_type'] || 'Smart Slider Group' === $item['page_type'] || 'Smart Slider Content' === $item['page_type'] ) {
-			$output = '<a href="/wp-admin/admin.php?page=smart-slider3" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+			$output = '<a href="' . esc_url( wpscx_smartslider3_admin_url( (int) $item['page_id'], $item['page_type'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
+		} elseif ( 'Meta Slider Group' === $item['page_type'] || 'Meta Slider Slide Title' === $item['page_type'] || 'Meta Slider Caption' === $item['page_type'] || 'Meta Slider Content' === $item['page_type'] || 'Meta Slider Image Title' === $item['page_type'] || 'Meta Slider Image Alt' === $item['page_type'] || 'Meta Slider Link Alt' === $item['page_type'] ) {
+			$output = '<a href="' . esc_url( wpscx_metaslider_admin_url( (int) $item['page_id'], $item['page_type'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Media Title' === $item['page_type'] || 'Media Description' === $item['page_type'] || 'Media Caption' === $item['page_type'] || 'Media Alternate Text' === $item['page_type'] ) {
-			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Tag Title' === $item['page_type'] || 'Tag Description' === $item['page_type'] || WPSCX_TAG === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'WooCommerce Tag Description' === $item['page_type'] || 'WooCommerce Tag Title' === $item['page_type'] ) {
@@ -337,12 +337,12 @@ class Wpscx_Table extends WP_List_Table {
 			$postmeta = $wpdb->prefix . 'postmeta';
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'postmeta'
 			$result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $postmeta WHERE meta_id = %d", $item['page_id'] ) );
-			$output = '<a href="/wp-admin/post.php?post=' . $result[0]->post_id . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $result[0]->post_id ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} else {
 			$output = '<a href="' . $link . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		}
-		if ( ( 'WP eCommerce Product Excerpt' === $item['page_type'] || 'WP eCommerce Product Name' === $item['page_type'] || 'WooCommerce Product Excerpt' === $item['page_type'] || 'WooCommerce Product Title' === $item['page_type'] || 'WooCommerce Product Short Description' === $item['page_type'] || 'WooCommerce Category Title' === $item['page_type'] || 'WooCommerce Category Description' === $item['page_type'] || 'WooCommerce Tag Title' === $item['page_type'] || 'WooCommerce Tag Description' === $item['page_type'] || 'WooCommerce Product Name' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Post Title' === $item['page_type'] || 'Yoast SEO Page Description' === $item['page_type'] || 'All in One SEO Page Description' === $item['page_type'] || 'Ultimate SEO Page Description' === $item['page_type'] || 'SEO Page Description' === $item['page_type'] || 'Yoast SEO Page Title' === $item['page_type'] || 'All in One SEO Page Title' === $item['page_type'] || 'Ultimate SEO Page Title' === $item['page_type'] || 'SEO Page Title' === $item['page_type'] || 'Yoast SEO Post Description' === $item['page_type'] || 'All in One SEO Post Description' === $item['page_type'] || 'Ultimate SEO Post Description' === $item['page_type'] || 'SEO Post Description' === $item['page_type'] || 'Yoast SEO Post Title' === $item['page_type'] || 'All in One SEO Post Title' === $item['page_type'] || 'Ultimate SEO Post Title' === $item['page_type'] || 'SEO Post Title' === $item['page_type'] || 'Yoast SEO Media Description' === $item['page_type'] || 'All in One SEO Media Description' === $item['page_type'] || 'Ultimate SEO Media Description' === $item['page_type'] || 'SEO Media Description' === $item['page_type'] || 'Yoast SEO Media Title' === $item['page_type'] || 'All in One SEO Media Title' === $item['page_type'] || 'Ultimate SEO Media Title' === $item['page_type'] || 'SEO Media Title' === $item['page_type'] ) && 'Empty Field' === $item['word'] ) {
-			$output = '<a href="/wp-admin/post.php?post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		if ( ( 'WooCommerce Product Excerpt' === $item['page_type'] || 'WooCommerce Product Title' === $item['page_type'] || 'WooCommerce Product Short Description' === $item['page_type'] || 'WooCommerce Category Title' === $item['page_type'] || 'WooCommerce Category Description' === $item['page_type'] || 'WooCommerce Tag Title' === $item['page_type'] || 'WooCommerce Tag Description' === $item['page_type'] || 'WooCommerce Product Name' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Post Title' === $item['page_type'] || 'Yoast SEO Page Description' === $item['page_type'] || 'All in One SEO Page Description' === $item['page_type'] || 'SEO Page Description' === $item['page_type'] || 'Yoast SEO Page Title' === $item['page_type'] || 'All in One SEO Page Title' === $item['page_type'] || 'SEO Page Title' === $item['page_type'] || 'Yoast SEO Post Description' === $item['page_type'] || 'All in One SEO Post Description' === $item['page_type'] || 'SEO Post Description' === $item['page_type'] || 'Yoast SEO Post Title' === $item['page_type'] || 'All in One SEO Post Title' === $item['page_type'] || 'SEO Post Title' === $item['page_type'] || 'Yoast SEO Media Description' === $item['page_type'] || 'All in One SEO Media Description' === $item['page_type'] || 'SEO Media Description' === $item['page_type'] || 'Yoast SEO Media Title' === $item['page_type'] || 'All in One SEO Media Title' === $item['page_type'] || 'SEO Media Title' === $item['page_type'] ) && 'Empty Field' === $item['word'] ) {
+			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		}
 
 		$actions = array(
@@ -643,7 +643,6 @@ function wpscx_admin_render() {
 	global $wp_version;
 	$wpsc_api          = 'https://www.wpspellcheck.com/api/error-report.php';
 	$mass_edit_message = '';
-	$log_debug         = true; // Enables debugging log
 	$utils             = new Wpscx_Results_Utils();
 	set_time_limit( 600 );
 
@@ -777,24 +776,12 @@ function wpscx_admin_render() {
 		++$sql_count;
 		$total_cat_desc  = $total_cat;
 		$total_cat_slug  = $total_cat;
-		$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title' OR meta_key='_su_title'" ) );
+		$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title'" ) );
 		++$sql_count;
-		$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description' OR meta_key='_su_description'" ) );
+		$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description'" ) );
 		++$sql_count;
 
-		$total_generic_slider = get_pages(
-			array(
-				'number'       => PHP_INT_MAX,
-				'hierarchical' => 0,
-				'post_type'    => 'slider',
-				'post_status'  => array(
-					'publish',
-					'draft',
-				),
-			)
-		);
-		++$sql_count;
-		$total_sliders = $total_huge_it + $total_smartslider + sizeof( (array) $total_generic_slider );
+		$total_sliders = $total_huge_it + $total_smartslider;
 
 		$total_other = $total_menu + $total_authors + $total_tags + $total_tag_desc + $total_tag_slug + $total_cat + $total_cat_desc + $total_cat_slug + $total_seo_title + $total_seo_desc;
 
@@ -1145,7 +1132,7 @@ function wpscx_admin_render() {
 				></p>
 						<?php
 						// Only show the Sliders scan button when at least one supported slider plugin is active.
-						if ( is_plugin_active( 'smart-slider-3/smart-slider-3.php' ) ) {
+						if ( is_plugin_active( 'smart-slider-3/smart-slider-3.php' ) || is_plugin_active( 'ml-slider/ml-slider.php' ) ) {
 							?>
 							<p class="submit 
 						<?php
@@ -1162,7 +1149,7 @@ function wpscx_admin_render() {
 						></p>
 						<?php } ?>
 							<?php
-							if ( is_plugin_active( 'woocommerce/woocommerce.php' ) || is_plugin_active( 'wp-e-commerce/wp-shopping-cart.php' ) ) {
+							if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 								?>
 								<p class="submit 
 								<?php

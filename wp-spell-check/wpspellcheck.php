@@ -5,15 +5,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Name: WP Spell Check
  * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
- * Version: 11.1
+ * Version: 11.2
  * Author: WP Spell Check
  * Author URI: https://www.wpspellcheck.com
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.0
- * Requires PHP: 7.0
+ * Requires PHP: 7.4
  * 
- * Tested up to: 6.9
+ * Tested up to: 7.0
  */
 
 const WPSC_FRAMEWORK  = 'wpsc-framework.php';
@@ -249,7 +249,7 @@ function wpscx_set_global_vars() {
 	global $wpsc_version;
 	global $wpsc_globals_loaded;
 
-	$wpsc_version = '11.1';
+	$wpsc_version = '11.2';
 
 	// Return early if globals are already loaded to prevent duplicate queries
 	if ( isset( $wpsc_globals_loaded ) && $wpsc_globals_loaded === true ) {
@@ -300,7 +300,7 @@ function wpscx_set_global_vars() {
 			$wpscx_base_page_max = $wpsc_settings[138]->option_value;
 		}
 	} else {
-		$wpscx_base_page_max = 20;
+		$wpscx_base_page_max = 10;
 	}
 
 	// Mark globals as loaded so subsequent calls return early (no duplicate queries).

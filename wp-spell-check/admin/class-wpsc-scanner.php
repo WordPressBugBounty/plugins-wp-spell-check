@@ -11,7 +11,6 @@ class Wpscx_Scanner {
 	private $haystack;
 
 	function __construct() {
-		// wpscx_print_debug("wpscx scanner construct first line", time(), 0, round(memory_get_usage() / 1000,5), 0);
 		global $wpdb;
 		$settings_table = $wpdb->prefix . 'spellcheck_options';
 		$dict_table     = $wpdb->prefix . 'spellcheck_dictionary';
@@ -20,30 +19,6 @@ class Wpscx_Scanner {
 		$this->settings_list = $wpdb->get_results( "SELECT * FROM $settings_table" );
 		$this->ignore_list   = $wpdb->get_results( "SELECT word FROM $ignore_table WHERE ignore_word = true" );
 		$wpscx_dict_list     = $wpdb->get_results( "SELECT * FROM $dict_table" );
-
-		// wpscx_print_debug("wpscx scanner construct init", time(), 0, round(memory_get_usage() / 1000,5), 0);
-
-		/*
-		$loc = plugins_url("/dict/" . $wpsc_settings[11]->option_value . ".pws", __FILE__ );
-		$contents = wp_remote_retrieve_body(  wp_remote_get( $loc ) );
-
-		$contents = str_replace("\r\n", "\n", $contents);
-		$dict_file = explode("\n", $contents);
-
-		//wpscx_print_debug("wpscx scanner construct Get Dict Files", time(), 0, round(memory_get_usage() / 1000,5), 0);
-
-		foreach($dict_file as $value) {
-			$this->haystack[strtoupper(stripslashes($value))] = 1;
-		}
-
-		foreach ($wpscx_dict_list as $value) {
-			$this->haystack[strtoupper(stripslashes($value->word))] = 1;
-		}
-
-		foreach ($this->ignore_list as $value) {
-			$this->haystack[strtoupper(stripslashes($value->word))] = 1;
-		}*/
-		// wpscx_print_debug("wpscx scanner construct last line", time(), 0, round(memory_get_usage() / 1000,5), 0);
 	}
 
 	function sql_insert( $error_list, $page_type, $table_name = '' ) {

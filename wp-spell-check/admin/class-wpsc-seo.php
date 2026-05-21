@@ -7,7 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 	function check_page_title_empty( $rng_seed = 0, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 		global $wpdb;
 		global $wpscx_base_page_max;
@@ -88,11 +89,12 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			++$sql_count;
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Empty Page Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Page Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_post_title_empty( $rng_seed = 0, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 		global $wpdb;
 		global $wpsc_settings;
@@ -190,11 +192,12 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Empty Post Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Empty Post Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_author_empty_run( $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_settings;
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
@@ -260,7 +263,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Empty Author', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		if ( $log_debug ) {
+			wpscx_print_debug( 'Empty Author', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+		}
 	}
 
 	function check_author_empty( $rng_seed = 0, $is_running = false ) {
@@ -297,65 +302,63 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$pro_errors = 0;
 		$last_count = 0;
 
-		$pro_errors += $this->check_menus_empty_free( true );
+		$pro_errors += $this->check_menus_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_yoast_page_empty_free( true );
+		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) || is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			$pro_errors += $this->check_yoast_page_empty_free( 0, true );
+			$last_count  = $pro_errors;
+
+			$pro_errors += $this->check_seo_titles_page_empty_free( 0, true );
+			$last_count  = $pro_errors;
+
+			$pro_errors += $this->check_yoast_post_empty_free( 0, true );
+			$last_count  = $pro_errors;
+
+			$pro_errors += $this->check_seo_titles_post_empty_free( 0, true );
+			$last_count  = $pro_errors;
+
+			$pro_errors += $this->check_yoast_media_empty_free( 0, true );
+			$last_count  = $pro_errors;
+
+			$pro_errors += $this->check_seo_titles_media_empty_free( 0, true );
+			$last_count  = $pro_errors;
+		}
+
+		$pro_errors += $this->check_media_descriptions_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_seo_titles_page_empty_free( true );
+		$pro_errors += $this->check_media_captions_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_yoast_post_empty_free( true );
+		$pro_errors += $this->check_media_alt_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_seo_titles_post_empty_free( true );
+		if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			$pro_errors += $this->check_woocommerce_empty_all_free( 0, true );
+			$last_count  = $pro_errors;
+		}
+
+		$pro_errors += $this->check_post_tag_descriptions_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_yoast_media_empty_free( true );
+		$pro_errors += $this->check_post_categories_description_empty_free( 0, true );
 		$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_seo_titles_media_empty_free( true );
-		$last_count  = $pro_errors;
+		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			$pro_errors += $this->check_author_seotitle_empty_free( 0, true );
+			$last_count  = $pro_errors;
 
-		$pro_errors += $this->check_media_descriptions_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_media_captions_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_media_alt_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_woocommerce_name_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_woocommerce_excerpt_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_wpecommerce_name_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_wpecommerce_excerpt_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_post_tag_descriptions_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_post_categories_description_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_author_seotitle_empty_free( true );
-		$last_count  = $pro_errors;
-
-		$pro_errors += $this->check_author_seodesc_empty_free( true );
-		$last_count  = $pro_errors;
+			$pro_errors += $this->check_author_seodesc_empty_free( 0, true );
+			$last_count  = $pro_errors;
+		}
 
 		$wpdb->update( $options_table, array( 'option_value' => $pro_errors ), array( 'option_name' => 'pro_empty_count' ) );
 	}
 
 	function check_menus_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_settings;
 		$table_name    = $wpdb->prefix . 'posts';
@@ -395,14 +398,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Menu', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Menu', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_post_tag_descriptions_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_settings;
@@ -441,14 +445,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Tag Desc', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Tag Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_post_categories_description_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start       = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$timer_start = round( microtime( true ), 5 );
 				global $wpdb;
 		global $wpsc_settings;
@@ -480,14 +485,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		}
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Category Desc ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Category Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_media_descriptions_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_settings;
@@ -526,14 +532,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media Desc', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Media Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_media_captions_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_settings;
@@ -573,14 +580,15 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media Caption ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Media Caption ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_media_alt_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_settings;
@@ -620,14 +628,39 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media Alt ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Media Alt ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
+	function check_woocommerce_empty_all_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
+		if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			return 0;
+		}
+
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$start         = round( microtime( true ), 5 );
+		$total_errors  = 0;
+
+		$total_errors += (int) $this->check_woocommerce_name_empty_free( $rng_seed, $is_running, false );
+		$total_errors += (int) $this->check_woocommerce_excerpt_empty_free( $rng_seed, $is_running, false );
+
+		if ( $log_debug ) {
+			$end = round( microtime( true ), 5 );
+			wpscx_print_debug( 'Empty WooCommerce', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $total_errors, $wpscx_debug_q );
+		}
+
+		return $total_errors;
+	}
+
 	function check_woocommerce_name_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_settings;
@@ -682,14 +715,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty WooCommerce Title ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty WooCommerce Title ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
-		return sizeof( (array) $error_list );
+		return $error_count;
 	}
 
 	function check_woocommerce_excerpt_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_settings;
 		$table_name    = $wpdb->prefix . 'spellcheck_empty';
@@ -743,135 +781,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty WooCommerce Excerpt', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty WooCommerce Excerpt', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
-		return sizeof( (array) $error_list );
-	}
-
-	function check_wpecommerce_name_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
-		global $wpdb;
-		global $wpsc_settings;
-		$table_name    = $wpdb->prefix . 'spellcheck_empty';
-		$options_table = $wpdb->prefix . 'spellcheck_options';
-		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$sql_count     = 1;
-
-		set_time_limit( 6000 );
-		$error_count = 0;
-		$total_count = 0;
-		$error_list  = array();
-
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
-		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-		$posts_list   = get_posts(
-			array(
-				'posts_per_page' => 10000,
-				'post_type'      => 'wpsc-product',
-				'post_status'    => array(
-					'publish',
-					'draft',
-				),
-			)
-		);
-
-		foreach ( $posts_list as $post ) {
-			++$total_count;
-			$ignore_flag = 'false';
-			foreach ( $ignore_posts as $ignore_check ) {
-				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
-					$ignore_flag = 'true';
-				}
-			}
-			if ( 'true' === $ignore_flag ) {
-				continue; }
-			$words_list = $post->post_title;
-			if ( wpscx_check_empty( $words_list, false ) ) {
-				++$error_count;
-				array_push(
-					$error_list,
-					array(
-						'word'      => WPSCX_EMPTY,
-						'page_name' => $post->post_title,
-						'page_type' => 'WP eCommerce Product Name',
-						'page_id'   => $post->ID,
-					)
-				);
-			}
-		}
-
-		$end = round( microtime( true ), 5 );
-		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty WPeCommerce Title ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
-		}
-
-		return sizeof( (array) $error_list );
-	}
-
-	function check_wpecommerce_excerpt_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
-		global $wpdb;
-		global $wpsc_settings;
-		$table_name    = $wpdb->prefix . 'spellcheck_empty';
-		$options_table = $wpdb->prefix . 'spellcheck_options';
-		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$sql_count     = 1;
-
-		set_time_limit( 6000 );
-		$error_count = 0;
-		$total_count = 0;
-		$error_list  = array();
-
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', no user input
-		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-
-		$posts_list = get_posts(
-			array(
-				'posts_per_page' => 10000,
-				'post_type'      => 'wpsc-product',
-				'post_status'    => array(
-					'publish',
-					'draft',
-				),
-			)
-		);
-
-		foreach ( $posts_list as $post ) {
-			++$total_count;
-			$ignore_flag = 'false';
-			foreach ( $ignore_posts as $ignore_check ) {
-				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
-					$ignore_flag = 'true';
-				}
-			}
-			if ( 'true' === $ignore_flag ) {
-				continue; }
-			$words_list = $post->post_excerpt;
-			if ( wpscx_check_empty( $words_list, false ) ) {
-				++$error_count;
-				array_push(
-					$error_list,
-					array(
-						'word'      => WPSCX_EMPTY,
-						'page_name' => $post->post_title,
-						'page_type' => 'WP eCommerce Product Excerpt',
-						'page_id'   => $post->ID,
-					)
-				);
-			}
-		}
-
-		$end = round( microtime( true ), 5 );
-		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty WPeCommerce Excerpt', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
-		}
-
-		return sizeof( (array) $error_list );
+		return $error_count;
 	}
 
 	function check_author_seotitle_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_settings;
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
@@ -916,14 +838,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Author SEO Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Author SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_author_seodesc_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_settings;
 		$table_name     = $wpdb->prefix . 'spellcheck_empty';
@@ -967,14 +894,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Author SEO Desc', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Author SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_yoast_page_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -994,7 +926,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1023,14 +955,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Page SEO Desc ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'Empty Page SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
 	}
 
 	function check_seo_titles_page_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -1050,7 +987,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1079,14 +1016,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Page SEO Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'Empty Page SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
 	}
 
 	function check_yoast_post_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -1106,7 +1048,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_dscription") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_dscription") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1135,14 +1077,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Post SEO Desc ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'Empty Post SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
 	}
 
 	function check_seo_titles_post_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -1162,7 +1109,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1191,14 +1138,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Post SEO Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'Empty Post SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
 	}
 
 	function check_yoast_media_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -1218,7 +1170,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, query contains only hardcoded meta_key values
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1243,14 +1195,19 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media SEO Desc', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Media SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
 	}
 
 	function check_seo_titles_media_empty_free( $rng_seed = 0, $is_running = false, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 0;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		ini_set( 'memory_limit', '512M' );
 
 		global $wpdb;
@@ -1270,7 +1227,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1297,7 +1254,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media SEO Title', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Empty Media SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );

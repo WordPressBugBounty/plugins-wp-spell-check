@@ -1225,7 +1225,6 @@ function wpscx_show_editor(
   if (
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
-    page_type == "Ultimate SEO Title" ||
     page_type == "SEO Title" ||
     page_type == "SEO Post Title" ||
     page_type == "SEO Page Title" ||
@@ -1235,7 +1234,6 @@ function wpscx_show_editor(
   } else if (
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
-    page_type == "Ultimate SEO Description" ||
     page_type == "SEO Description" ||
     page_type == "SEO Page Description" ||
     page_type == "SEO Post Description" ||
@@ -1283,7 +1281,6 @@ function wpscx_show_editor_seo(
   if (
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
-    page_type == "Ultimate SEO Title" ||
     page_type == "SEO Title" ||
     page_type == "SEO Post Title" ||
     page_type == "SEO Page Title" ||
@@ -1293,7 +1290,6 @@ function wpscx_show_editor_seo(
   } else if (
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
-    page_type == "Ultimate SEO Description" ||
     page_type == "SEO Description" ||
     page_type == "SEO Page Description" ||
     page_type == "SEO Post Description" ||

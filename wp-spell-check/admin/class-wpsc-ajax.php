@@ -114,9 +114,9 @@ class Wpscx_Ajax {
 			$this->check_permissions();
 			check_ajax_referer( 'wpsc_finish_scan', 'nonce' );
 		}
-		$start     = round( microtime( true ), 5 );
-		$sql_count = 0;
-		sleep( 1 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$start         = round( microtime( true ), 5 );
+		$sql_count     = 0;
 		global $wpdb;
 		global $wpscx_ent_included;
 		global $wpsc_version;
@@ -164,10 +164,10 @@ class Wpscx_Ajax {
 
 		if ( $wpscx_ent_included ) {
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Finalization', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), 0 );
+			wpscx_print_debug( 'Finalization', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 		} else {
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Finalization Scan', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), 0 );
+			wpscx_print_debug( 'Finalization Scan', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 		}
 	}
 
@@ -177,8 +177,9 @@ class Wpscx_Ajax {
 			$this->check_permissions();
 			check_ajax_referer( 'wpsc_finish_empty_scan', 'nonce' );
 		}
-		$start     = round( microtime( true ), 5 );
-		$sql_count = 0;
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$start         = round( microtime( true ), 5 );
+		$sql_count     = 0;
 		global $wpdb;
 		global $wpscx_ent_included;
 		global $wpsc_version;
@@ -235,7 +236,7 @@ class Wpscx_Ajax {
 			++$sql_count;
 		}
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Empty Finalization', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Empty Finalization', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 	}
 
 	function wpscx_scan_function() {
@@ -389,7 +390,8 @@ class Wpscx_Ajax {
 		}
 		global $wpscx_ent_included;
 		global $wpsc_version;
-		$start = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$start         = round( microtime( true ), 5 );
 		require_once 'class-wpsc-results.php';
 		$this->wpscx_finish_scan();
 
@@ -397,7 +399,7 @@ class Wpscx_Ajax {
 		$results_table->prepare_items( true );
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Get Results Table', round( $end - $start, 5 ), 1, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Get Results Table', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 		if ( $wpscx_ent_included ) {
 			wpscx_print_debug_end( "$wpsc_version Spell Check Pro" );
 		} else {

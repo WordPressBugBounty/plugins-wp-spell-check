@@ -3,14 +3,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-	const WPSCX_POST      = 'Post Content';
-	const WPSCX_SITE      = 'Site Tagline';
-	const WPSCX_DEBUG_LOC = '/../../../../debug-var.log';
+	const WPSCX_POST = 'Post Content';
+	const WPSCX_SITE = 'Site Tagline';
 
 class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 	function check_pages( $log_errors = false, $wpsc_haystack = null, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
@@ -118,7 +118,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			if ( $log_errors ) {
 				$end = round( microtime( true ), 5 );
-				wpscx_print_debug( 'Page Content EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), $pro_error_count );
+				wpscx_print_debug( 'Page Content EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $pro_error_count, $wpscx_debug_q );
 				return $pro_error_count;
 			}
 
@@ -145,11 +145,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			++$sql_count;
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Page Content', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Page Content', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_posts( $log_errors = false, $wpsc_haystack = null, $is_running = false ) {
-		$start       = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$start_debug = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 				global $wpscx_title;
@@ -209,7 +210,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpsc-product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 				$post_type_list .= "post_type='$type' OR ";
 			}
 		}
@@ -306,7 +307,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 			if ( $log_errors ) {
 				$end = round( microtime( true ), 5 );
-				wpscx_print_debug( 'Post Content EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), $pro_error_count );
+				wpscx_print_debug( 'Post Content EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $pro_error_count, $wpscx_debug_q );
 				return $pro_error_count;
 			}
 
@@ -342,14 +343,15 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$timer_final += round( microtime( true ), 5 ) - $start_timer;
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( WPSCX_POST, round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( WPSCX_POST, round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 			unset( $sql );
 			unset( $error_list );
 	}
 
 	function check_author_spelling( $wpsc_haystack ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 
 		global $wpdb;
 		global $wpsc_haystack;
@@ -448,11 +450,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		wpscx_sql_insert( $error_list, 'Multi' );
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Author', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Author', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_site_name( $wpsc_haystack, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $end_included;
 		global $wpsc_haystack;
@@ -533,11 +536,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Sitename', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Sitename', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_site_tagline( $wpsc_haystack, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpscx_ent_included;
 		global $wpsc_haystack;
@@ -589,9 +593,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$error_list = new SplFixedArray( 1 );
 
-				$end   = round( microtime( true ), 5 );
-				$start = round( microtime( true ), 5 );
-
 			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 			$words      = explode( ' ', $words_list );
 
@@ -625,7 +626,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( WPSCX_SITE, round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( WPSCX_SITE, round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_authors( $wpsc_haystack = null, $is_running = false ) {
@@ -670,7 +671,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 	}
 
 	function check_cf7( $wpsc_haystack = null, $is_running = false ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		global $wpdb;
 		global $wpscx_ent_included;
@@ -864,11 +866,16 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		++$sql_count;
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Contact Form 7', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Contact Form 7', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_author_seotitle_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 			global $wpdb;
 		global $wpsc_haystack;
@@ -930,7 +937,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 		++$sql_count;
 
-		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key='wpseo_title';" );
+		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key='wpseo_title';" );
 		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
@@ -952,8 +959,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 									$error_list,
 									array(
 										'word'      => $word,
-										'page_name' => $post->post_title,
-										'page_id'   => $post->ID,
+										'page_name' => $post->user_login,
+										'page_id'   => $post->user_id,
 										'page_type' => 'Author SEO Title',
 									)
 								);
@@ -962,13 +969,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Author SEO Title EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Author SEO Title EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_count;
 	}
 
 	function check_author_seodesc_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 			global $wpdb;
 		global $wpsc_haystack;
@@ -1032,7 +1044,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
 		++$sql_count;
 
-		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key = 'wpseo_metadesc';" );
+		$posts_list = $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE a.meta_key = 'wpseo_metadesc';" );
 		++$sql_count;
 
 		foreach ( $posts_list as $post ) {
@@ -1055,8 +1067,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							$error_list,
 							array(
 								'word'      => $word,
-								'page_name' => '',
-								'page_id'   => '',
+								'page_name' => $post->user_login,
+								'page_id'   => $post->user_id,
 								'page_type' => 'Author SEO Description',
 							)
 						);
@@ -1066,13 +1078,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Author SEO Desc EPS ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Author SEO Desc EPS ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_count;
 	}
 
 	function check_widgets_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start       = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$sql_count   = 0;
 		$total_words = 0;
 		$error_count = 0;
@@ -1127,13 +1140,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Widgets EPS ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Widgets EPS ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_list->getSize();
 	}
 
 	function check_menus_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -1193,7 +1207,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Menus EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Menus EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_list->getSize();
 	}
@@ -1202,7 +1216,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 	function check_page_title_free( $is_running = false, $haystack = null, $log_debug = true ) {
 		$end = round( microtime( true ), 5 );
 
-		$start       = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$start_debug = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 		$sql_count = 0;
@@ -1382,7 +1397,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Page Title/Slug EPS ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Page Title/Slug EPS ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 			return $error_list->getSize();
 	}
@@ -1472,7 +1487,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 	function check_post_title_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
 		$end = round( microtime( true ), 5 );
 
-		$start       = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$start_debug = round( microtime( true ), 5 );
 		global $wpscx_scan_delay;
 		$sql_count = 0;
@@ -1527,7 +1543,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpsc-product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 				$post_type_list .= "post_type='$type' OR ";
 			}
 		}
@@ -1645,14 +1661,15 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			}
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Post Title/Slug EPS ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Post Title/Slug EPS ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 			return $error_list->getSize();
 	}
 
 
 	function check_post_tags_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -1792,13 +1809,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Tag EPS ', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Tag EPS ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_list->getSize();
 	}
 
 	function check_post_categories_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -1937,13 +1955,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Category EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Category EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_list->getSize();
 	}
 
 	function check_yoast_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -1983,12 +2006,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						$post_status = false; }
 
 				$ain_active   = is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' );
-				$su_active    = is_plugin_active( 'seo-ultimate/seo-ultimate.php' );
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
-				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="_su_description" OR meta_key="rank_math_description" LIMIT ' . $max_pages ) );
+				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description" LIMIT ' . $max_pages ) );
 				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
@@ -2029,8 +2051,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$hold[3] = 'Yoast SEO Description';
 							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
 								$hold[3] = 'All in One SEO Description';
-							} elseif ( '_su_description' === $desc_type && $su_active ) {
-								$hold[3] = 'Ultimate SEO Description';
 							} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
 								$hold[3] = 'Rank Math SEO Description';
 							}
@@ -2041,14 +2061,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 
 				$end = round( microtime( true ), 5 );
-				wpscx_print_debug( 'Seo Desc EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'Seo Desc EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 				return $error_list->getSize();
 	}
 
 
 	function check_seo_titles_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'wordpress-seo/wp-seo.php' ) && ! is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) && ! is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -2105,12 +2130,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						$post_status = false; }
 
 				$ain_active   = is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' );
-				$su_active    = is_plugin_active( 'seo-ultimate/seo-ultimate.php' );
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
-				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="_su_title" OR meta_key="rank_math_title" LIMIT ' . $max_pages ) );
+				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title" LIMIT ' . $max_pages ) );
 				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
@@ -2151,8 +2175,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$hold[3] = 'Yoast SEO Title';
 							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
 								$hold[3] = 'All in One SEO Title';
-							} elseif ( '_su_title' === $desc_type && $su_active ) {
-								$hold[3] = 'Ultimate SEO Title';
 							} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
 								$hold[3] = 'Rank Math SEO Title';
 							} else {
@@ -2168,22 +2190,26 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 
 				$end = round( microtime( true ), 5 );
-				wpscx_print_debug( 'SEO Title EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+				wpscx_print_debug( 'SEO Title EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 				return $error_list->getSize();
 	}
 
 
-	function check_slider_titles_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
-		global $wpscx_scan_delay;
+	function check_smart_slider3_eps_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
+		if ( ! is_plugin_active( 'smart-slider-3/smart-slider-3.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$sql_count = 0;
 
 		global $wpdb;
-		global $wpsc_haystack;
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
 		global $wpsc_settings;
+
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_words';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
@@ -2193,306 +2219,255 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		set_time_limit( 6000 );
 		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
-		global $wpsc_settings;
 
-		$max_pages         = intval( $wpsc_settings[138]->option_value );
-		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
+		if ( null === $wpsc_haystack ) {
+			$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
+			$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+			$loc               = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+			$contents          = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+			$contents          = str_replace( "\r\n", "\n", $contents );
+			$dict_file         = explode( "\n", $contents );
+			$wpsc_haystack     = wpscx_dictionary_init( $dict_file );
+		}
 
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
-			$start_time = time();
 		}
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
+
 		$error_list = new SplFixedArray( 1 );
 
-		$posts_list = SplFixedArray::fromArray(
-			get_posts(
-				array(
-					'posts_per_page' => $max_pages,
-					'post_type'      => 'slider',
-					'post_status'    => array(
-						'publish',
-						'draft',
-					),
-				)
-			)
-		);
+		$sliders_table = $wpdb->prefix . 'nextend2_smartslider3_sliders';
+		$slides_table  = $wpdb->prefix . 'nextend2_smartslider3_slides';
+		$sql = "SELECT sl1.id AS slider_id, sl1.title AS slider_title, sl2.id AS slide_id, sl2.title AS slide_title, sl2.description AS slide_description, sl2.slide AS slide_json FROM " . $sliders_table . " sl1 LEFT JOIN " . $slides_table . " sl2 ON sl2.slider = sl1.id WHERE sl1.slider_status = 'published' AND (sl2.published = 1 OR sl2.id IS NULL)";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table names built from $wpdb->prefix + fixed suffixes; no user input.
+		$rows = $wpdb->get_results( $sql );
 		++$sql_count;
 
-		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->post_title ), ENT_QUOTES, 'utf-8' );
-			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
-			$words     = explode( ' ', $word_list );
+		$seen_slider_ids = array();
 
+		foreach ( $rows as $row ) {
+			$slider_id = (int) $row->slider_id;
+
+			if ( ! isset( $seen_slider_ids[ $slider_id ] ) ) {
+				$seen_slider_ids[ $slider_id ] = true;
+				$group_title                   = isset( $row->slider_title ) ? (string) $row->slider_title : '';
+				$word_list                     = wpscx_clean_all( $group_title, $wpsc_settings );
+				$words                         = explode( ' ', $word_list );
+				foreach ( $words as $word ) {
+					++$word_count;
+					++$total_words;
+					$word = trim( $word, "\"`\xEF\xBF\xBD\xEF\xBF\xBD" );
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						$hold    = new SplFixedArray( 3 );
+						$hold[0] = $word;
+						$hold[1] = $group_title;
+						$hold[2] = $slider_id;
+						$error_list->setSize( $error_list->getSize() + 1 );
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					}
+				}
+			}
+
+			if ( null === $row->slide_id || '' === $row->slide_id ) {
+				continue;
+			}
+
+			$slide_id    = (int) $row->slide_id;
+			$slide_label = isset( $row->slide_title ) ? (string) $row->slide_title : '';
+
+			$word_list = wpscx_clean_all( $slide_label, $wpsc_settings );
+			$words     = explode( ' ', $word_list );
 			foreach ( $words as $word ) {
 				++$word_count;
 				++$total_words;
-				$word = trim( $word, "'`”“" );
+				$word = trim( $word, "\"`\xEF\xBF\xBD\xEF\xBF\xBD" );
 				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					$hold    = new SplFixedArray( 3 );
+					$hold[0] = $word;
+					$hold[1] = $slide_label;
+					$hold[2] = $slide_id;
+					$error_list->setSize( $error_list->getSize() + 1 );
+					$error_list[ $error_count ] = $hold;
+					++$error_count;
+				}
+			}
 
-							// Add the error to a new fixed holding array
-							$hold    = new SplFixedArray( 3 );
-							$hold[0] = $word;
-							$hold[1] = $posts_list[ $x ]->post_title;
-							$hold[2] = $posts_list[ $x ]->ID;
+			$caption_raw = isset( $row->slide_description ) ? (string) $row->slide_description : '';
+			$word_list   = wpscx_clean_all( $caption_raw, $wpsc_settings );
+			$words       = explode( ' ', $word_list );
+			foreach ( $words as $word ) {
+				++$word_count;
+				++$total_words;
+				$word = trim( $word, "\"`\xEF\xBF\xBD\xEF\xBF\xBD" );
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					$hold    = new SplFixedArray( 3 );
+					$hold[0] = $word;
+					$hold[1] = $slide_label;
+					$hold[2] = $slide_id;
+					$error_list->setSize( $error_list->getSize() + 1 );
+					$error_list[ $error_count ] = $hold;
+					++$error_count;
+				}
+			}
 
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-							++$error_count;
+			$slide_json = isset( $row->slide_json ) ? (string) $row->slide_json : '';
+			$decoded    = json_decode( $slide_json, true );
+			$extracted  = '';
+			if ( null !== $decoded ) {
+				$extracted = wpscx_extract_smartslider3_slide_text( $decoded );
+			}
+			$word_list = wpscx_clean_all( $extracted, $wpsc_settings );
+			$words     = explode( ' ', $word_list );
+			foreach ( $words as $word ) {
+				++$word_count;
+				++$total_words;
+				$word = trim( $word, "\"`\xEF\xBF\xBD\xEF\xBF\xBD" );
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					$hold    = new SplFixedArray( 3 );
+					$hold[0] = $word;
+					$hold[1] = $slide_label;
+					$hold[2] = $slide_id;
+					$error_list->setSize( $error_list->getSize() + 1 );
+					$error_list[ $error_count ] = $hold;
+					++$error_count;
 				}
 			}
 		}
+
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Slider Title EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		if ( $log_debug ) {
+			wpscx_print_debug( 'Smart Slider 3 EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+		}
 
 		return $error_list->getSize();
 	}
 
-	function check_slider_captions_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
-		global $wpscx_scan_delay;
+	function check_metaslider_eps_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
+		if ( ! is_plugin_active( 'ml-slider/ml-slider.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		$sql_count = 0;
 
 		global $wpdb;
-		global $wpsc_haystack;
 		global $wpscx_ignore_list;
 		global $wpscx_dict_list;
 		global $wpsc_settings;
+
 		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
 		$table_name    = $wpdb->prefix . 'spellcheck_words';
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		$word_count    = 0;
 		$error_count   = 0;
 		$total_words   = 0;
-		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		set_time_limit( 6000 );
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
 		wpscx_set_global_vars();
-		global $wpsc_settings;
 
-		$max_pages         = intval( $wpsc_settings[138]->option_value );
-		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
+		if ( null === $wpsc_haystack ) {
+			$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
+			$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
+			$loc               = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+			$contents          = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+			$contents          = str_replace( "\r\n", "\n", $contents );
+			$dict_file         = explode( "\n", $contents );
+			$wpsc_haystack     = wpscx_dictionary_init( $dict_file );
+		}
 
 		if ( ! $is_running ) {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
 			++$sql_count;
-			$start_time = time();
 		}
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
+
 		$error_list = new SplFixedArray( 1 );
 
-		$posts_list = SplFixedArray::fromArray(
-			get_posts(
-				array(
-					'posts_per_page' => $max_pages,
-					'post_type'      => 'slider',
-					'post_status'    => array(
-						'publish',
-						'draft',
-					),
-				)
-			)
-		);
+		$posts_table    = $wpdb->posts;
+		$terms_table    = $wpdb->terms;
+		$tt_table       = $wpdb->term_taxonomy;
+		$tr_table       = $wpdb->term_relationships;
+		$postmeta_table = $wpdb->postmeta;
+
+		$sql = "SELECT p_slider.ID AS slider_id, p_slider.post_title AS slider_title, p_slide.ID AS slide_id, p_slide.post_title AS slide_title, p_slide.post_excerpt AS slide_excerpt, p_slide.post_content AS slide_content, pm_hidden.meta_value AS is_hidden FROM {$posts_table} p_slider INNER JOIN {$terms_table} t ON t.slug = CAST(p_slider.ID AS CHAR) INNER JOIN {$tt_table} tt ON tt.term_id = t.term_id AND tt.taxonomy = 'ml-slider' LEFT JOIN {$tr_table} tr ON tr.term_taxonomy_id = tt.term_taxonomy_id LEFT JOIN {$posts_table} p_slide ON p_slide.ID = tr.object_id AND p_slide.post_type IN ('ml-slide', 'attachment') AND p_slide.post_status IN ('publish', 'inherit') LEFT JOIN {$postmeta_table} pm_hidden ON pm_hidden.post_id = p_slide.ID AND pm_hidden.meta_key = '_meta_slider_slide_is_hidden' WHERE p_slider.post_type = 'ml-slider' AND p_slider.post_status = 'publish' ORDER BY p_slider.ID";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->* properties; no user input.
+		$rows = $wpdb->get_results( $sql );
 		++$sql_count;
 
-		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = get_post_meta( $posts_list[ $x ]->ID, 'my_slider_caption', true );
-			$word_list = html_entity_decode( wp_strip_all_tags( $word_list ), ENT_QUOTES, 'utf-8' );
-			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
-			$words     = explode( ' ', $word_list );
-
-			foreach ( $words as $word ) {
-				++$word_count;
-				++$total_words;
-				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-
-							// Add the error to a new fixed holding array
-							$hold    = new SplFixedArray( 3 );
-							$hold[0] = $word;
-							$hold[1] = $posts_list[ $x ]->post_title;
-							$hold[2] = $posts_list[ $x ]->ID;
-
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-							++$error_count;
-				}
+		$slide_ids = array();
+		foreach ( $rows as $row ) {
+			if ( null === $row->slide_id || '' === $row->slide_id ) {
+				continue;
 			}
+			$hidden_raw = isset( $row->is_hidden ) ? (string) $row->is_hidden : '';
+			if ( '1' === $hidden_raw || 'true' === $hidden_raw ) {
+				continue;
+			}
+			$slide_ids[ (int) $row->slide_id ] = true;
+		}
+		$slide_meta = wpscx_metaslider_load_slide_meta( array_keys( $slide_ids ) );
+		++$sql_count;
+
+		$seen_slider_ids = array();
+
+		foreach ( $rows as $row ) {
+			$slider_id = (int) $row->slider_id;
+
+			if ( ! isset( $seen_slider_ids[ $slider_id ] ) ) {
+				$seen_slider_ids[ $slider_id ] = true;
+				$group_title                   = isset( $row->slider_title ) ? (string) $row->slider_title : '';
+				wpscx_metaslider_add_errors_from_text( $group_title, $group_title, $slider_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+			}
+
+			if ( null === $row->slide_id || '' === $row->slide_id ) {
+				continue;
+			}
+
+			$hidden_raw = isset( $row->is_hidden ) ? (string) $row->is_hidden : '';
+			if ( '1' === $hidden_raw || 'true' === $hidden_raw ) {
+				continue;
+			}
+
+			$slide_id    = (int) $row->slide_id;
+			$slide_label = isset( $row->slide_title ) ? (string) $row->slide_title : '';
+
+			wpscx_metaslider_add_errors_from_text( $slide_label, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+
+			$caption_raw = isset( $row->slide_excerpt ) ? (string) $row->slide_excerpt : '';
+			wpscx_metaslider_add_errors_from_text( $caption_raw, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+
+			$content_raw = isset( $row->slide_content ) ? (string) $row->slide_content : '';
+			wpscx_metaslider_add_errors_from_text( $content_raw, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+
+			$slide_meta_row = isset( $slide_meta[ $slide_id ] ) ? $slide_meta[ $slide_id ] : array();
+
+			if ( ! wpscx_metaslider_inherit_enabled( $slide_meta, $slide_id, 'title' ) ) {
+				$image_title_raw = isset( $slide_meta_row['ml-slider_title'] ) ? (string) $slide_meta_row['ml-slider_title'] : '';
+				wpscx_metaslider_add_errors_from_text( $image_title_raw, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+			}
+
+			if ( ! wpscx_metaslider_inherit_enabled( $slide_meta, $slide_id, 'alt' ) ) {
+				$image_alt_raw = isset( $slide_meta_row['_wp_attachment_image_alt'] ) ? (string) $slide_meta_row['_wp_attachment_image_alt'] : '';
+				wpscx_metaslider_add_errors_from_text( $image_alt_raw, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
+			}
+
+			$link_alt_raw = isset( $slide_meta_row['ml-slider_link-alt'] ) ? (string) $slide_meta_row['ml-slider_link-alt'] : '';
+			wpscx_metaslider_add_errors_from_text( $link_alt_raw, $slide_label, $slide_id, $error_list, $error_count, $word_count, $total_words, $wpsc_haystack, $wpsc_settings );
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Slider Caption EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
-
-		return $error_list->getSize();
-	}
-
-	/* Slider Plugins */
-
-	/* Smart Slider 2 */
-
-	function check_smart_slider_titles_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		global $wpscx_scan_delay;
-		$sql_count = 0;
-
-		global $wpdb;
-		global $wpsc_haystack;
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
-		$table_name    = $wpdb->prefix . 'wp_nextend2_smartsliders_slides';
-		$options_table = $wpdb->prefix . 'spellcheck_options';
-		$words_table   = $wpdb->prefix . 'spellcheck_words';
-		$word_count    = 0;
-		$error_count   = 0;
-		$total_words   = 0;
-		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
-		wpscx_set_global_vars();
-		global $wpsc_settings;
-
-		$max_pages         = intval( $wpsc_settings[138]->option_value );
-		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
-
-		if ( ! $is_running ) {
-			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$start_time = time();
-		}
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$error_list = new SplFixedArray( 1 );
-
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT slider, title FROM ' . esc_sql( $table_name ) ) );
-
-		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->title ), ENT_QUOTES, 'utf-8' );
-			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
-			$words     = explode( ' ', $word_list );
-
-			foreach ( $words as $word ) {
-				++$word_count;
-				++$total_words;
-				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-
-							// Add the error to a new fixed holding array
-							$hold    = new SplFixedArray( 3 );
-							$hold[0] = $word;
-							$hold[1] = $posts_list[ $x ]->post_title;
-							$hold[2] = $posts_list[ $x ]->ID;
-
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-							++$error_count;
-				}
-			}
+		if ( $log_debug ) {
+			wpscx_print_debug( 'Meta Slider EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 		}
 
 		return $error_list->getSize();
 	}
-
-	function check_smart_slider_captions_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		global $wpscx_scan_delay;
-		$sql_count = 0;
-
-		global $wpdb;
-		global $wpsc_haystack;
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
-		$table_name    = $wpdb->prefix . 'wp_nextend2_smartsliders_slides';
-		$options_table = $wpdb->prefix . 'spellcheck_options';
-		$words_table   = $wpdb->prefix . 'spellcheck_words';
-		$word_count    = 0;
-		$error_count   = 0;
-		$total_words   = 0;
-		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
-		wpscx_set_global_vars();
-		global $wpsc_settings;
-
-		$max_pages         = intval( $wpsc_settings[138]->option_value );
-		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
-
-		if ( ! $is_running ) {
-			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$start_time = time();
-		}
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$error_list = new SplFixedArray( 1 );
-
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT slider, slide, title FROM ' . esc_sql( $table_name ) ) );
-
-		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
-			$word_list = html_entity_decode( wp_strip_all_tags( $posts_list[ $x ]->slide ), ENT_QUOTES, 'utf-8' );
-			$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
-			$words     = explode( ' ', $word_list );
-
-			foreach ( $words as $word ) {
-				++$word_count;
-				++$total_words;
-				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-
-							// Add the error to a new fixed holding array
-							$hold    = new SplFixedArray( 3 );
-							$hold[0] = $word;
-							$hold[1] = $posts_list[ $x ]->post_title;
-							$hold[2] = $posts_list[ $x ]->ID;
-
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-							++$error_count;
-				}
-			}
-		}
-
-		return $error_list->getSize();
-	}
-
 
 	function check_media_titles_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpdb;
 		global $wpsc_haystack;
 		global $wpscx_ignore_list;
@@ -2623,13 +2598,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Media EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'Media EPS', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
 		return $error_list->getSize();
 	}
 
 	function check_woocommerce_free( $is_running = false, $wpscx_haystack = null, $log_debug = true ) {
-		$start = round( microtime( true ), 5 );
+		if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			return 1;
+		}
+
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		global $wpscx_scan_delay;
 		$sql_count = 0;
 
@@ -2650,15 +2630,26 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$max_pages         = intval( $wpsc_settings[138]->option_value );
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
 
 		$total_posts = $max_pages;
+		if ( 0 === $total_posts ) {
+			$total_posts = PHP_INT_MAX;
+		}
+		if ( 0 === $max_pages ) {
+			$max_pages = PHP_INT_MAX;
+		}
+
+		if ( null === $wpscx_haystack ) {
+			$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+			$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+
+			$contents  = str_replace( "\r\n", "\n", $contents );
+			$dict_file = explode( "\n", $contents );
+
+			$wpsc_haystack = wpscx_dictionary_init( $dict_file );
+		} else {
+			$wpsc_haystack = $wpscx_haystack;
+		}
 
 		$word_count  = 0;
 		$error_count = 0;
@@ -2795,80 +2786,86 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		}
 
 				// Check Categories
-				$args      = array( 'taxonomy', 'product_cat' );
-				$cats_list = SplFixedArray::fromArray( get_categories() );
+				$title_table = $wpdb->prefix . 'terms';
+				$desc_table  = $wpdb->prefix . 'term_taxonomy';
+				$cats_list   = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_cat' AND a.term_id = b.term_id;" ) );
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 				$words = array();
+
+			if ( isset( $cats_list[ $x ]->name ) ) {
 				$words = $cats_list[ $x ]->name;
 
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 
 				$words = explode( ' ', $words );
 
-			foreach ( $words as $word ) {
+				foreach ( $words as $word ) {
 						++$word_count;
 						++$total_words;
 						$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 										// Add the error to a new fixed holding array
 										$hold    = new SplFixedArray( 4 );
 										$hold[0] = $word;
-										$hold[1] = $cats_list[ $x ]->post_title;
+										$hold[1] = $cats_list[ $x ]->name;
 										$hold[2] = $cats_list[ $x ]->term_id;
 										$hold[3] = 'WooCommerce Category Title';
 
 										$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 										$error_list[ $error_count ] = $hold;
 										++$error_count;
+					}
 				}
 			}
 
+			if ( isset( $cats_list[ $x ]->description ) ) {
 				$words = $cats_list[ $x ]->description;
 
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 
 				$words = explode( ' ', $words );
 
-			foreach ( $words as $word ) {
+				foreach ( $words as $word ) {
 							++$word_count;
 							++$total_words;
 							$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
 								$hold[0] = $word;
-								$hold[1] = $cats_list[ $x ]->post_title;
+								$hold[1] = $cats_list[ $x ]->name;
 								$hold[2] = $cats_list[ $x ]->term_id;
 								$hold[3] = 'WooCommerce Category Description';
 
 								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
 								++$error_count;
+					}
 				}
 			}
 		}
 
 				// Check Tags
-				$title_table = $wpdb->prefix . 'terms';
-				$desc_table  = $wpdb->prefix . 'taxonomy_terms';
-				$tags_list   = SplFixedArray::fromArray( $wpdb->get_result( 'SELECT a.term_id, a.description, b.name FROM ' . $desc_table . ' a, ' . $title_table . ' b WHERE a.taxonomy="product_tag" AND a.term_id = b.term_id;' ) );
+				$tags_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_tag' AND a.term_id = b.term_id;" ) );
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 				$words = array();
+
+			if ( isset( $tags_list[ $x ]->name ) ) {
 				$words = $tags_list[ $x ]->name;
 
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 
 				$words = explode( ' ', $words );
 
-			foreach ( $words as $word ) {
+				foreach ( $words as $word ) {
 						++$word_count;
 						++$total_words;
 						$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 										// Add the error to a new fixed holding array
 										$hold    = new SplFixedArray( 4 );
@@ -2880,20 +2877,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 										$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 										$error_list[ $error_count ] = $hold;
 										++$error_count;
+					}
 				}
 			}
 
+			if ( isset( $tags_list[ $x ]->description ) ) {
 				$words = $tags_list[ $x ]->description;
 
 				$words = wpscx_clean_all( $words, $wpsc_settings );
 
 				$words = explode( ' ', $words );
 
-			foreach ( $words as $word ) {
+				foreach ( $words as $word ) {
 							++$word_count;
 							++$total_words;
 							$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
 
 								// Add the error to a new fixed holding array
 								$hold    = new SplFixedArray( 4 );
@@ -2905,14 +2904,65 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
 								++$error_count;
+					}
+				}
+			}
+		}
+
+				// Check Coupons
+				$coupon_list = get_posts(
+					array(
+						'posts_per_page' => $max_pages,
+						'post_type'      => 'shop_coupon',
+						'post_status'    => array(
+							'publish',
+							'draft',
+						),
+					)
+				);
+				++$sql_count;
+
+				$coupon_count = 0;
+
+		foreach ( $coupon_list as $post ) {
+			$ignore_flag = 'false';
+			foreach ( $ignore_posts as $ignore_check ) {
+				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
+					$ignore_flag = 'true';
+				}
+			}
+			if ( 'true' === $ignore_flag ) {
+				continue;
+			}
+			++$coupon_count;
+			$words_list = $post->post_excerpt;
+			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
+			$words      = explode( ' ', $words_list );
+
+			foreach ( $words as $word ) {
+				++$word_count;
+				++$total_words;
+				$word = trim( $word, "'`”“" );
+				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+					if ( $coupon_count <= $total_posts ) {
+						$hold    = new SplFixedArray( 4 );
+						$hold[0] = $word;
+						$hold[1] = $post->post_title;
+						$hold[2] = $post->ID;
+						$hold[3] = 'WooCommerce Coupon';
+
+						$error_list->setSize( $error_list->getSize() + 1 );
+						$error_list[ $error_count ] = $hold;
+						++$error_count;
+					}
 				}
 			}
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'WooCommerce EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+		wpscx_print_debug( 'WooCommerce', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 
-		return $error_count;
+		return $error_list->getSize();
 	}
 
 	function check_woocommerce_coupon_free( $is_running = false, $wpscx_haystack = null ) {
@@ -3117,103 +3167,6 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 	}
 
 
-	function check_wpecommerce_free( $is_running = false, $wpscx_haystack = null ) {
-		global $wpscx_scan_delay;
-		$sql_count = 0;
-
-		global $wpdb;
-		global $wpsc_haystack;
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$table_name    = $wpdb->prefix . 'spellcheck_words';
-		$options_table = $wpdb->prefix . 'spellcheck_options';
-		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
-		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
-		set_time_limit( 6000 );
-		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
-
-		$max_pages         = intval( $wpsc_settings[138]->option_value );
-		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
-		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
-
-		wpscx_set_global_vars();
-		global $wpsc_settings;
-
-		$loc      = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
-		$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
-
-		$contents  = str_replace( "\r\n", "\n", $contents );
-		$dict_file = explode( "\n", $contents );
-
-		$wpsc_haystack = wpscx_dictionary_init( $dict_file );
-
-		$word_count  = 0;
-		$error_count = 0;
-		$total_words = 0;
-		$post_count  = 0;
-		$word_count  = 0;
-		if ( ! $is_running ) {
-			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
-			$start_time = time();
-		}
-		global $wpscx_ignore_list;
-		global $wpscx_dict_list;
-		global $wpsc_settings;
-		$error_list = new SplFixedArray( 1 );
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
-		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
-
-		$posts_list = get_posts(
-			array(
-				'posts_per_page' => $max_pages,
-				'post_type'      => 'wpsc-product',
-				'post_status'    => array(
-					'publish',
-					'draft',
-				),
-			)
-		);
-
-		foreach ( $posts_list as $post ) {
-			array_shift( $posts_list );
-			$ignore_flag = 'false';
-			foreach ( $ignore_posts as $ignore_check ) {
-				if ( strtoupper( trim( $post->post_title ) ) === strtoupper( trim( $ignore_check->keyword ) ) ) {
-					$ignore_flag = 'true';
-				}
-			}
-			if ( 'true' === $ignore_flag ) {
-				continue; }
-			++$post_count;
-			$words_list = $post->post_content;
-			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
-			$words      = explode( ' ', $words_list );
-
-			foreach ( $words as $word ) {
-				++$word_count;
-				++$total_words;
-				$word = trim( $word, "'`”“" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-								// $word = addslashes($word);
-
-								// Add the error to a new fixed holding array
-								$hold    = new SplFixedArray( 3 );
-								$hold[0] = $word;
-								$hold[1] = $post->post_title;
-								$hold[2] = $post->ID;
-
-								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-								$error_list[ $error_count ] = $hold;
-								++$error_count;
-				}
-			}
-		}
-
-		return $error_count;
-	}
-
 	function check_errors( $wpsc_haystack ) {
 		global $wpdb;
 		global $wpscx_ent_included;
@@ -3256,23 +3209,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$error_count += $this->check_post_categories_free( true, $wpsc_haystack ) - 1;
 		$last_count   = $error_count;
 
-		$error_count += $this->check_yoast_free( true, $wpsc_haystack ) - 1;
-		$last_count   = $error_count;
+		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' ) || is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			$error_count += $this->check_yoast_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
 
-		$error_count += $this->check_seo_titles_free( true, $wpsc_haystack ) - 1;
-		$last_count   = $error_count;
+			$error_count += $this->check_seo_titles_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+		}
 
-		$error_count += $this->check_slider_titles_free( true, $wpsc_haystack ) - 1;
-		$last_count   = $error_count;
-
-		$error_count += $this->check_slider_captions_free( true, $wpsc_haystack ) - 1;
-		$last_count   = $error_count;
+		if ( is_plugin_active( 'smart-slider-3/smart-slider-3.php' ) ) {
+			$error_count += $this->check_smart_slider3_eps_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+		}
+		if ( is_plugin_active( 'ml-slider/ml-slider.php' ) ) {
+			$error_count += $this->check_metaslider_eps_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+		}
+		if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+			$error_count += $this->check_woocommerce_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+		}
 
 		$error_count += $this->check_media_titles_free( true, $wpsc_haystack ) - 1;
 		$last_count   = $error_count;
 
-		$error_count += $this->check_author_seodesc_free( true, $wpsc_haystack ) - 1;
-		$last_count   = $error_count;
+		if ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) ) {
+			$error_count += $this->check_author_seotitle_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+
+			$error_count += $this->check_author_seodesc_free( true, $wpsc_haystack ) - 1;
+			$last_count   = $error_count;
+		}
 
 		$wpdb->update( $options_table, array( 'option_value' => $error_count ), array( 'option_name' => 'pro_word_count' ) );
 		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'free_sip' ) );

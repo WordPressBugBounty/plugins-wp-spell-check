@@ -33,8 +33,9 @@ class Wpscx_Grammar_Scanner extends wpscx_scanner {
 
 
 	function check_pages() {
-		$start     = round( microtime( true ), 5 );
-		$sql_count = 0;
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$sql_count     = 0;
 		wpscx_set_global_vars();
 		$page_list = null;
 		global $wpgc_scan_delay;
@@ -149,12 +150,13 @@ class Wpscx_Grammar_Scanner extends wpscx_scanner {
 			wpgcx_sql_insert( $error_hold );
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Grammar Page Content', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), $error_count );
+			wpscx_print_debug( 'Grammar Page Content', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_posts() {
-		$start     = round( microtime( true ), 5 );
-		$sql_count = 0;
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$sql_count     = 0;
 		wpscx_set_global_vars();
 		$post_list = null;
 		global $wpgc_scan_delay;
@@ -185,7 +187,7 @@ class Wpscx_Grammar_Scanner extends wpscx_scanner {
 		$post_types                     = get_post_types();
 						$post_type_list = 'AND (';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpsc-product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 							$post_type_list .= "post_type='$type' OR ";
 			}
 		}
@@ -285,7 +287,7 @@ class Wpscx_Grammar_Scanner extends wpscx_scanner {
 			wpgcx_sql_insert( $error_hold );
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Grammar Post Content', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), $error_count );
+			wpscx_print_debug( 'Grammar Post Content', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function scan_site() {

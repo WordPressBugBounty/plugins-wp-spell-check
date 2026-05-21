@@ -208,26 +208,12 @@ function wpscx_admin_empty_render() {
 			++$sql_count;
 			$total_cat_desc  = $total_cat;
 			$total_cat_slug  = $total_cat;
-			$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title' OR meta_key='_su_title'" ) );
+			$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title'" ) );
 			++$sql_count;
-			$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description' OR meta_key='_su_description'" ) );
+			$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description'" ) );
 			++$sql_count;
 
-			$total_generic_slider = sizeof(
-				(array) get_pages(
-					array(
-						'number'       => PHP_INT_MAX,
-						'hierarchical' => 0,
-						'post_type'    => 'slider',
-						'post_status'  => array(
-							'publish',
-							'draft',
-						),
-					)
-				)
-			);
-			++$sql_count;
-			$total_sliders = $total_huge_it + $total_smartslider + $total_generic_slider;
+			$total_sliders = $total_huge_it + $total_smartslider;
 
 			if ( ! $wpscx_ent_included ) {
 				if ( $total_pages > 1000 ) {
@@ -364,7 +350,6 @@ function wpscx_admin_empty_render() {
 	}
 
 	$end = time();
-	// echo "debug - Checking For Scan Buttons Pressed Finished: " . ($end - $start) . " Seconds<br />";
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string. Query contains no user input.
 	$word_count = $wpdb->get_var( 'SELECT COUNT(*) FROM ' . esc_sql( $table_name ) . " WHERE ignore_word='false'" );
@@ -377,7 +362,6 @@ function wpscx_admin_empty_render() {
 	$path = plugin_dir_path( __FILE__ ) . '../premium-functions.php';
 
 	$end = time();
-	// echo "debug - Results Tables Prepared: " . ($end - $start) . " Seconds<br />";
 
 	$pro_words   = 0;
 	$empty_words = 0;
@@ -506,7 +490,6 @@ function wpscx_admin_empty_render() {
 	// $empty_factor = ();
 
 	$end = time();
-	// echo "debug - Finalization Code Finished(about to render HTML): " . ($end - $start) . " Seconds<br />";
 
 	?>
 	<?php // wpscx_show_feature_window(); ?>
@@ -720,7 +703,7 @@ function wpscx_admin_empty_render() {
 									?>
 									></p>
 							<?php
-							if ( is_plugin_active( 'woocommerce/woocommerce.php' ) || is_plugin_active( 'wp-e-commerce/wp-shopping-cart.php' ) ) {
+							if ( is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 								?>
 								<p class="submit 
 									<?php
