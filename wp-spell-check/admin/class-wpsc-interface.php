@@ -73,6 +73,9 @@ class Wpscx_Wordpress_Interface {
 		if ( ! class_exists( 'Wpscx_Opendyslexic' ) ) {
 			require_once __DIR__ . '/class-wpsc-utils.php';
 		}
+		if ( ! class_exists( 'Wpscx_Opendyslexic' ) ) {
+			return;
+		}
 		$opendyslexic = new Wpscx_Opendyslexic();
 
 		add_action( 'profile_personal_options', array( $opendyslexic, 'profile_dyslexic' ) );

@@ -196,8 +196,9 @@ function wpscx_clear_events_empty() {
 
 
 function wpscx_scan_site_empty( $rng_seed = 0 ) {
-	$start     = round( microtime( true ), 5 );
-	$sql_count = 0;
+	$start         = round( microtime( true ), 5 );
+	$wpscx_debug_q = wpscx_debug_queries_at_start();
+	$sql_count     = 0;
 	global $wpdb;
 	global $wpscx_ent_included;
 
@@ -270,7 +271,7 @@ function wpscx_scan_site_empty( $rng_seed = 0 ) {
 	}
 
 			$end = round( microtime( true ), 5 );
-	wpscx_print_debug( 'Empty Entire Site', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), 0 );
+	wpscx_print_debug( 'Empty Entire Site', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 }
 	add_action( 'adminscansiteempty', 'wpscx_scan_site_empty' );
 

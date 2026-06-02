@@ -20,8 +20,9 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 
 	function wpscx_scan_all_eps() {
 		wpscx_set_global_vars();
-		$start     = round( microtime( true ), 5 );
-		$sql_count = 0;
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$sql_count     = 0;
 		$page_list = null;
 		global $wpscx_scan_delay;
 		global $wpscx_ent_included;
@@ -137,7 +138,7 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 			}
 
 			$end = round( microtime( true ), 5 );
-			wpscx_print_debug( 'Broken Code EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ) );
+			wpscx_print_debug( 'Broken Code EPS', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 
 				$errors_num = $error_list->getSize() - 1;
 			if ( $errors_num < 0 ) {

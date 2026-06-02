@@ -325,6 +325,13 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="/wp-admin/term.php?taxonomy=product_tag&tag_ID=' . $item['page_id'] . '&post_type=product" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'WooCommerce Category Description' === $item['page_type'] || 'WooCommerce Category Title' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=product_cat&tag_ID=' . $item['page_id'] . '&post_type=product" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( 'WooCommerce Brand Description' === $item['page_type'] || 'WooCommerce Brand Title' === $item['page_type'] ) {
+			$output = '<a href="/wp-admin/term.php?taxonomy=product_brand&tag_ID=' . $item['page_id'] . '&post_type=product" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
+		} elseif ( 'WooCommerce Attribute Description' === $item['page_type'] || 'WooCommerce Attribute Title' === $item['page_type'] ) {
+			// Use the taxonomy stored on the term itself so we don't hard-code any specific pa_* slug.
+			$attr_term = get_term( (int) $item['page_id'] );
+			$attr_tax  = ( $attr_term && ! is_wp_error( $attr_term ) ) ? $attr_term->taxonomy : 'pa_';
+			$output    = '<a href="/wp-admin/term.php?taxonomy=' . esc_attr( $attr_tax ) . '&tag_ID=' . $item['page_id'] . '&post_type=product" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Post Category' === $item['page_type'] || 'Category Description' === $item['page_type'] || WPSCX_CAT === $item['page_type'] || 'Category Title' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=category&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 'Author Nickname' === $item['page_type'] || 'Author First Name' === $item['page_type'] || 'Author Last Name' === $item['page_type'] || 'Author Biography' === $item['page_type'] || 'Author SEO Title' === $item['page_type'] || 'Author SEO Description' === $item['page_type'] || 'twitter' === $item['page_type'] || 'facebook' === $item['page_type'] || 'Author facebook' === $item['page_type'] || 'Author twitter' === $item['page_type'] || 'Author googleplus' === $item['page_type'] ) {

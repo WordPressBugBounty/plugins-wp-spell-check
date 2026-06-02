@@ -838,7 +838,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Author SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+			wpscx_print_debug( 'Empty Author SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
@@ -894,7 +894,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Author SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+			wpscx_print_debug( 'Empty Author SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
@@ -955,7 +955,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Page SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+				wpscx_print_debug( 'Empty Page SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
@@ -1016,7 +1016,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Page SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+				wpscx_print_debug( 'Empty Page SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
@@ -1077,7 +1077,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Post SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+				wpscx_print_debug( 'Empty Post SEO Desc ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
@@ -1138,7 +1138,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 			$end = round( microtime( true ), 5 );
 			if ( $log_debug ) {
-				wpscx_print_debug( 'Empty Post SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+				wpscx_print_debug( 'Empty Post SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 			}
 
 			return sizeof( (array) $error_list );
@@ -1195,7 +1195,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+			wpscx_print_debug( 'Empty Media SEO Desc', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );
@@ -1254,7 +1254,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		if ( $log_debug ) {
-			wpscx_print_debug( 'Empty Media SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+			wpscx_print_debug( 'Empty Media SEO Title', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), sizeof( (array) $error_list ), $wpscx_debug_q );
 		}
 
 		return sizeof( (array) $error_list );

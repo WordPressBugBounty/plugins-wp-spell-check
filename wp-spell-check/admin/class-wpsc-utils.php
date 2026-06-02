@@ -559,7 +559,7 @@ class Wpscx_Results_Utils {
 			$word_id         = $old_word_ids[ $x ];
 			$new_words[ $x ] = str_replace( '$', '\$', $new_words[ $x ] );
 
-			if ( 'Post Content' === $page_types[ $x ] || 'Page Content' === $page_types[ $x ] || 'Media Description' === $page_types[ $x ] || 'WooCommerce Product' === $page_types[ $x ] ) {
+			if ( 'Post Content' === $page_types[ $x ] || 'Page Content' === $page_types[ $x ] || 'Media Description' === $page_types[ $x ] || 'WooCommerce Product' === $page_types[ $x ] || 'WooCommerce Variation' === $page_types[ $x ] || 'WooCommerce Coupon Content' === $page_types[ $x ] ) {
 				$new_words[ $x ] = str_replace( '\$', '$', $new_words[ $x ] );
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
@@ -684,7 +684,7 @@ class Wpscx_Results_Utils {
 				}
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'WooCommerce Product Short Description' === $page_types[ $x ] ) {
+			} elseif ( 'WooCommerce Product Short Description' === $page_types[ $x ] || 'WooCommerce Variation Short Description' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT post_content, post_title, post_excerpt FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
@@ -695,7 +695,7 @@ class Wpscx_Results_Utils {
 				$wpdb->update( $table_name, array( 'post_excerpt' => $updated_content ), array( 'ID' => $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Menu Item' === $page_types[ $x ] || 'Post Title' === $page_types[ $x ] || 'Page Title' === $page_types[ $x ] || 'Media Title' === $page_types[ $x ] || 'WooCommerce Title' === $page_types[ $x ] ) {
+			} elseif ( 'Menu Item' === $page_types[ $x ] || 'Post Title' === $page_types[ $x ] || 'Page Title' === $page_types[ $x ] || 'Media Title' === $page_types[ $x ] || 'WooCommerce Title' === $page_types[ $x ] || 'WooCommerce Variation Title' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$menu_result     = $wpdb->get_results( $wpdb->prepare( 'SELECT post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
@@ -938,7 +938,7 @@ class Wpscx_Results_Utils {
 				$wpdb->update( $table_name, array( 'post_excerpt' => $updated_content ), array( 'ID' => $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Tag Title' === $page_types[ $x ] || 'Category Title' === $page_types[ $x ] || 'WooCommerce Category Title' === $page_types[ $x ] || 'WooCommerce Tag Title' === $page_types[ $x ] ) {
+			} elseif ( 'Tag Title' === $page_types[ $x ] || 'Category Title' === $page_types[ $x ] || 'WooCommerce Category Title' === $page_types[ $x ] || 'WooCommerce Tag Title' === $page_types[ $x ] || 'WooCommerce Attribute Title' === $page_types[ $x ] || 'WooCommerce Brand Title' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'terms'
 				$tag_result = $wpdb->get_results( $wpdb->prepare( 'SELECT name FROM ' . $terms_table . ' WHERE term_id=%d', $page_names[ $x ] ) );
@@ -948,27 +948,34 @@ class Wpscx_Results_Utils {
 				$wpdb->update( $terms_table, array( 'name' => $updated_content ), array( 'name' => $tag_result[0]->name ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Tag Description' === $page_types[ $x ] || 'WooCommerce Tag Description' === $page_types[ $x ] ) {
+		} elseif ( 'Tag Description' === $page_types[ $x ] || 'WooCommerce Tag Description' === $page_types[ $x ] ) {
 
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'term_taxonomy'
-				$tag_result = $wpdb->get_results( $wpdb->prepare( 'SELECT description FROM ' . $taxonomy_table . ' WHERE term_id=%d', $page_names[ $x ] ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'term_taxonomy'
+			$tag_result = $wpdb->get_results( $wpdb->prepare( 'SELECT description FROM ' . $taxonomy_table . ' WHERE term_id=%d', $page_names[ $x ] ) );
 
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $tag_result[0]->description ) );
+			$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $tag_result[0]->description ) );
 
-				$wpdb->update( $taxonomy_table, array( 'description' => $updated_content ), array( 'description' => $tag_result[0]->description ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
-				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Category Description' === $page_types[ $x ] || 'WooCommerce Category Description' === $page_types[ $x ] ) {
+			$wpdb->update( $taxonomy_table, array( 'description' => $updated_content ), array( 'description' => $tag_result[0]->description ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+			$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+		} elseif ( 'Category Description' === $page_types[ $x ] || 'WooCommerce Category Description' === $page_types[ $x ] || 'WooCommerce Attribute Description' === $page_types[ $x ] || 'WooCommerce Brand Description' === $page_types[ $x ] ) {
 
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'term_taxonomy'
-				$tag_result = $wpdb->get_results( $wpdb->prepare( 'SELECT description FROM ' . $taxonomy_table . ' WHERE term_id=%d', $page_names[ $x ] ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'term_taxonomy'
+			$tag_result = $wpdb->get_results( $wpdb->prepare( 'SELECT description FROM ' . $taxonomy_table . ' WHERE term_id=%d', $page_names[ $x ] ) );
 
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $tag_result[0]->description ) );
+			$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $tag_result[0]->description ) );
 
-				$wpdb->update( $taxonomy_table, array( 'description' => $updated_content ), array( 'description' => $tag_result[0]->description ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
-				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Post Custom Field' === $page_types[ $x ] ) {
+			$wpdb->update( $taxonomy_table, array( 'description' => $updated_content ), array( 'description' => $tag_result[0]->description ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+			$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+		} elseif ( 'WooCommerce Purchase Note' === $page_types[ $x ] ) {
+
+			$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( (string) get_post_meta( (int) $page_names[ $x ], '_purchase_note', true ) ) );
+			$updated_content = sanitize_text_field( $updated_content );
+			update_post_meta( (int) $page_names[ $x ], '_purchase_note', $updated_content );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+			$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+		} elseif ( 'Post Custom Field' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );

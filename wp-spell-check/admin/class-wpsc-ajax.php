@@ -171,7 +171,7 @@ class Wpscx_Ajax {
 		}
 	}
 
-	function wpscx_finish_empty_scan() {
+	function wpscx_finish_empty_scan( $write_footer = true ) {
 		// Only check nonce if this is a direct AJAX call (has finish_empty_scan action), not when called internally
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'finish_empty_scan' ) {
 			$this->check_permissions();
@@ -220,16 +220,6 @@ class Wpscx_Ajax {
 			++$sql_count;
 			$time = $time[0]->option_value;
 
-			if ( $wpscx_ent_included ) {
-				$end        = round( microtime( true ), 5 );
-				$total_time = round( $end - $start, 5 );
-				wpscx_print_debug_end( "$wpsc_version SEO Check Pro", $total_time );
-			} else {
-				$end        = round( microtime( true ), 5 );
-				$total_time = round( $end - $start, 5 );
-				wpscx_print_debug_end( "$wpsc_version SEO Check Base", $total_time );
-			}
-
 			$end_time   = time();
 			$total_time = wpscx_time_elapsed( $end_time - $time );
 			$wpdb->update( $options_table, array( 'option_value' => $total_time ), array( 'option_name' => 'empty_start_time' ) );
@@ -237,6 +227,14 @@ class Wpscx_Ajax {
 		}
 		$end = round( microtime( true ), 5 );
 		wpscx_print_debug( 'Empty Finalization', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
+
+		if ( $write_footer ) {
+			if ( $wpscx_ent_included ) {
+				wpscx_print_debug_end( "$wpsc_version SEO Check Pro" );
+			} else {
+				wpscx_print_debug_end( "$wpsc_version SEO Check Base" );
+			}
+		}
 	}
 
 	function wpscx_scan_function() {
@@ -589,15 +587,24 @@ class Wpscx_Ajax {
 			$_SERVER['REQUEST_URI'] = $p['path'] . ( isset( $p['query'] ) ? '?' . $p['query'] : '' );
 		}
 		require_once 'class-wpsc-results.php';
-		$this->wpscx_finish_empty_scan();
+		$this->wpscx_finish_empty_scan( false );
 
-		$start = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		$start         = round( microtime( true ), 5 );
 
 		$results_table = new Wpscx_Table();
 		$results_table->prepare_empty_items();
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Empty Get Table for Results ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Empty Get Table for Results ', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
+
+		global $wpscx_ent_included;
+		global $wpsc_version;
+		if ( $wpscx_ent_included ) {
+			wpscx_print_debug_end( "$wpsc_version SEO Check Pro" );
+		} else {
+			wpscx_print_debug_end( "$wpsc_version SEO Check Base" );
+		}
 
 		die( json_encode( $results_table->display() ) );
 	}
@@ -826,20 +833,23 @@ class Wpscx_Ajax {
 	function wpscx_start_scan_bc() {
 		$this->check_permissions();
 		check_ajax_referer( 'wpsc_start_scan_bc', 'nonce' );
-		$start = round( microtime( true ), 5 );
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
 		require_once WPSC_FRAMEWORK;
-		wpscx_print_debug( 'Broken Code Init - Start', 0, 0, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Broken Code AJAX - Start', 0, 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
 		global $wpdb;
+		global $wpsc_version;
 		$options_table = $wpdb->prefix . 'spellcheck_options';
 		global $wpscx_ent_included;
-		$sql_count = 0;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string 'spellcheck_options'. Query contains no user input.
 		$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table );
 
 		$type = sanitize_text_field( wp_unslash( $_POST['type'] ) );
 
-		$start_time = time();
+		$ajax_setup_queries   = 0;
+		$ajax_cleanup_queries = 0;
+		$start_time           = time();
 		$wpdb->update( $options_table, array( 'option_value' => $start_time ), array( 'option_name' => 'html_scan_start_time' ) );
 
 		if ( WPSCX_SITE_STRING === $type ) {
@@ -848,28 +858,41 @@ class Wpscx_Ajax {
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'html_scan_running' ) );
 			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Entire Site</span>. The page will automatically refresh when the scan has finished.';
 
+			$ajax_setup_queries = wpscx_debug_queries_since( $wpscx_debug_q );
 			wpscx_check_broken_code();
+			$ajax_cleanup_start = wpscx_debug_queries_at_start();
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'html_scan_running' ) );
+			$ajax_cleanup_queries = wpscx_debug_queries_since( $ajax_cleanup_start );
 		} elseif ( 'Broken HTML' === $type ) {
 			wphcx_clear_results(); // Clear out results table in preparation for a new scan
 
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'html_scan_running' ) );
 			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Broken HTML</span>. The page will automatically refresh when the scan has finished.';
 
+			$ajax_setup_queries = wpscx_debug_queries_since( $wpscx_debug_q );
 			wpscx_check_broken_html();
+			$ajax_cleanup_start = wpscx_debug_queries_at_start();
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'html_scan_running' ) );
+			$ajax_cleanup_queries = wpscx_debug_queries_since( $ajax_cleanup_start );
 		} elseif ( 'Broken Shortcodes' === $type ) {
 			wphcx_clear_results(); // Clear out results table in preparation for a new scan
 
 			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'html_scan_running' ) );
 			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Broken Shortcodes</span>. The page will automatically refresh when the scan has finished.';
 
+			$ajax_setup_queries = wpscx_debug_queries_since( $wpscx_debug_q );
 			wpscx_check_broken_shortcode();
+			$ajax_cleanup_start = wpscx_debug_queries_at_start();
 			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'html_scan_running' ) );
+			$ajax_cleanup_queries = wpscx_debug_queries_since( $ajax_cleanup_start );
 		}
 
 		$end = round( microtime( true ), 5 );
-		wpscx_print_debug( 'Broken Shortcodes(Init)', round( $end - $start, 5 ), $sql_count, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Broken Code AJAX - Calls', 0, $ajax_setup_queries + $ajax_cleanup_queries, round( memory_get_usage() / 1000, 5 ), 0 );
+		wpscx_print_debug( 'Total', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 0, $wpscx_debug_q );
+		if ( $wpscx_ent_included ) {
+			wpscx_print_debug_end( $wpsc_version . ' Spell Check Pro', 0 );
+		}
 		die();
 	}
 

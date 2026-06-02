@@ -92,12 +92,63 @@ function wpscx_get_debug_log_path() {
 }
 
 /**
+ * Whether WPSCX debug file logging is enabled.
+ *
+ * @since 11.2
+ * @return bool
+ */
+function wpscx_debug_logging_enabled() {
+	return defined( 'WPSCX_DEBUG_LOGGING_ENABLED' ) && WPSCX_DEBUG_LOGGING_ENABLED;
+}
+
+/**
+ * Reset SEO empty scan status-poll AJAX counter (debug only).
+ *
+ * @since 11.2
+ */
+function wpscx_empty_ajax_poll_reset() {
+	if ( ! wpscx_debug_logging_enabled() ) {
+		return;
+	}
+	update_option( 'wpscx_empty_ajax_poll_count', 0, false );
+}
+
+/**
+ * Increment SEO empty scan status-poll AJAX counter (debug only).
+ *
+ * @since 11.2
+ */
+function wpscx_empty_ajax_poll_increment() {
+	if ( ! wpscx_debug_logging_enabled() ) {
+		return;
+	}
+	$count = (int) get_option( 'wpscx_empty_ajax_poll_count', 0 );
+	update_option( 'wpscx_empty_ajax_poll_count', $count + 1, false );
+}
+
+/**
+ * SEO empty scan status-poll AJAX count since last reset (debug only).
+ *
+ * @since 11.2
+ * @return int
+ */
+function wpscx_empty_ajax_poll_count() {
+	if ( ! wpscx_debug_logging_enabled() ) {
+		return 0;
+	}
+	return (int) get_option( 'wpscx_empty_ajax_poll_count', 0 );
+}
+
+/**
  * Snapshot $wpdb->num_queries at the start of a timed scan step.
  *
  * @since 11.2
  * @return int Query counter value.
  */
 function wpscx_debug_queries_at_start() {
+	if ( ! wpscx_debug_logging_enabled() ) {
+		return 0;
+	}
 	global $wpdb;
 	return isset( $wpdb->num_queries ) ? (int) $wpdb->num_queries : 0;
 }
@@ -110,6 +161,9 @@ function wpscx_debug_queries_at_start() {
  * @return int
  */
 function wpscx_debug_queries_since( $query_start ) {
+	if ( ! wpscx_debug_logging_enabled() ) {
+		return 0;
+	}
 	global $wpdb;
 	return max( 0, (int) $wpdb->num_queries - (int) $query_start );
 }
@@ -862,7 +916,12 @@ function wpscx_check_broken_code() {
 	if ( ! $wpscx_ent_included ) {
 		return;
 	}
+	$clear_results_start = microtime( true );
+	$clear_results_q     = wpscx_debug_queries_at_start();
 	wphcx_clear_results();
+	if ( function_exists( 'wpscx_print_debug' ) ) {
+		wpscx_print_debug( 'Clear Results', round( microtime( true ) - $clear_results_start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 'N/A', $clear_results_q );
+	}
 	$scanner = new Wpscx_Broken_Code_Scanner_Pro();
 
 	$scanner->wpscx_scan_all();
@@ -1132,6 +1191,10 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 	$settings = $wpdb->get_results( 'SELECT option_value FROM ' . $options_table . ' ORDER BY id' );
 	++$sql_count;
 
+	if ( $log_debug ) {
+		wpscx_print_debug( 'Scan Setup', round( microtime( true ) - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), 'N/A', $wpscx_debug_q );
+	}
+
 	if ( ! $wpscx_ent_included ) {
 		$scanner = new Wpscx_Spellcheck_Scanner();
 		$scanner->check_errors( $wpsc_haystack );
@@ -1145,7 +1208,7 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 		if ( 'true' === $settings[4]->option_value || 'true' === $settings[12]->option_value || 'true' === $settings[18]->option_value ) {
 			wpscx_check_pages_ent( $wpsc_haystack, true );
 		}
-		if ( 'true' === $settings[36]->option_value && is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+		if ( 'true' === $settings[36]->option_value ) {
 			wpscx_check_ecommerce_ent( $wpsc_haystack, true );
 		}
 		if ( 'true' === $settings[7]->option_value ) {
@@ -1169,7 +1232,7 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 		if ( 'true' === $settings[31]->option_value ) {
 			wpscx_check_media_ent( $wpsc_haystack, true );
 		}
-		if ( 'true' === $settings[37]->option_value && ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) ) {
+		if ( 'true' === $settings[37]->option_value ) {
 			wpscx_check_cf7( $wpsc_haystack, true );
 		}
 		if ( 'true' === $settings[44]->option_value ) {
@@ -1188,7 +1251,7 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 		if ( 'true' === $settings[44]->option_value ) {
 			wpscx_check_authors( $wpsc_haystack, true );
 		}
-		if ( 'true' === $settings[37]->option_value && ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) ) {
+		if ( 'true' === $settings[37]->option_value ) {
 			wpscx_check_cf7( $wpsc_haystack, true );
 		}
 	}

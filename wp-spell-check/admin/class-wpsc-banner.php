@@ -146,7 +146,7 @@ class Wpscx_Banner {
 			esc_url( $remind_url ),
 			esc_html__( 'Remind me later', 'wp-spell-check' ),
 			esc_url( $hide_url ),
-			esc_html__( 'Don\'t show again', 'wp-spell-check' )
+			esc_html__( 'I\'ve already rated the plugin', 'wp-spell-check' )
 		);
 	}
 
