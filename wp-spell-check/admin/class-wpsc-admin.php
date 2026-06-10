@@ -181,9 +181,19 @@ class Wpscx_Admin {
 			$api_entered = true; }
 
 		if ( $pro_active && $api_entered && ! $wpscx_ent_included ) {
-			echo "<div class='notice notice-warning'>"
-			. "<p><span style='font-weight: bold; color: red;'>The WP Spell Check Pro API Key has NOT been entered.</span> Please go to the <a href='/wp-admin/admin.php?page=wp-spellcheck-options.php'>options page</a> to enter your API Key. <a href='https://www.wpspellcheck.com/account' target='_blank'>Click here</a> to get your API Key.</p>"
-					. '</div>';
+			$options_url = admin_url( 'admin.php?page=wp-spellcheck-options.php' );
+			$account_url = 'https://www.wpspellcheck.com/account';
+
+			printf(
+				'<div class="wpsc-promo-notice wpsc-promo-notice--warning" role="alert" aria-label="%1$s"><div class="wpsc-promo-notice__inner"><div class="wpsc-promo-notice__badge" aria-hidden="true"><span class="dashicons dashicons-lock"></span></div><div class="wpsc-promo-notice__body"><p class="wpsc-promo-notice__title">%2$s</p><p class="wpsc-promo-notice__text">%3$s</p></div><div class="wpsc-promo-notice__actions"><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--primary" href="%4$s">%5$s</a><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--ghost" href="%6$s" target="_blank" rel="noopener noreferrer">%7$s</a></div></div></div>',
+				esc_attr__( 'WP Spell Check Pro API key required', 'wp-spell-check' ),
+				esc_html__( 'WP Spell Check Pro API key not entered', 'wp-spell-check' ),
+				esc_html__( 'Go to the options page to enter your API key and unlock Pro scanning and all advanced features.', 'wp-spell-check' ),
+				esc_url( $options_url ),
+				esc_html__( 'Enter API Key', 'wp-spell-check' ),
+				esc_url( $account_url ),
+				esc_html__( 'Get your API Key', 'wp-spell-check' )
+			);
 		}
 	}
 }

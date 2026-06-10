@@ -228,6 +228,24 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice a.wpsc-promo-notice__btn
 	background: linear-gradient(180deg, #3858e9 0%, #2271b1 100%);
 }
 
+/* Required base plugin — attention / warning accent */
+.wpsc-promo-notice--warning {
+	--wpsc-promo-accent: #d63638;
+	--wpsc-promo-accent-2: #b32d2e;
+	--wpsc-promo-accent-soft: rgba(214, 54, 56, 0.18);
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #fce8e8 0%, #fdebd0 100%);
+	--wpsc-promo-icon-color: #d63638;
+}
+
+.wpsc-promo-notice--warning::before {
+	background: linear-gradient(180deg, #f0b849 0%, #d63638 100%);
+}
+
+.wpsc-promo-notice--warning .wpsc-promo-notice__btn--primary:hover,
+.wpsc-promo-notice--warning .wpsc-promo-notice__btn--primary:focus {
+	box-shadow: 0 2px 6px rgba(214, 54, 56, 0.35);
+}
+
 /* -------------------------------------------------------------------------
  * Plugin admin dark theme (matches admin-theme-dark.css palette)
  * ------------------------------------------------------------------------- */
@@ -257,6 +275,18 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--upgrade {
 
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--upgrade::before {
 	background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--warning {
+	--wpsc-promo-accent: #f87171;
+	--wpsc-promo-accent-2: #fca5a5;
+	--wpsc-promo-accent-soft: rgba(248, 113, 113, 0.35);
+	--wpsc-promo-icon-bg: linear-gradient(145deg, #3d2020 0%, #4a3020 100%);
+	--wpsc-promo-icon-color: #fca5a5;
+}
+
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice--warning::before {
+	background: linear-gradient(180deg, #fbbf24 0%, #f87171 100%);
 }
 
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost {
@@ -298,6 +328,18 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost:focus {
 
 	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice--upgrade::before {
 		background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice--warning {
+		--wpsc-promo-accent: #f87171;
+		--wpsc-promo-accent-2: #fca5a5;
+		--wpsc-promo-accent-soft: rgba(248, 113, 113, 0.35);
+		--wpsc-promo-icon-bg: linear-gradient(145deg, #3d2020 0%, #4a3020 100%);
+		--wpsc-promo-icon-color: #fca5a5;
+	}
+
+	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice--warning::before {
+		background: linear-gradient(180deg, #fbbf24 0%, #f87171 100%);
 	}
 
 	body.wpsc-admin-page.wpsc-theme-system .wpsc-promo-notice__btn--ghost {

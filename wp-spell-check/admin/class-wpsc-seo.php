@@ -229,6 +229,8 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 						$post_type = 'Last Name';
 					} elseif ( 'description' === $posts_list[ $x ]->meta_key ) {
 						$post_type = 'Biography';
+					} elseif ( 'twitter' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'X';
 					} else {
 						$post_type = $posts_list[ $x ]->meta_key; }
 

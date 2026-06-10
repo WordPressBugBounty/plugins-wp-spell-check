@@ -311,8 +311,18 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="/wp-admin/nav-menus.php?action=edit&menu=' . $item['page_id'] . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
 		} elseif ( 'Contact Form 7' === $item['page_type'] || 'Contact Form 7 Auto Response' === $item['page_type'] || 'Contact Form 7 Form' === $item['page_type'] || 'Contact Form 7 Email Notification' === $item['page_type'] ) {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
-		} elseif ( 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
+		} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $item['page_type'] ) || 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '"  target="_blank">View</a>';
+		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Tag ' ) ) {
+			$output = '<a href="/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Category ' ) ) {
+			$output = '<a href="/wp-admin/term.php?taxonomy=category&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Archive ' ) ) {
+			$archive_page = wpscx_yoast_archive_post_type_from_label( $item['page_name'] );
+			if ( null === $archive_page ) {
+				$archive_page = $item['page_id'];
+			}
+			$output = '<a href="/wp-admin/admin.php?page=wpseo_titles" id="wpsc-page-name" page="' . esc_attr( $archive_page ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Smart Slider Title' === $item['page_type'] || 'Smart Slider Caption' === $item['page_type'] || 'Smart Slider Group' === $item['page_type'] || 'Smart Slider Content' === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( wpscx_smartslider3_admin_url( (int) $item['page_id'], $item['page_type'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Meta Slider Group' === $item['page_type'] || 'Meta Slider Slide Title' === $item['page_type'] || 'Meta Slider Caption' === $item['page_type'] || 'Meta Slider Content' === $item['page_type'] || 'Meta Slider Image Title' === $item['page_type'] || 'Meta Slider Image Alt' === $item['page_type'] || 'Meta Slider Link Alt' === $item['page_type'] ) {
@@ -334,7 +344,7 @@ class Wpscx_Table extends WP_List_Table {
 			$output    = '<a href="/wp-admin/term.php?taxonomy=' . esc_attr( $attr_tax ) . '&tag_ID=' . $item['page_id'] . '&post_type=product" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Post Category' === $item['page_type'] || 'Category Description' === $item['page_type'] || WPSCX_CAT === $item['page_type'] || 'Category Title' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=category&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
-		} elseif ( 'Author Nickname' === $item['page_type'] || 'Author First Name' === $item['page_type'] || 'Author Last Name' === $item['page_type'] || 'Author Biography' === $item['page_type'] || 'Author SEO Title' === $item['page_type'] || 'Author SEO Description' === $item['page_type'] || 'twitter' === $item['page_type'] || 'facebook' === $item['page_type'] || 'Author facebook' === $item['page_type'] || 'Author twitter' === $item['page_type'] || 'Author googleplus' === $item['page_type'] ) {
+		} elseif ( 'Author Nickname' === $item['page_type'] || 'Author First Name' === $item['page_type'] || 'Author Last Name' === $item['page_type'] || 'Author Biography' === $item['page_type'] || 'Author SEO Title' === $item['page_type'] || 'Author SEO Description' === $item['page_type'] || 'Yoast Author Pronouns' === $item['page_type'] || 'X' === $item['page_type'] || 'facebook' === $item['page_type'] || 'Author facebook' === $item['page_type'] || 'Author X' === $item['page_type'] || 'Author googleplus' === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( get_edit_user_link( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 'Sitename' === $item['page_type'] || 'Site Tagline' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/options-general.php" title="' . $item['page_name'] . '" target="_blank">View</a>';
@@ -911,6 +921,11 @@ function wpscx_admin_render() {
 		$last_type_label = is_array( $last_type ) && isset( $last_type[0] ) && is_object( $last_type[0] ) && isset( $last_type[0]->option_value )
 			? $last_type[0]->option_value
 			: ( is_array( $last_type ) && isset( $last_type[0] ) ? (string) $last_type[0] : (string) $last_type );
+		if ( 'Tag Titles' === $last_type_label ) {
+			$last_type_label = 'Tags';
+		} elseif ( 'Category Titles' === $last_type_label ) {
+			$last_type_label = 'Categories';
+		}
 		$scan_message    = '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' . esc_html( $last_type_label ) . '</span>. Estimated time for completion is ' . $estimated_time . ' . <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 	} elseif ( '' === $scan_message ) {
 		$scan_message = 'No scan currently running';
@@ -928,6 +943,11 @@ function wpscx_admin_render() {
 	}
 
 	$scan_type = $settings[45]->option_value;
+	if ( 'Tag Titles' === $scan_type ) {
+		$scan_type = 'Tags';
+	} elseif ( 'Category Titles' === $scan_type ) {
+		$scan_type = 'Categories';
+	}
 
 	$post_status = array( 'publish', 'draft' );
 
@@ -1228,7 +1248,7 @@ function wpscx_admin_render() {
 						<input type="hidden" name="_wpnonce_stop_empty_scans"
 							value="<?php echo esc_attr( $nonce_stop_empty ); ?>">
 						<?php echo "<h3 class='sc-message sc-literacy'style='color: rgb(0, 150, 255); font-size: 1.4em;'>Website Literacy Factor: " . esc_html( $literacy_factor ) . '%'; ?>
-						<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $settings[45]->option_value ) . '</span>: ' . esc_html( $word_count ) . '</h3>'; ?>
+						<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $scan_type ) . '</span>: ' . esc_html( $word_count ) . '</h3>'; ?>
 						<?php
 						if ( $settings[29]->option_value >= $page_count ) {
 							echo "<h3 class='sc-message sc-post' style='color: rgb(0, 115, 0);'>Posts scanned: " . esc_html( $page_count ) . '/' . esc_html( $page_count );
@@ -1338,7 +1358,7 @@ function wpscx_admin_render() {
 
 			<div class="wpsc-stats-summary"
 				style="padding: 15px; clear: both; width: 72%; font-family: helvetica, sans-serif;">
-				<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $settings[45]->option_value ) . '</span>: ' . esc_html( $word_count ) . '</h3>'; ?>
+				<?php echo "<h3 class='sc-message sc-type' style='color: rgb(0, 115, 0);'>Errors found on <span style='color: rgb(0, 150, 255); font-weight: bold;'>" . esc_html( $scan_type ) . '</span>: ' . esc_html( $word_count ) . '</h3>'; ?>
 				<?php
 				if ( $settings[29]->option_value >= $page_count ) {
 					echo "<h3 class='sc-message sc-post' style='color: rgb(0, 115, 0);'>Posts scanned: " . esc_html( $page_count ) . '/' . esc_html( $page_count );

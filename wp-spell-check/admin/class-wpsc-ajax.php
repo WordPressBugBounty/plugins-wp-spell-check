@@ -427,6 +427,11 @@ class Wpscx_Ajax {
 		$eps_count       = $settings[21]->option_value;
 		$scan_time       = $settings[27]->option_value;
 		$scan_type       = $settings[45]->option_value;
+		if ( 'Tag Titles' === $scan_type ) {
+			$scan_type = 'Tags';
+		} elseif ( 'Category Titles' === $scan_type ) {
+			$scan_type = 'Categories';
+		}
 		$total_errors    = $wpdb->get_var( "SELECT COUNT(*) FROM $errors_table WHERE ignore_word='false'" );
 		$total_pages     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
 		$total_posts     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
@@ -988,7 +993,7 @@ class Wpscx_Ajax {
 			++$sql_count;
 			$wpdb->update( $options_table, array( 'option_value' => time() ), array( 'option_name' => 'last_scan_date' ) );
 			++$sql_count;
-			$wpdb->update( $options_table, array( 'option_value' => 'Tag Titles' ), array( 'option_name' => 'last_scan_type' ) );
+			$wpdb->update( $options_table, array( 'option_value' => 'Tags' ), array( 'option_name' => 'last_scan_type' ) );
 			++$sql_count;
 			if ( $wpscx_ent_included ) {
 				wpscx_check_post_tags_ent();
@@ -1004,7 +1009,7 @@ class Wpscx_Ajax {
 			++$sql_count;
 			$wpdb->update( $options_table, array( 'option_value' => time() ), array( 'option_name' => 'last_scan_date' ) );
 			++$sql_count;
-			$wpdb->update( $options_table, array( 'option_value' => 'Category Titles' ), array( 'option_name' => 'last_scan_type' ) );
+			$wpdb->update( $options_table, array( 'option_value' => 'Categories' ), array( 'option_name' => 'last_scan_type' ) );
 			++$sql_count;
 			if ( $wpscx_ent_included ) {
 				wpscx_check_post_categories_ent();

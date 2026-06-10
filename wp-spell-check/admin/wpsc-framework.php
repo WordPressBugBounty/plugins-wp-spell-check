@@ -597,6 +597,252 @@ function wpscx_get_post_edit_url( $post_id ) {
 	return admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' );
 }
 
+/**
+ * Check if Yoast SEO plugin is active.
+ *
+ * @return bool
+ * @since 1.0.0
+ */
+function wpscx_yoast_is_active() {
+	return is_plugin_active( 'wordpress-seo/wp-seo.php' );
+}
+
+/**
+ * Yoast postmeta keys for SEO Descriptions spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_yoast_postmeta_desc_keys() {
+	return array(
+		'_yoast_wpseo_metadesc'              => 'Yoast SEO Description',
+		'_yoast_wpseo_opengraph-description' => 'Yoast SEO Open Graph Description',
+		'_yoast_wpseo_twitter-description'   => 'Yoast SEO X Description',
+		'_yoast_wpseo_focuskw'               => 'Yoast SEO Focus Keyphrase',
+		'_yoast_wpseo_focuskeywords'         => 'Yoast SEO Focus Keyphrases',
+		'_yoast_wpseo_keywordsynonyms'       => 'Yoast SEO Keyword Synonyms',
+	);
+}
+
+/**
+ * Yoast postmeta keys for SEO Titles spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_yoast_postmeta_title_keys() {
+	return array(
+		'_yoast_wpseo_title'           => 'Yoast SEO Title',
+		'_yoast_wpseo_opengraph-title' => 'Yoast SEO Open Graph Title',
+		'_yoast_wpseo_twitter-title'   => 'Yoast SEO X Title',
+		'_yoast_wpseo_bctitle'         => 'Yoast SEO Breadcrumbs Title',
+	);
+}
+
+/**
+ * Yoast taxonomy meta field map for tag/category spellcheck scans.
+ *
+ * @param string $taxonomy Taxonomy slug (post_tag or category).
+ * @return array<string, string> wpseo field key => page_type
+ * @since 1.0.0
+ */
+function wpscx_yoast_taxonomy_field_map( $taxonomy ) {
+	$label = ( 'post_tag' === $taxonomy ) ? 'Tag' : 'Category';
+	return array(
+		'wpseo_title'                 => 'Yoast SEO ' . $label . ' Title',
+		'wpseo_desc'                  => 'Yoast SEO ' . $label . ' Description',
+		'wpseo_bctitle'               => 'Yoast SEO ' . $label . ' Breadcrumbs Title',
+		'wpseo_focuskw'               => 'Yoast SEO ' . $label . ' Focus Keyphrase',
+		'wpseo_focuskeywords'         => 'Yoast SEO ' . $label . ' Focus Keyphrases',
+		'wpseo_keywordsynonyms'       => 'Yoast SEO ' . $label . ' Keyword Synonyms',
+		'wpseo_opengraph-title'       => 'Yoast SEO ' . $label . ' Open Graph Title',
+		'wpseo_opengraph-description' => 'Yoast SEO ' . $label . ' Open Graph Description',
+		'wpseo_twitter-title'         => 'Yoast SEO ' . $label . ' X Title',
+		'wpseo_twitter-description'   => 'Yoast SEO ' . $label . ' X Description',
+	);
+}
+
+/**
+ * Yoast archive option key prefixes for SEO Titles spellcheck scan.
+ *
+ * @return array<string, string> option key prefix => page_type
+ * @since 1.0.0
+ */
+function wpscx_yoast_archive_field_map() {
+	return array(
+		'title-ptarchive-'    => 'Yoast SEO Archive Title',
+		'metadesc-ptarchive-' => 'Yoast SEO Archive Description',
+		'bctitle-ptarchive-'  => 'Yoast SEO Archive Breadcrumbs Title',
+	);
+}
+
+/**
+ * Build OR meta_key SQL fragments for Yoast postmeta queries.
+ *
+ * @param array<int, string> $keys Full meta_key values.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_yoast_postmeta_sql_or_clause( $keys ) {
+	$parts = array();
+	foreach ( $keys as $key ) {
+		$parts[] = 'meta_key="' . $key . '"';
+	}
+	return implode( ' OR ', $parts );
+}
+
+/**
+ * Extract spellcheckable text from Yoast JSON meta fields.
+ *
+ * @param string $meta_key   Meta or taxonomy field key.
+ * @param string $meta_value Raw stored value.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_yoast_flatten_json_text( $meta_key, $meta_value ) {
+	if ( false !== strpos( $meta_key, 'focuskeywords' ) ) {
+		$decoded = json_decode( $meta_value, true );
+		if ( ! is_array( $decoded ) ) {
+			return $meta_value;
+		}
+		$parts = array();
+		foreach ( $decoded as $entry ) {
+			if ( isset( $entry['keyword'] ) && '' !== $entry['keyword'] ) {
+				$parts[] = $entry['keyword'];
+			}
+		}
+		return implode( ' ', $parts );
+	}
+	if ( false !== strpos( $meta_key, 'keywordsynonyms' ) ) {
+		$decoded = json_decode( $meta_value, true );
+		if ( ! is_array( $decoded ) ) {
+			return $meta_value;
+		}
+		return implode( ' ', array_filter( $decoded, 'is_string' ) );
+	}
+	return $meta_value;
+}
+
+/**
+ * Remove Yoast SEO replacement variables (e.g. %%sitename%%, %%title%%).
+ *
+ * @param string $content Raw field text.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_yoast_strip_variables( $content ) {
+	return preg_replace( '/%%[a-z0-9_]+%%?/i', ' ', $content );
+}
+
+/**
+ * Resolve Yoast postmeta page_type to meta_key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_yoast_page_type_to_postmeta_key( $page_type ) {
+	$merged = array_merge( wpscx_yoast_postmeta_desc_keys(), wpscx_yoast_postmeta_title_keys() );
+	foreach ( $merged as $meta_key => $type ) {
+		if ( $type === $page_type ) {
+			return $meta_key;
+		}
+	}
+	return null;
+}
+
+/**
+ * Resolve Yoast taxonomy page_type to taxonomy and field key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return array{taxonomy: string, field_key: string}|null
+ * @since 1.0.0
+ */
+function wpscx_yoast_page_type_to_taxonomy_field( $page_type ) {
+	foreach ( array( 'post_tag', 'category' ) as $taxonomy ) {
+		$map = wpscx_yoast_taxonomy_field_map( $taxonomy );
+		foreach ( $map as $field_key => $type ) {
+			if ( $type === $page_type ) {
+				return array(
+					'taxonomy'  => $taxonomy,
+					'field_key' => $field_key,
+				);
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Resolve Yoast archive page_type to wpseo_titles option key prefix.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_yoast_page_type_to_archive_prefix( $page_type ) {
+	foreach ( wpscx_yoast_archive_field_map() as $prefix => $type ) {
+		if ( $type === $page_type ) {
+			return $prefix;
+		}
+	}
+	return null;
+}
+
+/**
+ * Apply a spellcheck fix inside Yoast JSON meta fields.
+ *
+ * @param string $field_key  Meta or taxonomy field key.
+ * @param string $meta_value Raw stored value.
+ * @param string $old_word   Misspelled word.
+ * @param string $new_word   Replacement word.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_yoast_apply_fix_to_json( $field_key, $meta_value, $old_word, $new_word ) {
+	if ( false !== strpos( $field_key, 'focuskeywords' ) ) {
+		$decoded = json_decode( $meta_value, true );
+		if ( ! is_array( $decoded ) ) {
+			return preg_replace( wpscx_regex_pattern( $old_word ), $new_word, html_entity_decode( $meta_value ) );
+		}
+		foreach ( $decoded as $i => $entry ) {
+			if ( isset( $entry['keyword'] ) ) {
+				$decoded[ $i ]['keyword'] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $entry['keyword'] );
+			}
+		}
+		return wp_json_encode( $decoded );
+	}
+	if ( false !== strpos( $field_key, 'keywordsynonyms' ) ) {
+		$decoded = json_decode( $meta_value, true );
+		if ( ! is_array( $decoded ) ) {
+			return preg_replace( wpscx_regex_pattern( $old_word ), $new_word, html_entity_decode( $meta_value ) );
+		}
+		foreach ( $decoded as $i => $val ) {
+			if ( is_string( $val ) ) {
+				$decoded[ $i ] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $val );
+			}
+		}
+		return wp_json_encode( $decoded );
+	}
+	return preg_replace( wpscx_regex_pattern( $old_word ), $new_word, html_entity_decode( $meta_value ) );
+}
+
+/**
+ * Resolve post type slug from archive page_name label.
+ *
+ * @param string $page_name Stored page_name (post type label).
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_yoast_archive_post_type_from_label( $page_name ) {
+	foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $post_type ) {
+		if ( $post_type->labels->name === $page_name ) {
+			return $post_type->name;
+		}
+	}
+	return null;
+}
+
 function wpscx_construct_url( $type, $id ) {
 	$blog = get_site_url();
 
@@ -606,8 +852,14 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/nav-menus.php?action=edit&menu=' . $id;
 	} elseif ( 'Contact Form 7' === $type ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
-	} elseif ( 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
+	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = wpscx_get_post_edit_url( $id );
+	} elseif ( 0 === strpos( $type, 'Yoast SEO Tag ' ) ) {
+		$url = $blog . '/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $id . '&post_type=post';
+	} elseif ( 0 === strpos( $type, 'Yoast SEO Category ' ) ) {
+		$url = $blog . '/wp-admin/term.php?taxonomy=category&tag_ID=' . $id . '&post_type=post';
+	} elseif ( 0 === strpos( $type, 'Yoast SEO Archive ' ) ) {
+		$url = $blog . '/wp-admin/admin.php?page=wpseo_titles';
 	} elseif ( 'Smart Slider Title' === $type || 'Smart Slider Caption' === $type || 'Smart Slider Group' === $type || 'Smart Slider Content' === $type ) {
 		$url = wpscx_smartslider3_admin_url( (int) $id, $type );
 	} elseif ( 'Meta Slider Group' === $type || 'Meta Slider Slide Title' === $type || 'Meta Slider Caption' === $type || 'Meta Slider Content' === $type || 'Meta Slider Image Title' === $type || 'Meta Slider Image Alt' === $type || 'Meta Slider Link Alt' === $type ) {
@@ -618,7 +870,7 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $id . '&post_type=post';
 	} elseif ( 'Post Category' === $type || 'Category Description' === $type || 'Category Slug' === $type ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=category&tag_ID=' . $id . '&post_type=post';
-	} elseif ( 'Author Nickname' === $type || 'Author First Name' === $type || 'Author Last Name' === $type || 'Author Biography' === $type || 'Author SEO Title' === $type || 'Author SEO Description' === $type || 'twitter' === $type || 'facebook' === $type ) {
+	} elseif ( 'Author Nickname' === $type || 'Author First Name' === $type || 'Author Last Name' === $type || 'Author Biography' === $type || 'Author SEO Title' === $type || 'Author SEO Description' === $type || 'Yoast Author Pronouns' === $type || 'X' === $type || 'facebook' === $type ) {
 		$url = $blog . '/wp-admin/user-edit.php?user_id=' . $id;
 	} elseif ( 'Site Name' === $type || 'Site Tagline' === $type ) {
 		$url = $blog . '/wp-admin/options-general.php';
@@ -864,6 +1116,9 @@ function wpscx_website_cleanup( $content ) {
 }
 
 function wpscx_clean_all( $content, $wpsc_settings, $debug = false ) {
+	if ( false !== strpos( $content, '%%' ) ) {
+		$content = wpscx_yoast_strip_variables( $content );
+	}
 	$content = wpscx_script_cleanup( $content );
 	$content = wpscx_clean_shortcode( $content );
 	$content = wpscx_html_cleanup( $content );

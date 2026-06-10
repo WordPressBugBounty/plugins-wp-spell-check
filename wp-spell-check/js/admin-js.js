@@ -1201,6 +1201,27 @@ function wpscx_connect_listeners() {
 }
 
 // Display the editor for a single word
+function wpscx_is_yoast_title_page_type(page_type) {
+  if (page_type && page_type.indexOf("Yoast SEO") === 0) {
+    return (
+      page_type.indexOf("Title") !== -1 &&
+      page_type.indexOf("Description") === -1
+    );
+  }
+  return false;
+}
+
+function wpscx_is_yoast_desc_page_type(page_type) {
+  if (page_type && page_type.indexOf("Yoast SEO") === 0) {
+    return (
+      page_type.indexOf("Description") !== -1 ||
+      page_type.indexOf("Keyphrase") !== -1 ||
+      page_type.indexOf("Synonyms") !== -1
+    );
+  }
+  return false;
+}
+
 function wpscx_show_editor(
   parent_id,
   old_word,
@@ -1223,6 +1244,7 @@ function wpscx_show_editor(
   // Add the word to the field
   edit_row.find("input[type=text]").attr("value", old_word.replace("\\", ""));
   if (
+    wpscx_is_yoast_title_page_type(page_type) ||
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
     page_type == "SEO Title" ||
@@ -1232,6 +1254,7 @@ function wpscx_show_editor(
   ) {
     edit_row.find("input[type=text]").addClass("edit-seo-title");
   } else if (
+    wpscx_is_yoast_desc_page_type(page_type) ||
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
     page_type == "SEO Description" ||
@@ -1279,6 +1302,7 @@ function wpscx_show_editor_seo(
   // Add the word to the field
   edit_row.find("input[type=text]").attr("value", old_word.replace("\\", ""));
   if (
+    wpscx_is_yoast_title_page_type(page_type) ||
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
     page_type == "SEO Title" ||
@@ -1288,6 +1312,7 @@ function wpscx_show_editor_seo(
   ) {
     edit_row.find("input[type=text]").addClass("edit-seo-title");
   } else if (
+    wpscx_is_yoast_desc_page_type(page_type) ||
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
     page_type == "SEO Description" ||
@@ -1348,7 +1373,7 @@ function wpscx_add_event_handlers() {
     if (jQuery(this).attr("value").length > 56) {
       jQuery(this).css("color", "red");
     } else {
-      jQuery(this).css("color", "#32373c");
+      jQuery(this).css("color", "");
     }
   });
 
@@ -1356,7 +1381,7 @@ function wpscx_add_event_handlers() {
     if (jQuery(this).attr("value").length > 156) {
       jQuery(this).css("color", "red");
     } else {
-      jQuery(this).css("color", "#32373c");
+      jQuery(this).css("color", "");
     }
   });
 }

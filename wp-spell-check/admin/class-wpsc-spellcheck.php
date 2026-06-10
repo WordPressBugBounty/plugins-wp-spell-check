@@ -396,7 +396,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
 
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE (a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'wpseo_metadesc' OR a.meta_key='wpseo_title');" ) );
+		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE (a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'wpseo_metadesc' OR a.meta_key='wpseo_title' OR a.meta_key='wpseo_pronouns');" ) );
 		++$sql_count;
 
 		for ( $x = 0; $x < $posts_list->getSize(); $x++ ) {
@@ -428,6 +428,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					} elseif ( 'wpseo_title' === $posts_list[ $x ]->meta_key ) {
 						$post_type = 'Author SEO Title';
 						if ( ! $wpscx_ent_included ) {
+							$to_add = false;
+						}
+					} elseif ( 'wpseo_pronouns' === $posts_list[ $x ]->meta_key ) {
+						$post_type = 'Yoast Author Pronouns';
+						if ( ! wpscx_yoast_is_active() || ! $wpscx_ent_included ) {
 							$to_add = false;
 						}
 					} else {
@@ -1723,6 +1728,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$tags_list = SplFixedArray::fromArray( get_tags() );
 		++$sql_count;
+		$tax_meta  = wpscx_yoast_is_active() ? get_option( 'wpseo_taxonomy_meta', array() ) : array();
+		$tax_map   = wpscx_yoast_is_active() ? wpscx_yoast_taxonomy_field_map( 'post_tag' ) : array();
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 			$words = array();
@@ -1816,6 +1823,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_yoast_is_active() && isset( $tags_list[ $x ]->term_id ) && ! empty( $tax_meta['post_tag'][ $tags_list[ $x ]->term_id ] ) ) {
+				$term_id   = $tags_list[ $x ]->term_id;
+				$term_name = isset( $tags_list[ $x ]->name ) ? $tags_list[ $x ]->name : '';
+				foreach ( $tax_map as $field_key => $page_type ) {
+					if ( empty( $tax_meta['post_tag'][ $term_id ][ $field_key ] ) ) {
+						continue;
+					}
+					$field_value = $tax_meta['post_tag'][ $term_id ][ $field_key ];
+					if ( false !== strpos( $field_key, 'focuskeywords' ) || false !== strpos( $field_key, 'keywordsynonyms' ) ) {
+						$field_value = wpscx_yoast_flatten_json_text( $field_key, $field_value );
+					}
+					$field_value = wpscx_clean_all( $field_value, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $tags_list[ $x ] );
 		}
 
@@ -1870,6 +1908,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$cats_list = SplFixedArray::fromArray( get_categories() );
 		++$sql_count;
+		$tax_meta  = wpscx_yoast_is_active() ? get_option( 'wpseo_taxonomy_meta', array() ) : array();
+		$tax_map   = wpscx_yoast_is_active() ? wpscx_yoast_taxonomy_field_map( 'category' ) : array();
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 			$words = array();
@@ -1962,6 +2002,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_yoast_is_active() && isset( $cats_list[ $x ]->term_id ) && ! empty( $tax_meta['category'][ $cats_list[ $x ]->term_id ] ) ) {
+				$term_id   = $cats_list[ $x ]->term_id;
+				$term_name = isset( $cats_list[ $x ]->name ) ? $cats_list[ $x ]->name : '';
+				foreach ( $tax_map as $field_key => $page_type ) {
+					if ( empty( $tax_meta['category'][ $term_id ][ $field_key ] ) ) {
+						continue;
+					}
+					$field_value = $tax_meta['category'][ $term_id ][ $field_key ];
+					if ( false !== strpos( $field_key, 'focuskeywords' ) || false !== strpos( $field_key, 'keywordsynonyms' ) ) {
+						$field_value = wpscx_yoast_flatten_json_text( $field_key, $field_value );
+					}
+					$field_value = wpscx_clean_all( $field_value, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $cats_list[ $x ] );
 		}
 
@@ -2019,9 +2090,20 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$ain_active   = is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' );
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
+				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_desc_keys() : array();
+				$where_parts  = array();
+				if ( $yoast_active ) {
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
+				}
+				if ( $ain_active ) {
+					$where_parts[] = 'meta_key="_aioseop_description"';
+				}
+				if ( $rm_active ) {
+					$where_parts[] = 'meta_key="rank_math_description"';
+				}
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
-				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description" LIMIT ' . $max_pages ) );
+				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE ' . implode( ' OR ', $where_parts ) . ' LIMIT ' . $max_pages ) );
 				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
@@ -2040,31 +2122,39 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						continue;
 					}
 
-					$desc_type = $desc->meta_key;
-					$desc      = html_entity_decode( wp_strip_all_tags( $desc->meta_value ), ENT_QUOTES, 'utf-8' );
-					$desc      = wpscx_clean_all( $desc, $wpsc_settings );
-					$words     = explode( ' ', $desc );
+					$desc_type  = $desc->meta_key;
+					$desc_value = $desc->meta_value;
+					if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) && ( '_yoast_wpseo_focuskeywords' === $desc_type || '_yoast_wpseo_keywordsynonyms' === $desc_type ) ) {
+						$desc_value = wpscx_yoast_flatten_json_text( $desc_type, $desc_value );
+					}
+					$desc  = html_entity_decode( wp_strip_all_tags( $desc_value ), ENT_QUOTES, 'utf-8' );
+					$desc  = wpscx_clean_all( $desc, $wpsc_settings );
+					$words = explode( ' ', $desc );
 
 					foreach ( $words as $word ) {
 						++$word_count;
 						++$total_words;
 						$word = trim( $word, "'`”“" );
 						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-									// Add the error to a new fixed holding array
+									$page_type = null;
+							if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) ) {
+								$page_type = $yoast_types[ $desc_type ];
+							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
+								$page_type = 'All in One SEO Description';
+							} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
+								$page_type = 'Rank Math SEO Description';
+							}
+							if ( null === $page_type ) {
+								break;
+							}
 									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $page_results[0]->post_title;
 									$hold[2] = $page_results[0]->ID;
+									$hold[3] = $page_type;
 
 									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
-							if ( '_yoast_wpseo_metadesc' === $desc_type && $yoast_active ) {
-								$hold[3] = 'Yoast SEO Description';
-							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
-								$hold[3] = 'All in One SEO Description';
-							} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
-								$hold[3] = 'Rank Math SEO Description';
-							}
 									++$error_count;
 						}
 					}
@@ -2143,9 +2233,20 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$ain_active   = is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' );
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
+				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_title_keys() : array();
+				$where_parts  = array();
+				if ( $yoast_active ) {
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
+				}
+				if ( $ain_active ) {
+					$where_parts[] = 'meta_key="_aioseop_title"';
+				}
+				if ( $rm_active ) {
+					$where_parts[] = 'meta_key="rank_math_title"';
+				}
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
-				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title" LIMIT ' . $max_pages ) );
+				$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE ' . implode( ' OR ', $where_parts ) . ' LIMIT ' . $max_pages ) );
 				++$sql_count;
 
 				for ( $x = 0;$x < $results->getSize();$x++ ) {
@@ -2164,11 +2265,12 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						continue;
 					}
 
-					$desc_type = $desc->meta_key;
-					$desc      = $desc->meta_value;
-
-					$desc = wpscx_clean_all( $desc, $wpsc_settings );
-
+					$desc_type  = $desc->meta_key;
+					$desc_value = $desc->meta_value;
+					if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) && ( '_yoast_wpseo_focuskeywords' === $desc_type || '_yoast_wpseo_keywordsynonyms' === $desc_type ) ) {
+						$desc_value = wpscx_yoast_flatten_json_text( $desc_type, $desc_value );
+					}
+					$desc  = wpscx_clean_all( $desc_value, $wpsc_settings );
 					$words = explode( ' ', $desc );
 
 					foreach ( $words as $word ) {
@@ -2176,21 +2278,22 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						++$total_words;
 						$word = trim( $word, "'`”“" );
 						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-									// Add the error to a new fixed holding array
+									$page_type = null;
+							if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) ) {
+								$page_type = $yoast_types[ $desc_type ];
+							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
+								$page_type = 'All in One SEO Title';
+							} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
+								$page_type = 'Rank Math SEO Title';
+							}
+							if ( null === $page_type ) {
+								break;
+							}
 									$hold    = new SplFixedArray( 4 );
 									$hold[0] = $word;
 									$hold[1] = $page_results[0]->post_title;
 									$hold[2] = $page_results[0]->ID;
-
-							if ( '_yoast_wpseo_title' === $desc_type && $yoast_active ) {
-								$hold[3] = 'Yoast SEO Title';
-							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
-								$hold[3] = 'All in One SEO Title';
-							} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
-								$hold[3] = 'Rank Math SEO Title';
-							} else {
-								break;
-							}
+									$hold[3] = $page_type;
 
 									$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 									$error_list[ $error_count ] = $hold;
@@ -2198,6 +2301,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						}
 					}
 					unset( $results[ $x ] );
+				}
+
+				if ( $yoast_active ) {
+					$titles        = get_option( 'wpseo_titles', array() );
+					$archive_map   = wpscx_yoast_archive_field_map();
+					$post_types    = get_post_types( array( 'public' => true ), 'objects' );
+					foreach ( $post_types as $post_type ) {
+						foreach ( $archive_map as $prefix => $page_type ) {
+							$option_key = $prefix . $post_type->name;
+							if ( empty( $titles[ $option_key ] ) ) {
+								continue;
+							}
+							$archive_value = wpscx_clean_all( $titles[ $option_key ], $wpsc_settings );
+							$words         = explode( ' ', $archive_value );
+							foreach ( $words as $word ) {
+								++$word_count;
+								++$total_words;
+								$word = trim( $word, "'`”“" );
+								if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+									$hold    = new SplFixedArray( 4 );
+									$hold[0] = $word;
+									$hold[1] = $post_type->labels->name;
+									$hold[2] = 0;
+									$hold[3] = $page_type;
+									$error_list->setSize( $error_list->getSize() + 1 );
+									$error_list[ $error_count ] = $hold;
+									++$error_count;
+								}
+							}
+						}
+					}
 				}
 
 				$end = round( microtime( true ), 5 );
