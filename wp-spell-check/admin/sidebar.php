@@ -6,7 +6,7 @@ global $wpsc_version;
 
 <div class="wpsc-sidebar-container">
 <div class="wpsc-sidebar-tutorial-box">
-			<a href="https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( isset( $wpsc_version ) ? $wpsc_version : '11.4' ); ?>" target="_blank"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/wpsc-sidebar.jpg'; ?>" alt="Watch WP Spell Check Tutorials" /></a>
+			<a href="https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check&utm_content=<?php echo esc_html( isset( $wpsc_version ) ? $wpsc_version : '11.5' ); ?>" target="_blank"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/wpsc-sidebar.jpg'; ?>" alt="Watch WP Spell Check Tutorials" /></a>
 </div>
 <hr>
 <div class="wpsc-sidebar-social-box">
