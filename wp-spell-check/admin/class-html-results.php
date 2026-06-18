@@ -439,7 +439,7 @@ function wphcx_admin_render() {
 								?>
 								<h3 class='sc-message error'>You have more than
 									<?php echo esc_attr( $max_pages ); ?> Pages/Posts. <a
-										href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=&utm_medium=bc_scan&utm_content=<?php echo esc_attr( isset( $wpsc_version ) ? $wpsc_version : '11.5' ); ?>'
+										href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=&utm_medium=bc_scan'
 										target='_blank'>Upgrade</a> to scan all of your website.
 								</h3>
 								<?php
@@ -447,7 +447,7 @@ function wphcx_admin_render() {
 							if ( ! $wpscx_ent_included ) {
 								?>
 								<h3 class='sc-message error'><a
-										href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan&utm_content=<?php echo esc_attr( $wpsc_version ); ?>'
+										href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan'
 										target='_blank'>Upgrade</a> to scan all parts of your website.</h3>
 							<?php } ?>
 						</div>
@@ -499,7 +499,7 @@ function wphcx_admin_render() {
 				echo htmlspecialchars_decode( esc_html( $pro_error_msg ) );
 			}
 			?>
-			<h3><a href="https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan&utm_content=<?php echo esc_attr( isset( $wpsc_version ) ? $wpsc_version : '11.5' ); ?>"
+			<h3><a href="https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan"
 					target="_blank">Upgrade to pro</a> to find broken HTML and broken Shortcodes on your website.</h3>
 			<h3 class="wpsc-examples-heading">Examples</h3>
 			<h4>Broken Shortcode</h4>
@@ -510,7 +510,7 @@ function wphcx_admin_render() {
 			<div>When HTML tags are not closed properly, HTML code could be displayed on the output of your pages. This will
 				also increase the bounce rate on your website and hurt your SEO.<br>Example:</div>
 			<div>&lt;h1&gt;Broken Header Title&lt;/h1&gt;
-				<h3><a href="https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan&utm_content=<?php echo esc_attr( isset( $wpsc_version ) ? $wpsc_version : '11.5' ); ?>"
+				<h3><a href="https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeBroken_code&utm_medium=bc_scan"
 						target="_blank">Upgrade to pro</a> to find and fix the errors. You will also get notified when errors
 					show up on your website.</h3>
 			<?php } ?>

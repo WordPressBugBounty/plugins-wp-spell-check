@@ -2931,6 +2931,47 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					}
 				}
 			}
+
+			if ( wpscx_yoast_is_active() ) {
+				$yoast_types = array_merge(
+					wpscx_yoast_postmeta_desc_keys(),
+					wpscx_yoast_postmeta_title_keys()
+				);
+				foreach ( $yoast_types as $meta_key => $page_type ) {
+					$meta_value = get_post_meta( $post->ID, $meta_key, true );
+					if ( '' === $meta_value ) {
+						continue;
+					}
+					if ( '_yoast_wpseo_focuskeywords' === $meta_key || '_yoast_wpseo_keywordsynonyms' === $meta_key ) {
+						$meta_value = wpscx_yoast_flatten_json_text( $meta_key, $meta_value );
+						if ( '' === $meta_value ) {
+							continue;
+						}
+					}
+					$words_list = wpscx_clean_all( $meta_value, $wpsc_settings );
+					$words      = explode( ' ', $words_list );
+
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							if ( $post_count <= $total_posts ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $post->post_title;
+								$hold[2] = $post->ID;
+								$hold[3] = $page_type;
+
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// Check Variations
