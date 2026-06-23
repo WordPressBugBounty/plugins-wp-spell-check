@@ -57,7 +57,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
 			$post_status = " AND post_status='publish'"; }
 
-			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $page_table WHERE post_type='page'$post_status" ) );
+			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, post_excerpt, ID FROM $page_table WHERE post_type='page'$post_status" ) );
 			++$sql_count;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
@@ -113,6 +113,32 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							}
 						}
 					}
+
+					$word_list = html_entity_decode( wp_strip_all_tags( $page_list[ $x ]->post_excerpt ), ENT_QUOTES, 'utf-8' );
+					$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
+					$words     = explode( ' ', $word_list );
+
+					foreach ( $words as $word ) {
+
+						++$total_words;
+						$word = trim( $word, "'`”“$" );
+
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							if ( $page_count <= $total_pages ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $page_list[ $x ]->post_title;
+								$hold[2] = $page_list[ $x ]->ID;
+								$hold[3] = 'Page Excerpt';
+
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							} else {
+								++$pro_error_count;
+							}
+						}
+					}
 					unset( $page_list[ $x ] );
 			}
 
@@ -136,7 +162,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						$wpdb->update( $options_table, array( 'option_value' => $page_count ), array( 'option_name' => 'page_count' ) );
 						$sql_count += 4;
 
-						wpscx_sql_insert( $error_list, 'Page Content' );
+						wpscx_sql_insert( $error_list, 'Multi' );
 
 			if ( ! $is_running ) {
 					wpscx_finalize( $start_time );
@@ -221,7 +247,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
 			$post_status = " AND post_status='publish'"; }
 
-			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $page_table WHERE $post_type_list$post_status" ) );
+			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, post_excerpt, ID FROM $page_table WHERE $post_type_list$post_status" ) );
 			++$sql_count;
 
 			if ( ! $is_running ) {
@@ -302,6 +328,34 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 							}
 						}
 					}
+
+					$word_list = html_entity_decode( wp_strip_all_tags( $page_list[ $x ]->post_excerpt ), ENT_QUOTES, 'utf-8' );
+					$word_list = wpscx_clean_all( $word_list, $wpsc_settings );
+					$words     = explode( ' ', $word_list );
+
+					foreach ( $words as $word ) {
+						$start_timer = round( microtime( true ), 5 );
+
+						++$total_words;
+						$word = trim( $word, "'`”“$" );
+
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+									$timer_upper += round( microtime( true ), 5 ) - $start_timer;
+							if ( $page_count <= $total_pages ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $page_list[ $x ]->post_title;
+								$hold[2] = $page_list[ $x ]->ID;
+								$hold[3] = 'Post Excerpt';
+
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							} else {
+								++$pro_error_count;
+							}
+						}
+					}
 					unset( $page_list[ $x ] );
 			}
 
@@ -329,7 +383,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 				$start_timer = round( microtime( true ), 5 );
 
-				wpscx_sql_insert( $error_list, WPSCX_POST );
+				wpscx_sql_insert( $error_list, 'Multi' );
 
 				$timer_errors += round( microtime( true ), 5 ) - $start_timer;
 				$start_timer   = round( microtime( true ), 5 );
@@ -396,7 +450,15 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$wpscx_dict_list   = $wpdb->get_results( "SELECT * FROM $dict_table;" );
 		$wpscx_ignore_list = $wpdb->get_results( 'SELECT * FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=true;' );
 
-		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE (a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'wpseo_metadesc' OR a.meta_key='wpseo_title' OR a.meta_key='wpseo_pronouns');" ) );
+		$author_meta_where = "(a.meta_key = 'first_name' OR a.meta_key = 'last_name' OR a.meta_key = 'description' OR a.meta_key = 'wpseo_metadesc' OR a.meta_key='wpseo_title' OR a.meta_key='wpseo_pronouns'";
+		if ( wpscx_rank_math_is_active() ) {
+			$author_meta_where .= " OR a.meta_key='rank_math_title' OR a.meta_key='rank_math_description'";
+		}
+		$author_meta_where .= ')';
+		$rm_author_types = wpscx_rank_math_is_active() ? wpscx_rank_math_usermeta_keys() : array();
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; meta_key OR list is hardcoded.
+		$posts_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.meta_key, a.user_id, a.meta_value, b.user_login, b.post_author FROM $user_table a LEFT JOIN (SELECT a.post_author, b.user_login FROM $post_table a, $username_table b WHERE a.post_author = b.ID GROUP BY post_author) AS b ON b.post_author = a.user_id WHERE $author_meta_where;" ) );
 		++$sql_count;
 
 		for ( $x = 0; $x < $posts_list->getSize(); $x++ ) {
@@ -433,6 +495,11 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					} elseif ( 'wpseo_pronouns' === $posts_list[ $x ]->meta_key ) {
 						$post_type = 'Yoast Author Pronouns';
 						if ( ! wpscx_yoast_is_active() || ! $wpscx_ent_included ) {
+							$to_add = false;
+						}
+					} elseif ( isset( $rm_author_types[ $posts_list[ $x ]->meta_key ] ) ) {
+						$post_type = $rm_author_types[ $posts_list[ $x ]->meta_key ];
+						if ( ! $wpscx_ent_included ) {
 							$to_add = false;
 						}
 					} else {
@@ -1730,6 +1797,19 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		++$sql_count;
 		$tax_meta  = wpscx_yoast_is_active() ? get_option( 'wpseo_taxonomy_meta', array() ) : array();
 		$tax_map   = wpscx_yoast_is_active() ? wpscx_yoast_taxonomy_field_map( 'post_tag' ) : array();
+		$rm_term_meta = array();
+		if ( wpscx_rank_math_is_active() ) {
+			$termmeta_table      = $wpdb->prefix . 'termmeta';
+			$term_taxonomy_table = $wpdb->prefix . 'term_taxonomy';
+			$terms_table         = $wpdb->prefix . 'terms';
+			$rm_keys             = array_keys( wpscx_rank_math_term_keys( 'post_tag' ) );
+			$key_placeholders    = implode( ', ', array_fill( 0, count( $rm_keys ), '%s' ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
+			$rm_rows = $wpdb->get_results( $wpdb->prepare( 'SELECT tm.term_id, tm.meta_key, tm.meta_value FROM ' . $termmeta_table . ' tm INNER JOIN ' . $term_taxonomy_table . ' tt ON tm.term_id = tt.term_id WHERE tt.taxonomy = %s AND tm.meta_key IN (' . $key_placeholders . ')', array_merge( array( 'post_tag' ), $rm_keys ) ) );
+			foreach ( $rm_rows as $rm_row ) {
+				$rm_term_meta[ $rm_row->term_id ][ $rm_row->meta_key ] = $rm_row->meta_value;
+			}
+		}
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 			$words = array();
@@ -1854,6 +1934,34 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_rank_math_is_active() && isset( $tags_list[ $x ]->term_id ) && ! empty( $rm_term_meta[ $tags_list[ $x ]->term_id ] ) ) {
+				$term_id   = $tags_list[ $x ]->term_id;
+				$term_name = isset( $tags_list[ $x ]->name ) ? $tags_list[ $x ]->name : '';
+				$rm_map    = wpscx_rank_math_term_keys( 'post_tag' );
+				foreach ( $rm_map as $meta_key => $page_type ) {
+					if ( empty( $rm_term_meta[ $term_id ][ $meta_key ] ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $rm_term_meta[ $term_id ][ $meta_key ], $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $tags_list[ $x ] );
 		}
 
@@ -1910,6 +2018,18 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		++$sql_count;
 		$tax_meta  = wpscx_yoast_is_active() ? get_option( 'wpseo_taxonomy_meta', array() ) : array();
 		$tax_map   = wpscx_yoast_is_active() ? wpscx_yoast_taxonomy_field_map( 'category' ) : array();
+		$rm_term_meta = array();
+		if ( wpscx_rank_math_is_active() ) {
+			$termmeta_table      = $wpdb->prefix . 'termmeta';
+			$term_taxonomy_table = $wpdb->prefix . 'term_taxonomy';
+			$rm_keys             = array_keys( wpscx_rank_math_term_keys( 'category' ) );
+			$key_placeholders    = implode( ', ', array_fill( 0, count( $rm_keys ), '%s' ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
+			$rm_rows = $wpdb->get_results( $wpdb->prepare( 'SELECT tm.term_id, tm.meta_key, tm.meta_value FROM ' . $termmeta_table . ' tm INNER JOIN ' . $term_taxonomy_table . ' tt ON tm.term_id = tt.term_id WHERE tt.taxonomy = %s AND tm.meta_key IN (' . $key_placeholders . ')', array_merge( array( 'category' ), $rm_keys ) ) );
+			foreach ( $rm_rows as $rm_row ) {
+				$rm_term_meta[ $rm_row->term_id ][ $rm_row->meta_key ] = $rm_row->meta_value;
+			}
+		}
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 			$words = array();
@@ -2033,6 +2153,34 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_rank_math_is_active() && isset( $cats_list[ $x ]->term_id ) && ! empty( $rm_term_meta[ $cats_list[ $x ]->term_id ] ) ) {
+				$term_id   = $cats_list[ $x ]->term_id;
+				$term_name = isset( $cats_list[ $x ]->name ) ? $cats_list[ $x ]->name : '';
+				$rm_map    = wpscx_rank_math_term_keys( 'category' );
+				foreach ( $rm_map as $meta_key => $page_type ) {
+					if ( empty( $rm_term_meta[ $term_id ][ $meta_key ] ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $rm_term_meta[ $term_id ][ $meta_key ], $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $cats_list[ $x ] );
 		}
 
@@ -2091,6 +2239,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_desc_keys() : array();
+				$rm_types     = $rm_active ? wpscx_rank_math_postmeta_desc_keys() : array();
 				$where_parts  = array();
 				if ( $yoast_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
@@ -2099,7 +2248,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$where_parts[] = 'meta_key="_aioseop_description"';
 				}
 				if ( $rm_active ) {
-					$where_parts[] = 'meta_key="rank_math_description"';
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
 				}
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
@@ -2141,8 +2290,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$page_type = $yoast_types[ $desc_type ];
 							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
 								$page_type = 'All in One SEO Description';
-							} elseif ( 'rank_math_description' === $desc_type && $rm_active ) {
-								$page_type = 'Rank Math SEO Description';
+							} elseif ( $rm_active && isset( $rm_types[ $desc_type ] ) ) {
+								$page_type = $rm_types[ $desc_type ];
 							}
 							if ( null === $page_type ) {
 								break;
@@ -2234,6 +2383,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_title_keys() : array();
+				$rm_types     = $rm_active ? wpscx_rank_math_postmeta_title_keys() : array();
 				$where_parts  = array();
 				if ( $yoast_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
@@ -2242,7 +2392,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$where_parts[] = 'meta_key="_aioseop_title"';
 				}
 				if ( $rm_active ) {
-					$where_parts[] = 'meta_key="rank_math_title"';
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
 				}
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
@@ -2283,8 +2433,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$page_type = $yoast_types[ $desc_type ];
 							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
 								$page_type = 'All in One SEO Title';
-							} elseif ( 'rank_math_title' === $desc_type && $rm_active ) {
-								$page_type = 'Rank Math SEO Title';
+							} elseif ( $rm_active && isset( $rm_types[ $desc_type ] ) ) {
+								$page_type = $rm_types[ $desc_type ];
 							}
 							if ( null === $page_type ) {
 								break;
@@ -2972,6 +3122,41 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					}
 				}
 			}
+
+			if ( wpscx_rank_math_is_active() ) {
+				$rm_types = array_merge(
+					wpscx_rank_math_postmeta_desc_keys(),
+					wpscx_rank_math_postmeta_title_keys()
+				);
+				foreach ( $rm_types as $meta_key => $page_type ) {
+					$meta_value = get_post_meta( $post->ID, $meta_key, true );
+					if ( '' === $meta_value ) {
+						continue;
+					}
+					$words_list = wpscx_clean_all( $meta_value, $wpsc_settings );
+					$words      = explode( ' ', $words_list );
+
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							if ( $post_count <= $total_posts ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $post->post_title;
+								$hold[2] = $post->ID;
+								$hold[3] = $page_type;
+
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// Check Variations
@@ -3078,6 +3263,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$title_table = $wpdb->prefix . 'terms';
 				$desc_table  = $wpdb->prefix . 'term_taxonomy';
 				$cats_list   = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_cat' AND a.term_id = b.term_id;" ) );
+				$rm_wc_cat_map = wpscx_rank_math_is_active() ? wpscx_rank_math_term_keys( 'product_cat' ) : array();
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 				$words = array();
@@ -3135,10 +3321,39 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					}
 				}
 			}
+
+			if ( wpscx_rank_math_is_active() && isset( $cats_list[ $x ]->term_id ) ) {
+				$term_id   = $cats_list[ $x ]->term_id;
+				$term_name = $cats_list[ $x ]->name;
+				foreach ( $rm_wc_cat_map as $meta_key => $page_type ) {
+					$field_value = get_term_meta( $term_id, $meta_key, true );
+					if ( '' === $field_value ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $field_value, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
 		}
 
 				// Check Tags
 				$tags_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_tag' AND a.term_id = b.term_id;" ) );
+				$rm_wc_tag_map = wpscx_rank_math_is_active() ? wpscx_rank_math_term_keys( 'product_tag' ) : array();
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 				$words = array();
@@ -3193,6 +3408,34 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 								$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
 								$error_list[ $error_count ] = $hold;
 								++$error_count;
+					}
+				}
+			}
+
+			if ( wpscx_rank_math_is_active() && isset( $tags_list[ $x ]->term_id ) ) {
+				$term_id   = $tags_list[ $x ]->term_id;
+				$term_name = $tags_list[ $x ]->name;
+				foreach ( $rm_wc_tag_map as $meta_key => $page_type ) {
+					$field_value = get_term_meta( $term_id, $meta_key, true );
+					if ( '' === $field_value ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $field_value, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
 					}
 				}
 			}

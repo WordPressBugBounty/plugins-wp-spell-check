@@ -927,7 +927,7 @@ class Wpscx_Results_Utils {
 				update_post_meta( $menu_result[0]->ID, '_wp_attachment_image_alt', $updated_content );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Media Caption' === $page_types[ $x ] ) {
+			} elseif ( 'Media Caption' === $page_types[ $x ] || 'Page Excerpt' === $page_types[ $x ] || 'Post Excerpt' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT post_excerpt, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
@@ -1011,6 +1011,25 @@ class Wpscx_Results_Utils {
 				);
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( null !== wpscx_rank_math_page_type_to_postmeta_key( $page_types[ $x ] ) ) {
+				$rm_meta_key = wpscx_rank_math_page_type_to_postmeta_key( $page_types[ $x ] );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
+				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
+				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key=%s', $page_result[0]->ID, $rm_meta_key ) );
+
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $desc_result[0]->meta_value ) );
+
+				$wpdb->update(
+					$meta_table,
+					array( 'meta_value' => $updated_content ),
+					array(
+						'post_id'  => $page_result[0]->ID,
+						'meta_key' => $rm_meta_key,
+					)
+				);
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( null !== wpscx_yoast_page_type_to_taxonomy_field( $page_types[ $x ] ) ) {
 				$tax_info  = wpscx_yoast_page_type_to_taxonomy_field( $page_types[ $x ] );
 				$tax_meta  = get_option( 'wpseo_taxonomy_meta', array() );
@@ -1025,6 +1044,13 @@ class Wpscx_Results_Utils {
 				}
 				$tax_meta[ $taxonomy ][ $term_id ][ $field_key ] = $updated_content;
 				update_option( 'wpseo_taxonomy_meta', $tax_meta );
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( null !== wpscx_rank_math_page_type_to_term_meta_key( $page_types[ $x ] ) ) {
+				$rm_meta_key = wpscx_rank_math_page_type_to_term_meta_key( $page_types[ $x ] );
+				$term_id     = (int) $page_names[ $x ];
+				$content     = get_term_meta( $term_id, $rm_meta_key, true );
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $content ) );
+				update_term_meta( $term_id, $rm_meta_key, $updated_content );
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( null !== wpscx_yoast_page_type_to_archive_prefix( $page_types[ $x ] ) ) {
 				$archive_prefix = wpscx_yoast_page_type_to_archive_prefix( $page_types[ $x ] );
@@ -1053,6 +1079,19 @@ class Wpscx_Results_Utils {
 					)
 				);
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( null !== wpscx_rank_math_page_type_to_usermeta_key( $page_types[ $x ] ) ) {
+				$rm_meta_key   = wpscx_rank_math_page_type_to_usermeta_key( $page_types[ $x ] );
+				$author_result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $user_table WHERE user_id=%d AND meta_key=%s", $page_names[ $x ], $rm_meta_key ) );
+				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $author_result[0]->meta_value ) );
+				$wpdb->update(
+					$user_table,
+					array( 'meta_value' => $updated_content ),
+					array(
+						'user_id'  => $page_names[ $x ],
+						'meta_key' => $rm_meta_key,
+					)
+				);
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'All in One SEO Description' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
@@ -1074,26 +1113,6 @@ class Wpscx_Results_Utils {
 				$wpdb->update( $wpdb->prefix . 'aioseo_posts', array( 'description' => $updated_content ), array( 'post_id' => $page_result[0]->ID ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Rank Math SEO Description' === $page_types[ $x ] ) {
-
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
-				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key="rank_math_description"', $page_result[0]->ID ) );
-
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $desc_result[0]->meta_value ) );
-
-				$old_name = $page_result[0]->post_title;
-				$wpdb->update(
-					$meta_table,
-					array( 'meta_value' => $updated_content ),
-					array(
-						'post_id'  => $page_result[0]->ID,
-						'meta_key' => 'rank_math_description',
-					)
-				);
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
-				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'All in One SEO Title' === $page_types[ $x ] ) {
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
@@ -1112,25 +1131,6 @@ class Wpscx_Results_Utils {
 					)
 				);
 				$wpdb->update( $wpdb->prefix . 'aioseo_posts', array( 'title' => $updated_content ), array( 'post_id' => $page_result[0]->ID ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
-				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Rank Math SEO Title' === $page_types[ $x ] ) {
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
-				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key="rank_math_title"', $page_result[0]->ID ) );
-
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $desc_result[0]->meta_value ) );
-
-				$old_name = $page_result[0]->post_title;
-				$wpdb->update(
-					$meta_table,
-					array( 'meta_value' => $updated_content ),
-					array(
-						'post_id'  => $page_result[0]->ID,
-						'meta_key' => 'rank_math_title',
-					)
-				);
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'Widget Content' === $page_types[ $x ] ) {
@@ -1381,7 +1381,7 @@ class Wpscx_Results_Utils {
 				$updated_content = sanitize_text_field( $updated_content );
 				update_post_meta( $menu_result[0]->ID, '_wp_attachment_image_alt', $updated_content );
 				$wpdb->delete( $words_table, array( 'id' => $old_word_ids[ $x ] ) );
-			} elseif ( 'Media Caption' === $page_types[ $x ] ) {
+			} elseif ( 'Media Caption' === $page_types[ $x ] || 'Page Excerpt' === $page_types[ $x ] || 'Post Excerpt' === $page_types[ $x ] ) {
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT post_excerpt, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );

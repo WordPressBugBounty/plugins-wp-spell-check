@@ -843,6 +843,146 @@ function wpscx_yoast_archive_post_type_from_label( $page_name ) {
 	return null;
 }
 
+/**
+ * Check if Rank Math SEO plugin is active.
+ *
+ * @return bool
+ * @since 1.0.0
+ */
+function wpscx_rank_math_is_active() {
+	return is_plugin_active( 'seo-by-rank-math/rank-math.php' );
+}
+
+/**
+ * Rank Math postmeta keys for SEO Descriptions spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_rank_math_postmeta_desc_keys() {
+	return array(
+		'rank_math_description'          => 'Rank Math SEO Description',
+		'rank_math_focus_keyword'        => 'Rank Math SEO Focus Keyword',
+		'rank_math_facebook_description' => 'Rank Math SEO Facebook Description',
+		'rank_math_twitter_description'  => 'Rank Math SEO X Description',
+	);
+}
+
+/**
+ * Rank Math postmeta keys for SEO Titles spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_rank_math_postmeta_title_keys() {
+	return array(
+		'rank_math_title'              => 'Rank Math SEO Title',
+		'rank_math_facebook_title'     => 'Rank Math SEO Facebook Title',
+		'rank_math_twitter_title'      => 'Rank Math SEO X Title',
+		'rank_math_breadcrumb_title'   => 'Rank Math SEO Breadcrumb Title',
+	);
+}
+
+/**
+ * Rank Math termmeta keys for tag/category spellcheck scans.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_rank_math_term_keys( $taxonomy ) {
+	$label = in_array( $taxonomy, array( 'post_tag', 'product_tag' ), true ) ? 'Tag' : 'Category';
+	return array(
+		'rank_math_title'                  => 'Rank Math SEO ' . $label . ' Title',
+		'rank_math_description'            => 'Rank Math SEO ' . $label . ' Description',
+		'rank_math_focus_keyword'          => 'Rank Math SEO ' . $label . ' Focus Keyword',
+		'rank_math_facebook_title'         => 'Rank Math SEO ' . $label . ' Facebook Title',
+		'rank_math_facebook_description'   => 'Rank Math SEO ' . $label . ' Facebook Description',
+		'rank_math_twitter_title'          => 'Rank Math SEO ' . $label . ' X Title',
+		'rank_math_twitter_description'    => 'Rank Math SEO ' . $label . ' X Description',
+		'rank_math_breadcrumb_title'       => 'Rank Math SEO ' . $label . ' Breadcrumb Title',
+	);
+}
+
+/**
+ * Rank Math usermeta keys for author spellcheck scans.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_rank_math_usermeta_keys() {
+	return array(
+		'rank_math_title'       => 'Rank Math SEO Author Title',
+		'rank_math_description' => 'Rank Math SEO Author Description',
+	);
+}
+
+/**
+ * Resolve Rank Math postmeta page_type to meta_key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_rank_math_page_type_to_postmeta_key( $page_type ) {
+	$merged = array_merge( wpscx_rank_math_postmeta_desc_keys(), wpscx_rank_math_postmeta_title_keys() );
+	foreach ( $merged as $meta_key => $type ) {
+		if ( $type === $page_type ) {
+			return $meta_key;
+		}
+	}
+	return null;
+}
+
+/**
+ * Resolve Rank Math term page_type to termmeta meta_key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_rank_math_page_type_to_term_meta_key( $page_type ) {
+	foreach ( array( 'post_tag', 'category', 'product_tag', 'product_cat' ) as $taxonomy ) {
+		foreach ( wpscx_rank_math_term_keys( $taxonomy ) as $meta_key => $type ) {
+			if ( $type === $page_type ) {
+				return $meta_key;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Resolve Rank Math author page_type to usermeta meta_key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_rank_math_page_type_to_usermeta_key( $page_type ) {
+	foreach ( wpscx_rank_math_usermeta_keys() as $meta_key => $type ) {
+		if ( $type === $page_type ) {
+			return $meta_key;
+		}
+	}
+	return null;
+}
+
+/**
+ * Build admin term edit URL for a Rank Math term page_type.
+ *
+ * @param int $term_id Term ID.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_rank_math_term_edit_url( $term_id ) {
+	$blog     = get_site_url();
+	$term     = get_term( (int) $term_id );
+	$taxonomy = ( $term && ! is_wp_error( $term ) ) ? $term->taxonomy : 'category';
+	$post_type = ( in_array( $taxonomy, array( 'product_cat', 'product_tag' ), true ) ) ? 'product' : 'post';
+	return $blog . '/wp-admin/term.php?taxonomy=' . rawurlencode( $taxonomy ) . '&tag_ID=' . (int) $term_id . '&post_type=' . rawurlencode( $post_type );
+}
+
 function wpscx_construct_url( $type, $id ) {
 	$blog = get_site_url();
 
@@ -852,12 +992,14 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/nav-menus.php?action=edit&menu=' . $id;
 	} elseif ( 'Contact Form 7' === $type ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
-	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
+	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Rank Math SEO Description' === $type || 'Rank Math SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = wpscx_get_post_edit_url( $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Tag ' ) ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $id . '&post_type=post';
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Category ' ) ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=category&tag_ID=' . $id . '&post_type=post';
+	} elseif ( 0 === strpos( $type, 'Rank Math SEO Tag ' ) || 0 === strpos( $type, 'Rank Math SEO Category ' ) ) {
+		$url = wpscx_rank_math_term_edit_url( (int) $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Archive ' ) ) {
 		$url = $blog . '/wp-admin/admin.php?page=wpseo_titles';
 	} elseif ( 'Smart Slider Title' === $type || 'Smart Slider Caption' === $type || 'Smart Slider Group' === $type || 'Smart Slider Content' === $type ) {
@@ -870,7 +1012,7 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $id . '&post_type=post';
 	} elseif ( 'Post Category' === $type || 'Category Description' === $type || 'Category Slug' === $type ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=category&tag_ID=' . $id . '&post_type=post';
-	} elseif ( 'Author Nickname' === $type || 'Author First Name' === $type || 'Author Last Name' === $type || 'Author Biography' === $type || 'Author SEO Title' === $type || 'Author SEO Description' === $type || 'Yoast Author Pronouns' === $type || 'X' === $type || 'facebook' === $type ) {
+	} elseif ( 'Author Nickname' === $type || 'Author First Name' === $type || 'Author Last Name' === $type || 'Author Biography' === $type || 'Author SEO Title' === $type || 'Author SEO Description' === $type || 'Rank Math SEO Author Title' === $type || 'Rank Math SEO Author Description' === $type || 'Yoast Author Pronouns' === $type || 'X' === $type || 'facebook' === $type ) {
 		$url = $blog . '/wp-admin/user-edit.php?user_id=' . $id;
 	} elseif ( 'Site Name' === $type || 'Site Tagline' === $type ) {
 		$url = $blog . '/wp-admin/options-general.php';

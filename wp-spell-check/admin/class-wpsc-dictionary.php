@@ -28,27 +28,6 @@ Admin Classes */
 	Pro Add-on / Home Page: https://www.wpspellcheck.com/
 	Pro Add-on / Prices: https://www.wpspellcheck.com/pricing/
 */
-function wpscx_display_dictionary_quickedit( $column_name ) {
-	static $print_nonce = true;
-	if ( $print_nonce ) {
-		$print_nonce = false;
-		wp_nonce_field( plugin_basename( __FILE__ ), 'book_edit_nonce' );
-	}
-
-	?>
-
-	<fieldset class="inline-edit-col-right inline-edit-book">
-		<legend>Edit to Dictionary Word</legend>
-		<div class="inline-edit-col column-<?php echo esc_html( $column_name ); ?>">
-			<label class="inline-edit-group">
-				<span class="title">Word</span><input name="dictionary_word" />
-			</label>
-		</div>
-	</fieldset>
-	<?php
-}
-add_action( 'quick_edit_custom_box', 'wpscx_display_dictionary_quickedit', 10, 2 );
-
 class Wpscx_Dictionary_Table extends WP_List_Table {
 
 
@@ -211,20 +190,6 @@ class Wpscx_Dictionary {
 
 		$wpdb->update( $table_name, array( 'word' => $new_word ), array( 'word' => $old_word ) );
 		return 'Word has been updated';
-	}
-
-	function save_dictionary_edit( $word_id, $word ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'spellcheck_dictionary';
-
-		$wpdb->update(
-			$table_name,
-			array(
-				'word' => $word,
-				'id'   => $word_id,
-			)
-		);
-		return 'Word Updated';
 	}
 }
 

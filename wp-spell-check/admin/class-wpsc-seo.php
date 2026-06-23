@@ -928,7 +928,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_desc_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -989,7 +989,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_title_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1050,7 +1050,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_dscription") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_desc_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1111,7 +1111,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_title_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1172,7 +1172,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string, query contains only hardcoded meta_key values
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR meta_key="rank_math_description") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_metadesc" OR meta_key="_aioseop_description" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_desc_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {
@@ -1229,7 +1229,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		$posts_table = $wpdb->prefix . 'posts';
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', no user input
-		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR meta_key="rank_math_title") GROUP BY post_id' );
+		$seo_check = $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE (meta_key="_yoast_wpseo_title" OR meta_key="_aioseop_title" OR ' . wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_rank_math_postmeta_title_keys() ) ) . ') GROUP BY post_id' );
 		++$sql_count;
 
 		foreach ( $seo_check as $value ) {

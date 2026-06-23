@@ -1,11 +1,11 @@
 === WP Spell Check ===
 Contributors: wpspellcheck 
 License: GPLv2 or later
-Donate link: https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=donationlink&utm_content=11.6
+Donate link: https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=donationlink&utm_content=11.7
 Tags: spell check, SEO, grammar check, proofreading, shortcode
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 11.6
+Stable tag: 11.7
 Requires PHP: 7.4
 
 Proofread & Audit your WordPress website with One Click! Find & fix the errors and build a professional image for your business.
@@ -15,7 +15,7 @@ Proofread & Audit your WordPress website with One Click! Find & fix the errors a
 
 Spell check and grammar check your entire WordPress site in one click! 
 
-Find & fix Spelling errors, Punctuation errors, Grammar errors, SEO, Broken Shortcodes & HTML, and Create a professional image with [WP Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=11.6)
+Find & fix Spelling errors, Punctuation errors, Grammar errors, SEO, Broken Shortcodes & HTML, and Create a professional image with [WP Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=11.7)
 
 
 **Did you know?**
@@ -56,7 +56,7 @@ By using WP Spell Check you will be able to:
 
 
 > <strong>WP Spell Check Pro</strong><br />
->This is the lite version of WP Spell Check. Additional features are included in the Premium Version. [Click here to get the fastest WordPress spell check plugin and unlock Premium Features](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=11.6)!
+>This is the lite version of WP Spell Check. Additional features are included in the Premium Version. [Click here to get the fastest WordPress spell check plugin and unlock Premium Features](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=upgrade_notice&utm_content=11.7)!
 
 
 **WP Spell Check is for you if you want to...**
@@ -163,11 +163,11 @@ Nigel Coates, Gold Coast, Australia
 
 For more info on Proofreading and Auditing your WordPress blog, check out the following:
 
-* [An Overview of WP Spell Check](https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
-* [How to Fix WordPress Spelling Errors](https://www.wpspellcheck.com/plugin-support/how-to-fix-wordpress-spelling-errors/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
-* [How to Improve WordPress SEO](https://www.wpspellcheck.com/plugin-support/how-to-improve-wordpress-seo/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
-* [How to Grammar Check on WordPress](https://www.wpspellcheck.com/plugin-support/grammar-check-video-guide/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
-* [Official WP Spell Check Plugin Blog](https://www.wpspellcheck.com/blog/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
+* [An Overview of WP Spell Check](https://www.wpspellcheck.com/plugin-support/an-overview-of-the-plugin/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
+* [How to Fix WordPress Spelling Errors](https://www.wpspellcheck.com/plugin-support/how-to-fix-wordpress-spelling-errors/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
+* [How to Improve WordPress SEO](https://www.wpspellcheck.com/plugin-support/how-to-improve-wordpress-seo/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
+* [How to Grammar Check on WordPress](https://www.wpspellcheck.com/plugin-support/grammar-check-video-guide/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
+* [Official WP Spell Check Plugin Blog](https://www.wpspellcheck.com/blog/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
 
 
 
@@ -177,7 +177,7 @@ Notes:
 
 == Frequently Asked Questions ==
 
-You will find answers to many of your questions on [www.wpspellcheck.com/support/](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6).
+You will find answers to many of your questions on [www.wpspellcheck.com/support/](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7).
 
 = How does this plugin work? =
 
@@ -204,7 +204,7 @@ If you have a website with 500 pages and 500 posts, it takes a long time to go t
 
 WP Spell Check Scans your entire site in seconds and prints out a comprehensive list of errors. 
 
-You can save a lot of time and embarrassment by using our [WordPress Spell Check plugin](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6).
+You can save a lot of time and embarrassment by using our [WordPress Spell Check plugin](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7).
 
 
 = Can I spell check entire website for free? =
@@ -259,7 +259,7 @@ Our plugin helps you find these empty places with one click. And with the help o
 
 The FREE plugin only checks the contents of pages and posts on your website. 
 
-For a more extensive check on everything on your website, you can purchase our [premium version](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6). 
+For a more extensive check on everything on your website, you can purchase our [premium version](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7). 
 
 The premium version checks your entire website
 
@@ -295,21 +295,21 @@ WP Spell Check is designed to handle websites with tens of thousands of pages an
 
 You can proofread and audit the entire website/blog in a few seconds and save thousands of hours of work for users and site admins. 
 
-To learn more about the packages available for large websites, please [visit our website](https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
+To learn more about the packages available for large websites, please [visit our website](https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
 
 
 
 = Which parts of my website get checked for spelling? =
 
 
-[Visit our website](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6) for a complete list of features and what is included. 
+[Visit our website](https://wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7) for a complete list of features and what is included. 
 
 New website components will be added in our future releases. Visit our Facebook and Twitter pages for updates.
 
 
 = Do you provide support for the WP Spell Check plugin? =
 
-Yes, for additional support please [visit our support center](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
+Yes, for additional support please [visit our support center](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
 
 
 = Which web browsers are supported with WP Spell Check? =
@@ -317,7 +317,7 @@ We test our plugin on the major web browsers so you can do a spell check and gra
 
 = Bug reports =
 
-Bug reports are welcome on our [Support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6).
+Bug reports are welcome on our [Support page](https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7).
 
 
 = What external services does this plugin connect to and what data is shared? =
@@ -339,7 +339,7 @@ For more information, see our [Privacy Policy](https://www.wpspellcheck.com/priv
 
 The plugin is designed for people who care about building and protecting their image and brand while saving time and embarrassment. 
 
-If you are looking for a [WordPress Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6) plugin to save time, and embarrassment and build your professional image, then upgrade and get access to all the Pro features and benefits. 
+If you are looking for a [WordPress Spell Check](https://www.wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7) plugin to save time, and embarrassment and build your professional image, then upgrade and get access to all the Pro features and benefits. 
 
 - Find and fix spelling and grammar errors
 - Get AI suggestions for SEO titles and descriptions for your pages and posts
@@ -383,10 +383,19 @@ There are three simple ways to install WP Spell Check
 **3- Setup the options**
 Navigate to the Options page for WP Spell Check to configure your desired settings and start checking and fixing errors on your website.
 
-**Want more features and audit power?**  [Upgrade to WP Spell Check Pro](https://wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.6)
+**Want more features and audit power?**  [Upgrade to WP Spell Check Pro](https://wpspellcheck.com/?utm_source=baseplugin&utm_campaign=readmefile&utm_medium=readmefile&utm_content=11.7)
 
 
 == Changelog ==
+
+= 11.7 =
+
+- Enhanced Rank Math SEO integration — spellchecks all Rank Math fields on posts, pages, tags, categories, authors, and WooCommerce products.
+
+- Now spell checks page and post excerpts — catch typos in summaries and fix them from your results
+
+- Removed unwanted "Edit to Dictionary Word" fields showing in Posts and Pages Quick Edit
+
 
 = 11.6 =
 
