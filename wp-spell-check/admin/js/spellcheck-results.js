@@ -656,12 +656,16 @@
 						typeof wpscResultsPage !== "undefined" && wpscResultsPage.version
 						? wpscResultsPage.version
 						: "";
+						var formattedCount = Number( response.epsCount ).toLocaleString();
+						var upgradeUrl =
+							"https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradespellch&utm_medium=spellcheck_scan&utm_content=" +
+							version;
 						$( ".sc-eps" ).html(
-							"<strong>Pro Version: </strong>" +
-							response.epsCount +
-							" Spelling Errors on other parts of your website are hurting your professional image. <a href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradespellch&utm_medium=spellcheck_scan&utm_content=" +
-							version +
-							"' target='_blank'>Click here</a> to upgrade to find and fix all the errors."
+							"<strong>" +
+							formattedCount +
+							" spelling errors found across your website</strong><br />Upgrade to scan and fix your entire site.<br /><strong><a href='" +
+							upgradeUrl +
+							"' target='_blank'>Click Here to Fix all errors now</a></strong>"
 						);
 					}
 

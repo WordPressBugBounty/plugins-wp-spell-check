@@ -1222,6 +1222,27 @@ function wpscx_is_yoast_desc_page_type(page_type) {
   return false;
 }
 
+function wpscx_is_aioseo_title_page_type(page_type) {
+  if (page_type && page_type.indexOf("All in One SEO") === 0) {
+    return (
+      page_type.indexOf("Title") !== -1 &&
+      page_type.indexOf("Description") === -1
+    );
+  }
+  return false;
+}
+
+function wpscx_is_aioseo_desc_page_type(page_type) {
+  if (page_type && page_type.indexOf("All in One SEO") === 0) {
+    return (
+      page_type.indexOf("Description") !== -1 ||
+      page_type.indexOf("Keyphrase") !== -1 ||
+      page_type.indexOf("Brand") !== -1
+    );
+  }
+  return false;
+}
+
 function wpscx_show_editor(
   parent_id,
   old_word,
@@ -1245,6 +1266,7 @@ function wpscx_show_editor(
   edit_row.find("input[type=text]").attr("value", old_word.replace("\\", ""));
   if (
     wpscx_is_yoast_title_page_type(page_type) ||
+    wpscx_is_aioseo_title_page_type(page_type) ||
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
     page_type == "SEO Title" ||
@@ -1255,6 +1277,7 @@ function wpscx_show_editor(
     edit_row.find("input[type=text]").addClass("edit-seo-title");
   } else if (
     wpscx_is_yoast_desc_page_type(page_type) ||
+    wpscx_is_aioseo_desc_page_type(page_type) ||
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
     page_type == "SEO Description" ||
@@ -1303,6 +1326,7 @@ function wpscx_show_editor_seo(
   edit_row.find("input[type=text]").attr("value", old_word.replace("\\", ""));
   if (
     wpscx_is_yoast_title_page_type(page_type) ||
+    wpscx_is_aioseo_title_page_type(page_type) ||
     page_type == "Yoast SEO Title" ||
     page_type == "All in One SEO Title" ||
     page_type == "SEO Title" ||
@@ -1313,6 +1337,7 @@ function wpscx_show_editor_seo(
     edit_row.find("input[type=text]").addClass("edit-seo-title");
   } else if (
     wpscx_is_yoast_desc_page_type(page_type) ||
+    wpscx_is_aioseo_desc_page_type(page_type) ||
     page_type == "Yoast SEO Description" ||
     page_type == "All in One SEO Description" ||
     page_type == "SEO Description" ||

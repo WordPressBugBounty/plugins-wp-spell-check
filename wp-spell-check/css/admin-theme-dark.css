@@ -381,6 +381,7 @@ body.wpsc-admin-page.wpsc-theme-dark
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-container {
   background: transparent;
 }
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-box,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-tutorial-box,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-social-box,
 body.wpsc-admin-page.wpsc-theme-dark
@@ -389,6 +390,26 @@ body.wpsc-admin-page.wpsc-theme-dark
   background: var(--wpsc-card-bg);
   border: 1px solid var(--wpsc-nav-border);
   color: #e0e0e0;
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-box {
+  border-top-color: #9a80ff;
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-box h2 {
+  color: #fff;
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-list li {
+  color: #e0e0e0;
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-list li::before {
+  color: #9a80ff;
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-btn {
+  background: linear-gradient(135deg, #ff5b37 0%, #ff8c40 100%);
+  box-shadow: 0 2px 6px rgba(255, 91, 55, 0.35);
+}
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-btn:hover,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-upgrade-btn:focus {
+  box-shadow: 0 4px 10px rgba(255, 91, 55, 0.4);
 }
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-social-box h2,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-sidebar-container .wpsc-sidebar {
@@ -741,6 +762,7 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
   body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-container {
     background: transparent;
   }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-box,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-tutorial-box,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-social-box,
   body.wpsc-admin-page.wpsc-theme-system
@@ -749,6 +771,26 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
     background: var(--wpsc-card-bg);
     border: 1px solid var(--wpsc-nav-border);
     color: #e0e0e0;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-box {
+    border-top-color: #9a80ff;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-box h2 {
+    color: #fff;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-list li {
+    color: #e0e0e0;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-list li::before {
+    color: #9a80ff;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-btn {
+    background: linear-gradient(135deg, #ff5b37 0%, #ff8c40 100%);
+    box-shadow: 0 2px 6px rgba(255, 91, 55, 0.35);
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-btn:hover,
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-upgrade-btn:focus {
+    box-shadow: 0 4px 10px rgba(255, 91, 55, 0.4);
   }
   body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-social-box h2,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-sidebar-container .wpsc-sidebar {

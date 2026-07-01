@@ -66,7 +66,7 @@ class Wpscx_Menu {
 
 		if ( ! $wpscx_ent_included ) {
 				global $submenu;
-				$permalink                          = 'https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=' . $wpsc_version;
+				$permalink                          = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=' . $wpsc_version;
 				$submenu[ WPSCX_SPELLCHECK_FILE ][] = array( 'Upgrade to Premium', 'manage_options', $permalink );
 		} else {
 				global $submenu;
@@ -84,9 +84,9 @@ class Wpscx_Menu {
 		?>
 		<script type="text/javascript">
 			jQuery(document).ready( function($) {
-				$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).attr( 'target', '_blank' );
-							$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).css( 'color', '#EC8E1F' );
-							$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).css( 'font-weight', 'bold' );
+				$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).attr( 'target', '_blank' );
+							$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).css( 'color', '#EC8E1F' );
+							$( "ul#adminmenu a[href$='https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=leftsidebar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).css( 'font-weight', 'bold' );
 							$( "ul#adminmenu a[href^='https://www.wpspellcheck.com/account']" ).attr( 'target', '_blank' );
 							$( "li#wp-admin-bar-WP_Spell_Check a[href$='https://www.wpspellcheck.com/support']" ).attr( 'target', '_blank' );
 							$( "li#wp-admin-bar-WP_Spell_Check_Tutorials a[href$='https://www.wpspellcheck.com/support?utm_source=baseplugin&utm_campaign=toturial_topbar&utm_medium=admin_bar&utm_content=<?php echo esc_js( $wpsc_version ); ?>']" ).attr( 'target', '_blank' );

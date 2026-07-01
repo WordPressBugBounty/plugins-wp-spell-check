@@ -4,6 +4,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wpsc-sidebar-container">
+<?php
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) :
+	global $wpsc_version;
+	$ver         = is_string( $wpsc_version ) ? $wpsc_version : '';
+	$upgrade_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgrade_sidebar&utm_medium=spell_check&utm_content=' . rawurlencode( $ver );
+	?>
+<div class="wpsc-sidebar-upgrade-box">
+	<h2><?php esc_html_e( 'Unlock WP Spell Check Pro', 'wp-spell-check' ); ?></h2>
+	<ul class="wpsc-sidebar-upgrade-list">
+		<li><?php esc_html_e( 'Scan entire site', 'wp-spell-check' ); ?></li>
+		<li><?php esc_html_e( 'Fix all spelling errors', 'wp-spell-check' ); ?></li>
+		<li><?php esc_html_e( 'See hidden issues', 'wp-spell-check' ); ?></li>
+	</ul>
+	<a class="wpsc-sidebar-upgrade-btn" href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '👉 Upgrade to Pro', 'wp-spell-check' ); ?></a>
+</div>
+<hr>
+	<?php
+endif;
+?>
 <div class="wpsc-sidebar-tutorial-box">
 			<a href="https://www.wpspellcheck.com/support/?utm_source=baseplugin&utm_campaign=toturial_rightside&utm_medium=spell_check" target="_blank"><img src="<?php echo esc_url( plugin_dir_url( __FILE__ ) ) . 'images/wpsc-sidebar.jpg'; ?>" alt="Watch WP Spell Check Tutorials" /></a>
 </div>
@@ -25,22 +47,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</a>
 				</div>
 </div>
+<?php /* Rating section temporarily hidden.
 <hr>
-<?php
-if ( ! function_exists( 'is_plugin_active' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/plugin.php';
-}
-if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) :
-	?>
-<div class="wpsc-sidebar-tutorial-box">
-	<a href="https://buy.stripe.com/9B66oI6uia7o8nMdRa2Ry01" target="_blank" rel="noopener noreferrer"><img class="wpsc-sidebar-coffee-img" src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . 'images/support-the-plugin.png' ); ?>" alt="Support the plugin" /></a>
-</div>
-<hr>
-	<?php
-endif;
-?>
 <div class="newsletter newsletter-subscription">
 <div class="wpsc-sidebar"><h2>Enjoying this plugin?</h2>Please help by giving us a <a class="review-button" href="https://wordpress.org/support/plugin/wp-spell-check/reviews/" target="_blank">★★★★★ Rating</a></div>
 </div>
 <hr>
+*/ ?>
 			</div>

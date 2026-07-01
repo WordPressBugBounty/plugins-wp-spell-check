@@ -1092,46 +1092,69 @@ class Wpscx_Results_Utils {
 					)
 				);
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'All in One SEO Description' === $page_types[ $x ] ) {
-
+			} elseif ( null !== wpscx_aioseo_page_type_to_postmeta_key( $page_types[ $x ] ) ) {
+				$aioseo_meta_key = wpscx_aioseo_page_type_to_postmeta_key( $page_types[ $x ] );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key="_aioseo_description"', $page_result[0]->ID ) );
+				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key=%s', $page_result[0]->ID, $aioseo_meta_key ) );
 
 				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $desc_result[0]->meta_value ) );
 
-				$old_name = $page_result[0]->post_title;
 				$wpdb->update(
 					$meta_table,
 					array( 'meta_value' => $updated_content ),
 					array(
 						'post_id'  => $page_result[0]->ID,
-						'meta_key' => '_aioseo_description',
+						'meta_key' => $aioseo_meta_key,
 					)
 				);
-				$wpdb->update( $wpdb->prefix . 'aioseo_posts', array( 'description' => $updated_content ), array( 'post_id' => $page_result[0]->ID ) );
+				$column_map = wpscx_aioseo_postmeta_to_column();
+				if ( isset( $column_map[ $aioseo_meta_key ] ) ) {
+					$wpdb->update(
+						$wpdb->prefix . 'aioseo_posts',
+						array( $column_map[ $aioseo_meta_key ] => $updated_content ),
+						array( 'post_id' => $page_result[0]->ID )
+					);
+				}
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'All in One SEO Title' === $page_types[ $x ] ) {
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
-				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ID, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-				$desc_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key="_aioseo_title"', $page_result[0]->ID ) );
-
-				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $desc_result[0]->meta_value ) );
-
-				$old_name = $page_result[0]->post_title;
-				$wpdb->update(
-					$meta_table,
-					array( 'meta_value' => $updated_content ),
-					array(
-						'post_id'  => $page_result[0]->ID,
-						'meta_key' => '_aioseo_title',
-					)
+			} elseif ( 'All in One SEO Focus Keyphrase' === $page_types[ $x ] ) {
+				$post_id     = (int) $page_names[ $x ];
+				$aioseo_table = $wpdb->prefix . 'aioseo_posts';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from $wpdb->prefix.
+				$kp_result = $wpdb->get_results( $wpdb->prepare( 'SELECT keyphrases FROM ' . $aioseo_table . ' WHERE post_id=%d', $post_id ) );
+				if ( ! empty( $kp_result[0]->keyphrases ) ) {
+					$updated_content = wpscx_aioseo_apply_fix_to_keyphrases( $kp_result[0]->keyphrases, $old_words[ $x ], $new_words[ $x ] );
+					$wpdb->update( $aioseo_table, array( 'keyphrases' => $updated_content ), array( 'post_id' => $post_id ) );
+				}
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( 'All in One SEO Product Schema Name' === $page_types[ $x ] || 'All in One SEO Product Schema Description' === $page_types[ $x ] || 'All in One SEO Product Brand' === $page_types[ $x ] ) {
+				$post_id      = (int) $page_names[ $x ];
+				$aioseo_table = $wpdb->prefix . 'aioseo_posts';
+				$prop_map     = array(
+					'All in One SEO Product Schema Name'        => 'name',
+					'All in One SEO Product Schema Description' => 'description',
+					'All in One SEO Product Brand'              => 'brand',
 				);
-				$wpdb->update( $wpdb->prefix . 'aioseo_posts', array( 'title' => $updated_content ), array( 'post_id' => $page_result[0]->ID ) );
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$property     = $prop_map[ $page_types[ $x ] ];
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from $wpdb->prefix.
+				$schema_result = $wpdb->get_results( $wpdb->prepare( 'SELECT schema FROM ' . $aioseo_table . ' WHERE post_id=%d', $post_id ) );
+				if ( ! empty( $schema_result[0]->schema ) ) {
+					$updated_content = wpscx_aioseo_apply_fix_to_product_schema( $schema_result[0]->schema, $property, $old_words[ $x ], $new_words[ $x ] );
+					$wpdb->update( $aioseo_table, array( 'schema' => $updated_content ), array( 'post_id' => $post_id ) );
+				}
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( null !== wpscx_aioseo_page_type_to_term_column( $page_types[ $x ] ) ) {
+				$term_column  = wpscx_aioseo_page_type_to_term_column( $page_types[ $x ] );
+				$term_id      = (int) $page_names[ $x ];
+				$aioseo_terms = $wpdb->prefix . 'aioseo_terms';
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from $wpdb->prefix.
+				$term_result = $wpdb->get_results( $wpdb->prepare( 'SELECT ' . $term_column . ' FROM ' . $aioseo_terms . ' WHERE term_id=%d', $term_id ) );
+				if ( ! empty( $term_result[0]->$term_column ) ) {
+					$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $term_result[0]->$term_column ) );
+					$wpdb->update( $aioseo_terms, array( $term_column => $updated_content ), array( 'term_id' => $term_id ) );
+				}
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'Widget Content' === $page_types[ $x ] ) {
 				$widget_instances = get_option( 'widget_text' );
@@ -1426,9 +1449,14 @@ class Wpscx_Results_Utils {
 						$meta_table,
 						array(
 							'post_id'    => $page_names[ $x ],
-							'meta_key'   => '_aioseop_title',
+							'meta_key'   => '_aioseo_title',
 							'meta_value' => $new_words[ $x ],
 						)
+					);
+					$wpdb->update(
+						$wpdb->prefix . 'aioseo_posts',
+						array( 'title' => $new_words[ $x ] ),
+						array( 'post_id' => $page_names[ $x ] )
 					);
 
 					$wpdb->delete( $words_table, array( 'id' => $old_word_ids[ $x ] ) );
@@ -1464,9 +1492,14 @@ class Wpscx_Results_Utils {
 						$meta_table,
 						array(
 							'post_id'    => $page_names[ $x ],
-							'meta_key'   => '_aioseop_description',
+							'meta_key'   => '_aioseo_description',
 							'meta_value' => $new_words[ $x ],
 						)
+					);
+					$wpdb->update(
+						$wpdb->prefix . 'aioseo_posts',
+						array( 'description' => $new_words[ $x ] ),
+						array( 'post_id' => $page_names[ $x ] )
 					);
 
 					$wpdb->delete( $words_table, array( 'id' => $old_word_ids[ $x ] ) );

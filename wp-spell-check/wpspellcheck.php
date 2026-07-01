@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Name: WP Spell Check
  * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
- * Version: 11.7
+ * Version: 11.8
  * Author: WP Spell Check
  * Author URI: https://www.wpspellcheck.com
  * License: GPLv2 or later
@@ -249,7 +249,7 @@ function wpscx_set_global_vars() {
 	global $wpsc_version;
 	global $wpsc_globals_loaded;
 
-	$wpsc_version = '11.7';
+	$wpsc_version = '11.8';
 
 	// Return early if globals are already loaded to prevent duplicate queries
 	if ( isset( $wpsc_globals_loaded ) && $wpsc_globals_loaded === true ) {
@@ -300,7 +300,7 @@ function wpscx_set_global_vars() {
 			$wpscx_base_page_max = $wpsc_settings[138]->option_value;
 		}
 	} else {
-		$wpscx_base_page_max = 10;
+		$wpscx_base_page_max = 5;
 	}
 
 	// Mark globals as loaded so subsequent calls return early (no duplicate queries).
@@ -541,7 +541,7 @@ add_action(
 function wpscx_add_premium_link( $links ) {
 	global $wpsc_version;
 
-	$settings_link = '<a href="https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradePlugins_Page&utm_medium=plugin_page&utm_content=' . $wpsc_version . '" target="_blank">' . __( 'Premium Features', 'wp-spell-check' ) . '</a>';
+	$settings_link = '<a href="https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradePlugins_Page&utm_medium=plugin_page&utm_content=' . $wpsc_version . '" target="_blank">' . __( 'Premium Features', 'wp-spell-check' ) . '</a>';
 	array_push( $links, $settings_link );
 	return $links;
 }

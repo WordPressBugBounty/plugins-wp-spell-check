@@ -311,7 +311,7 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="/wp-admin/nav-menus.php?action=edit&menu=' . $item['page_id'] . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
 		} elseif ( 'Contact Form 7' === $item['page_type'] || 'Contact Form 7 Auto Response' === $item['page_type'] || 'Contact Form 7 Form' === $item['page_type'] || 'Contact Form 7 Email Notification' === $item['page_type'] ) {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
-		} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $item['page_type'] ) || 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || 'Rank Math SEO Description' === $item['page_type'] || 'Rank Math SEO Title' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
+		} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $item['page_type'] ) || 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || 'Rank Math SEO Description' === $item['page_type'] || 'Rank Math SEO Title' === $item['page_type'] || 'All in One SEO Focus Keyphrase' === $item['page_type'] || 'All in One SEO Product Schema Name' === $item['page_type'] || 'All in One SEO Product Schema Description' === $item['page_type'] || 'All in One SEO Product Brand' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '"  target="_blank">View</a>';
 		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Tag ' ) ) {
 			$output = '<a href="/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
@@ -319,6 +319,8 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="/wp-admin/term.php?taxonomy=category&tag_ID=' . $item['page_id'] . '&post_type=post" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( 0 === strpos( $item['page_type'], 'Rank Math SEO Tag ' ) || 0 === strpos( $item['page_type'], 'Rank Math SEO Category ' ) ) {
 			$output = '<a href="' . esc_url( wpscx_rank_math_term_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
+		} elseif ( 0 === strpos( $item['page_type'], 'All in One SEO Tag ' ) || 0 === strpos( $item['page_type'], 'All in One SEO Category ' ) ) {
+			$output = '<a href="' . esc_url( wpscx_aioseo_term_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Archive ' ) ) {
 			$archive_page = wpscx_yoast_archive_post_type_from_label( $item['page_name'] );
 			if ( null === $archive_page ) {
@@ -795,9 +797,13 @@ function wpscx_admin_render() {
 		++$sql_count;
 		$total_cat_desc  = $total_cat;
 		$total_cat_slug  = $total_cat;
-		$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title'" ) );
+		$seo_title_or_clause = wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_aioseo_postmeta_title_keys() ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from prefix; meta_key OR list from hardcoded plugin map keys.
+		$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR " . $seo_title_or_clause ) );
 		++$sql_count;
-		$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description'" ) );
+		$seo_desc_or_clause = wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_aioseo_postmeta_desc_keys() ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from prefix; meta_key OR list from hardcoded plugin map keys.
+		$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR " . $seo_desc_or_clause ) );
 		++$sql_count;
 
 		$total_sliders = $total_huge_it + $total_smartslider;
@@ -1278,7 +1284,8 @@ function wpscx_admin_render() {
 						<?php
 						if ( ! $wpscx_ent_included ) {
 							if ( $word_count > 0 && $pro_words > 0 ) {
-								echo "<h3 class='sc-message sc-eps' style='color: rgb(225, 0, 0);'><strong>Pro Version: </strong>" . esc_html( $pro_words ) . " Spelling Errors on other parts of your website are hurting your professional image. <a href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradespellch&utm_medium=spellcheck_scan&utm_content=" . esc_html( $wpsc_version ) . "' target='_blank'>Click here</a> to upgrade to find and fix all the errors.</h3>";
+								$upgrade_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradespellch&utm_medium=spellcheck_scan&utm_content=' . rawurlencode( $wpsc_version );
+								echo "<h3 class='sc-message sc-eps' style='color: rgb(225, 0, 0);'><strong>" . esc_html( number_format_i18n( (int) $pro_words ) ) . " spelling errors found across your website</strong><br />Upgrade to scan and fix your entire site.<br /><strong><a href='" . esc_url( $upgrade_url ) . "' target='_blank'>Click Here to Fix all errors now</a></strong></h3>";
 							} else {
 								echo "<h3 class='sc-message sc-eps' style='color: rgb(225, 0, 0);'></h3>";
 							}

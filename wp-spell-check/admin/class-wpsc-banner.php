@@ -428,7 +428,7 @@ class Wpscx_Banner {
 
 		global $wpsc_version;
 		$ver         = is_string( $wpsc_version ) ? $wpsc_version : '';
-		$product_url = 'https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgrade_admin_notice&utm_medium=admin_notice&utm_content=' . rawurlencode( $ver );
+		$product_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgrade_admin_notice&utm_medium=admin_notice&utm_content=' . rawurlencode( $ver );
 
 		$dismiss_url = wp_nonce_url(
 			add_query_arg( 'wpsc_pro_ignore_notice', '1' ),

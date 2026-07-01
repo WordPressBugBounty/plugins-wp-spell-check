@@ -983,6 +983,256 @@ function wpscx_rank_math_term_edit_url( $term_id ) {
 	return $blog . '/wp-admin/term.php?taxonomy=' . rawurlencode( $taxonomy ) . '&tag_ID=' . (int) $term_id . '&post_type=' . rawurlencode( $post_type );
 }
 
+/**
+ * Whether All in One SEO Pack is active.
+ *
+ * @return bool
+ * @since 1.0.0
+ */
+function wpscx_aioseo_is_active() {
+	return is_plugin_active( 'all-in-one-seo-pack/all_in_one_seo_pack.php' );
+}
+
+/**
+ * AIOSEO postmeta keys for SEO Descriptions spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_aioseo_postmeta_desc_keys() {
+	return array(
+		'_aioseo_description'         => 'All in One SEO Description',
+		'_aioseo_og_description'      => 'All in One SEO Facebook Description',
+		'_aioseo_twitter_description' => 'All in One SEO X Description',
+	);
+}
+
+/**
+ * AIOSEO postmeta keys for SEO Titles spellcheck scan.
+ *
+ * @return array<string, string> meta_key => page_type
+ * @since 1.0.0
+ */
+function wpscx_aioseo_postmeta_title_keys() {
+	return array(
+		'_aioseo_title'         => 'All in One SEO Title',
+		'_aioseo_og_title'      => 'All in One SEO Facebook Title',
+		'_aioseo_twitter_title' => 'All in One SEO X Title',
+	);
+}
+
+/**
+ * Map AIOSEO postmeta keys to aioseo_posts columns.
+ *
+ * @return array<string, string> meta_key => column
+ * @since 1.0.0
+ */
+function wpscx_aioseo_postmeta_to_column() {
+	return array(
+		'_aioseo_title'               => 'title',
+		'_aioseo_description'         => 'description',
+		'_aioseo_og_title'            => 'og_title',
+		'_aioseo_og_description'      => 'og_description',
+		'_aioseo_twitter_title'       => 'twitter_title',
+		'_aioseo_twitter_description' => 'twitter_description',
+	);
+}
+
+/**
+ * Resolve AIOSEO postmeta page_type to meta_key.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_aioseo_page_type_to_postmeta_key( $page_type ) {
+	$merged = array_merge( wpscx_aioseo_postmeta_desc_keys(), wpscx_aioseo_postmeta_title_keys() );
+	foreach ( $merged as $meta_key => $type ) {
+		if ( $type === $page_type ) {
+			return $meta_key;
+		}
+	}
+	return null;
+}
+
+/**
+ * AIOSEO term page_type labels for a taxonomy.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @return array<string, string> column => page_type
+ * @since 1.0.0
+ */
+function wpscx_aioseo_term_page_types( $taxonomy ) {
+	$label = in_array( $taxonomy, array( 'post_tag', 'product_tag' ), true ) ? 'Tag' : 'Category';
+	return array(
+		'title'       => 'All in One SEO ' . $label . ' Title',
+		'description' => 'All in One SEO ' . $label . ' Description',
+	);
+}
+
+/**
+ * Resolve AIOSEO term page_type to aioseo_terms column.
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ * @since 1.0.0
+ */
+function wpscx_aioseo_page_type_to_term_column( $page_type ) {
+	foreach ( array( 'category', 'post_tag', 'product_cat', 'product_tag' ) as $taxonomy ) {
+		$types = wpscx_aioseo_term_page_types( $taxonomy );
+		foreach ( $types as $column => $type ) {
+			if ( $type === $page_type ) {
+				return $column;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Whether the aioseo_terms table exists.
+ *
+ * @return bool
+ * @since 1.0.0
+ */
+function wpscx_aioseo_terms_table_exists() {
+	global $wpdb;
+	$table = $wpdb->prefix . 'aioseo_terms';
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
+	return $table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+}
+
+/**
+ * Load aioseo_terms rows indexed by term_id for a taxonomy.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @return array<int, object>
+ * @since 1.0.0
+ */
+function wpscx_aioseo_term_rows_for_taxonomy( $taxonomy ) {
+	global $wpdb;
+	if ( ! wpscx_aioseo_is_active() || ! wpscx_aioseo_terms_table_exists() ) {
+		return array();
+	}
+	$aioseo_terms_table  = $wpdb->prefix . 'aioseo_terms';
+	$term_taxonomy_table = $wpdb->prefix . 'term_taxonomy';
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; taxonomy via prepare().
+	$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT at.term_id, at.title, at.description FROM ' . $aioseo_terms_table . ' at INNER JOIN ' . $term_taxonomy_table . ' tt ON at.term_id = tt.term_id WHERE tt.taxonomy = %s', $taxonomy ) );
+	$indexed = array();
+	foreach ( (array) $rows as $row ) {
+		$indexed[ (int) $row->term_id ] = $row;
+	}
+	return $indexed;
+}
+
+/**
+ * Extract focus keyphrase from AIOSEO keyphrases JSON.
+ *
+ * @param string $json Keyphrases JSON.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_aioseo_flatten_keyphrases( $json ) {
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || empty( $decoded['focus']['keyphrase'] ) ) {
+		return '';
+	}
+	return (string) $decoded['focus']['keyphrase'];
+}
+
+/**
+ * Extract Product schema text fields from AIOSEO schema JSON.
+ *
+ * @param string $json Schema JSON.
+ * @return array{name: string, description: string, brand: string}
+ * @since 1.0.0
+ */
+function wpscx_aioseo_product_schema_texts( $json ) {
+	$out     = array(
+		'name'        => '',
+		'description' => '',
+		'brand'       => '',
+	);
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || empty( $decoded['graphs'] ) ) {
+		return $out;
+	}
+	foreach ( $decoded['graphs'] as $graph ) {
+		if ( empty( $graph['graphName'] ) || 'Product' !== $graph['graphName'] ) {
+			continue;
+		}
+		$p                  = $graph['properties'] ?? array();
+		$out['name']        = (string) ( $p['name'] ?? '' );
+		$out['description'] = (string) ( $p['description'] ?? '' );
+		$out['brand']       = (string) ( $p['brand'] ?? '' );
+		break;
+	}
+	return $out;
+}
+
+/**
+ * Apply spell fix to AIOSEO keyphrases JSON.
+ *
+ * @param string $json     Keyphrases JSON.
+ * @param string $old_word Old word.
+ * @param string $new_word New word.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_aioseo_apply_fix_to_keyphrases( $json, $old_word, $new_word ) {
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || empty( $decoded['focus']['keyphrase'] ) ) {
+		return $json;
+	}
+	$decoded['focus']['keyphrase'] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $decoded['focus']['keyphrase'] );
+	return wp_json_encode( $decoded );
+}
+
+/**
+ * Apply spell fix to AIOSEO Product schema JSON property.
+ *
+ * @param string $json     Schema JSON.
+ * @param string $property Product property key (name, description, brand).
+ * @param string $old_word Old word.
+ * @param string $new_word New word.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_aioseo_apply_fix_to_product_schema( $json, $property, $old_word, $new_word ) {
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || empty( $decoded['graphs'] ) ) {
+		return $json;
+	}
+	foreach ( $decoded['graphs'] as $idx => $graph ) {
+		if ( empty( $graph['graphName'] ) || 'Product' !== $graph['graphName'] ) {
+			continue;
+		}
+		if ( ! empty( $graph['properties'][ $property ] ) ) {
+			$decoded['graphs'][ $idx ]['properties'][ $property ] = preg_replace(
+				wpscx_regex_pattern( $old_word ),
+				$new_word,
+				$graph['properties'][ $property ]
+			);
+		}
+		break;
+	}
+	return wp_json_encode( $decoded );
+}
+
+/**
+ * Build admin term edit URL for an AIOSEO term page_type.
+ *
+ * @param int $term_id Term ID.
+ * @return string
+ * @since 1.0.0
+ */
+function wpscx_aioseo_term_edit_url( $term_id ) {
+	$term      = get_term( (int) $term_id );
+	$taxonomy  = ( $term && ! is_wp_error( $term ) ) ? $term->taxonomy : 'category';
+	$post_type = ( in_array( $taxonomy, array( 'product_cat', 'product_tag' ), true ) ) ? 'product' : 'post';
+	return get_site_url() . '/wp-admin/term.php?taxonomy=' . rawurlencode( $taxonomy ) . '&tag_ID=' . (int) $term_id . '&post_type=' . rawurlencode( $post_type );
+}
+
 function wpscx_construct_url( $type, $id ) {
 	$blog = get_site_url();
 
@@ -992,7 +1242,7 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/nav-menus.php?action=edit&menu=' . $id;
 	} elseif ( 'Contact Form 7' === $type ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
-	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Rank Math SEO Description' === $type || 'Rank Math SEO Title' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
+	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $type ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Rank Math SEO Description' === $type || 'Rank Math SEO Title' === $type || 'All in One SEO Focus Keyphrase' === $type || 'All in One SEO Product Schema Name' === $type || 'All in One SEO Product Schema Description' === $type || 'All in One SEO Product Brand' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = wpscx_get_post_edit_url( $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Tag ' ) ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=post_tag&tag_ID=' . $id . '&post_type=post';
@@ -1000,6 +1250,8 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/term.php?taxonomy=category&tag_ID=' . $id . '&post_type=post';
 	} elseif ( 0 === strpos( $type, 'Rank Math SEO Tag ' ) || 0 === strpos( $type, 'Rank Math SEO Category ' ) ) {
 		$url = wpscx_rank_math_term_edit_url( (int) $id );
+	} elseif ( 0 === strpos( $type, 'All in One SEO Tag ' ) || 0 === strpos( $type, 'All in One SEO Category ' ) ) {
+		$url = wpscx_aioseo_term_edit_url( (int) $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Archive ' ) ) {
 		$url = $blog . '/wp-admin/admin.php?page=wpseo_titles';
 	} elseif ( 'Smart Slider Title' === $type || 'Smart Slider Caption' === $type || 'Smart Slider Group' === $type || 'Smart Slider Content' === $type ) {

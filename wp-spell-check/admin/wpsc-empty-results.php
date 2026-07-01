@@ -208,9 +208,13 @@ function wpscx_admin_empty_render() {
 			++$sql_count;
 			$total_cat_desc  = $total_cat;
 			$total_cat_slug  = $total_cat;
-			$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR meta_key='_aioseop_title'" ) );
+			$seo_title_or_clause = wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_aioseo_postmeta_title_keys() ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from prefix; meta_key OR list from hardcoded plugin map keys.
+			$total_seo_title = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_title' OR " . $seo_title_or_clause ) );
 			++$sql_count;
-			$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR meta_key='_aioseop_description'" ) );
+			$seo_desc_or_clause = wpscx_yoast_postmeta_sql_or_clause( array_keys( wpscx_aioseo_postmeta_desc_keys() ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from prefix; meta_key OR list from hardcoded plugin map keys.
+			$total_seo_desc = sizeof( (array) $wpdb->get_results( "SELECT * FROM $postmeta_table WHERE meta_key='_yoast_wpseo_metadesc' OR " . $seo_desc_or_clause ) );
 			++$sql_count;
 
 			$total_sliders = $total_huge_it + $total_smartslider;
@@ -769,7 +773,8 @@ function wpscx_admin_empty_render() {
 							<?php
 							if ( ! $wpscx_ent_included ) {
 								if ( $empty_words > 0 ) {
-									echo "<h3 class='sc-message error'><strong>Pro Version: </strong>" . esc_html( $empty_words ) . " SEO Empty Fields were found on your website. <a href='https://www.wpspellcheck.com/product-tour/?utm_source=baseplugin&utm_campaign=upgradeSEO&utm_medium=seo_scan&utm_content=" . esc_attr( $wpsc_version ) . "' target='_blank'>Upgrade today</a> to boost your SEO and get <strong>AI suggestions for Page/post SEO</strong></h3>";
+									$upgrade_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=upgradeSEO&utm_medium=seo_scan&utm_content=' . rawurlencode( $wpsc_version );
+									echo "<h3 class='sc-message error'><strong>" . esc_html( number_format_i18n( (int) $empty_words ) ) . " SEO opportunities found</strong><br />Missing SEO info could be costing you traffic.<br />Unlock the full report and AI suggestions.<br /><strong><a href='" . esc_url( $upgrade_url ) . "' target='_blank'>&#128073; Upgrade to Pro</a></strong></h3>";
 								} else {
 									// echo "<h3 class='sc-message error'><a href='https://www.wpspellcheck.com/product-tour/' target='_blank'>Upgrade</a> to scan all parts of your website.</h3>";
 								}

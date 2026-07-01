@@ -1804,12 +1804,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$terms_table         = $wpdb->prefix . 'terms';
 			$rm_keys             = array_keys( wpscx_rank_math_term_keys( 'post_tag' ) );
 			$key_placeholders    = implode( ', ', array_fill( 0, count( $rm_keys ), '%s' ) );
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder, WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
 			$rm_rows = $wpdb->get_results( $wpdb->prepare( 'SELECT tm.term_id, tm.meta_key, tm.meta_value FROM ' . $termmeta_table . ' tm INNER JOIN ' . $term_taxonomy_table . ' tt ON tm.term_id = tt.term_id WHERE tt.taxonomy = %s AND tm.meta_key IN (' . $key_placeholders . ')', array_merge( array( 'post_tag' ), $rm_keys ) ) );
 			foreach ( $rm_rows as $rm_row ) {
 				$rm_term_meta[ $rm_row->term_id ][ $rm_row->meta_key ] = $rm_row->meta_value;
 			}
 		}
+		$aioseo_term_meta = wpscx_aioseo_term_rows_for_taxonomy( 'post_tag' );
+		$aioseo_tag_types = wpscx_aioseo_term_page_types( 'post_tag' );
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 			$words = array();
@@ -1962,6 +1964,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_aioseo_is_active() && isset( $tags_list[ $x ]->term_id ) && ! empty( $aioseo_term_meta[ $tags_list[ $x ]->term_id ] ) ) {
+				$term_id    = $tags_list[ $x ]->term_id;
+				$term_name  = isset( $tags_list[ $x ]->name ) ? $tags_list[ $x ]->name : '';
+				$aioseo_row = $aioseo_term_meta[ $term_id ];
+				foreach ( array(
+					'title'       => $aioseo_tag_types['title'],
+					'description' => $aioseo_tag_types['description'],
+				) as $column => $page_type ) {
+					if ( empty( $aioseo_row->$column ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $aioseo_row->$column, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $tags_list[ $x ] );
 		}
 
@@ -2024,12 +2057,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			$term_taxonomy_table = $wpdb->prefix . 'term_taxonomy';
 			$rm_keys             = array_keys( wpscx_rank_math_term_keys( 'category' ) );
 			$key_placeholders    = implode( ', ', array_fill( 0, count( $rm_keys ), '%s' ) );
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPlaceholder, WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; IN placeholders built from fixed key count.
 			$rm_rows = $wpdb->get_results( $wpdb->prepare( 'SELECT tm.term_id, tm.meta_key, tm.meta_value FROM ' . $termmeta_table . ' tm INNER JOIN ' . $term_taxonomy_table . ' tt ON tm.term_id = tt.term_id WHERE tt.taxonomy = %s AND tm.meta_key IN (' . $key_placeholders . ')', array_merge( array( 'category' ), $rm_keys ) ) );
 			foreach ( $rm_rows as $rm_row ) {
 				$rm_term_meta[ $rm_row->term_id ][ $rm_row->meta_key ] = $rm_row->meta_value;
 			}
 		}
+		$aioseo_term_meta = wpscx_aioseo_term_rows_for_taxonomy( 'category' );
+		$aioseo_cat_types = wpscx_aioseo_term_page_types( 'category' );
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 			$words = array();
@@ -2181,6 +2216,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				}
 			}
 
+			if ( wpscx_aioseo_is_active() && isset( $cats_list[ $x ]->term_id ) && ! empty( $aioseo_term_meta[ $cats_list[ $x ]->term_id ] ) ) {
+				$term_id    = $cats_list[ $x ]->term_id;
+				$term_name  = isset( $cats_list[ $x ]->name ) ? $cats_list[ $x ]->name : '';
+				$aioseo_row = $aioseo_term_meta[ $term_id ];
+				foreach ( array(
+					'title'       => $aioseo_cat_types['title'],
+					'description' => $aioseo_cat_types['description'],
+				) as $column => $page_type ) {
+					if ( empty( $aioseo_row->$column ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $aioseo_row->$column, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
 			unset( $cats_list[ $x ] );
 		}
 
@@ -2239,13 +2305,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_desc_keys() : array();
+				$ain_types    = $ain_active ? wpscx_aioseo_postmeta_desc_keys() : array();
 				$rm_types     = $rm_active ? wpscx_rank_math_postmeta_desc_keys() : array();
 				$where_parts  = array();
 				if ( $yoast_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
 				}
 				if ( $ain_active ) {
-					$where_parts[] = 'meta_key="_aioseop_description"';
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $ain_types ) );
 				}
 				if ( $rm_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
@@ -2288,8 +2355,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 									$page_type = null;
 							if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) ) {
 								$page_type = $yoast_types[ $desc_type ];
-							} elseif ( '_aioseop_description' === $desc_type && $ain_active ) {
-								$page_type = 'All in One SEO Description';
+							} elseif ( $ain_active && isset( $ain_types[ $desc_type ] ) ) {
+								$page_type = $ain_types[ $desc_type ];
 							} elseif ( $rm_active && isset( $rm_types[ $desc_type ] ) ) {
 								$page_type = $rm_types[ $desc_type ];
 							}
@@ -2308,6 +2375,81 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						}
 					}
 					unset( $results[ $x ] );
+				}
+
+				if ( $ain_active ) {
+					$aioseo_posts_table = $wpdb->prefix . 'aioseo_posts';
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; LIMIT uses intval().
+					$kp_sql = 'SELECT ap.post_id, ap.keyphrases, p.post_title, p.post_status, p.post_type FROM ' . $aioseo_posts_table . ' ap INNER JOIN ' . $posts_table . ' p ON ap.post_id = p.ID WHERE ap.keyphrases IS NOT NULL AND ap.keyphrases != "" LIMIT ' . intval( $max_pages );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built above from safe table names and intval LIMIT.
+					$kp_rows = $wpdb->get_results( $kp_sql );
+					foreach ( (array) $kp_rows as $kp_row ) {
+						if ( 'draft' === $kp_row->post_status && 'page' === $kp_row->post_type && ! $page_status ) {
+							continue;
+						}
+						if ( 'draft' === $kp_row->post_status && 'page' !== $kp_row->post_type && ! $post_status ) {
+							continue;
+						}
+						$kp_text = wpscx_aioseo_flatten_keyphrases( $kp_row->keyphrases );
+						if ( '' === $kp_text ) {
+							continue;
+						}
+						$desc  = wpscx_clean_all( html_entity_decode( wp_strip_all_tags( $kp_text ), ENT_QUOTES, 'utf-8' ), $wpsc_settings );
+						$words = explode( ' ', $desc );
+						foreach ( $words as $word ) {
+							++$word_count;
+							++$total_words;
+							$word = trim( $word, "'`”“" );
+							if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $kp_row->post_title;
+								$hold[2] = $kp_row->post_id;
+								$hold[3] = 'All in One SEO Focus Keyphrase';
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							}
+						}
+					}
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; LIMIT uses intval().
+					$schema_sql = 'SELECT ap.post_id, ap.schema, p.post_title, p.post_status, p.post_type FROM ' . $aioseo_posts_table . ' ap INNER JOIN ' . $posts_table . ' p ON ap.post_id = p.ID WHERE p.post_type="product" AND ap.schema IS NOT NULL AND ap.schema != "" LIMIT ' . intval( $max_pages );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built above from safe table names and intval LIMIT.
+					$schema_rows = $wpdb->get_results( $schema_sql );
+					foreach ( (array) $schema_rows as $schema_row ) {
+						if ( 'draft' === $schema_row->post_status && ! $page_status ) {
+							continue;
+						}
+						if ( 'draft' === $schema_row->post_status && ! $post_status ) {
+							continue;
+						}
+						$texts = wpscx_aioseo_product_schema_texts( $schema_row->schema );
+						foreach ( array(
+							'description' => 'All in One SEO Product Schema Description',
+							'brand'       => 'All in One SEO Product Brand',
+						) as $prop => $schema_page_type ) {
+							if ( '' === $texts[ $prop ] ) {
+								continue;
+							}
+							$desc  = wpscx_clean_all( html_entity_decode( wp_strip_all_tags( $texts[ $prop ] ), ENT_QUOTES, 'utf-8' ), $wpsc_settings );
+							$words = explode( ' ', $desc );
+							foreach ( $words as $word ) {
+								++$word_count;
+								++$total_words;
+								$word = trim( $word, "'`”“" );
+								if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+									$hold    = new SplFixedArray( 4 );
+									$hold[0] = $word;
+									$hold[1] = $schema_row->post_title;
+									$hold[2] = $schema_row->post_id;
+									$hold[3] = $schema_page_type;
+									$error_list->setSize( $error_list->getSize() + 1 );
+									$error_list[ $error_count ] = $hold;
+									++$error_count;
+								}
+							}
+						}
+					}
 				}
 
 				$end = round( microtime( true ), 5 );
@@ -2383,13 +2525,14 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$yoast_active = is_plugin_active( 'wordpress-seo/wp-seo.php' );
 				$rm_active    = is_plugin_active( 'seo-by-rank-math/rank-math.php' );
 				$yoast_types  = $yoast_active ? wpscx_yoast_postmeta_title_keys() : array();
+				$ain_types    = $ain_active ? wpscx_aioseo_postmeta_title_keys() : array();
 				$rm_types     = $rm_active ? wpscx_rank_math_postmeta_title_keys() : array();
 				$where_parts  = array();
 				if ( $yoast_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $yoast_types ) );
 				}
 				if ( $ain_active ) {
-					$where_parts[] = 'meta_key="_aioseop_title"';
+					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $ain_types ) );
 				}
 				if ( $rm_active ) {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
@@ -2431,8 +2574,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 									$page_type = null;
 							if ( $yoast_active && isset( $yoast_types[ $desc_type ] ) ) {
 								$page_type = $yoast_types[ $desc_type ];
-							} elseif ( '_aioseop_title' === $desc_type && $ain_active ) {
-								$page_type = 'All in One SEO Title';
+							} elseif ( $ain_active && isset( $ain_types[ $desc_type ] ) ) {
+								$page_type = $ain_types[ $desc_type ];
 							} elseif ( $rm_active && isset( $rm_types[ $desc_type ] ) ) {
 								$page_type = $rm_types[ $desc_type ];
 							}
@@ -2451,6 +2594,43 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						}
 					}
 					unset( $results[ $x ] );
+				}
+
+				if ( $ain_active ) {
+					$aioseo_posts_table = $wpdb->prefix . 'aioseo_posts';
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb->prefix; LIMIT uses intval().
+					$schema_sql = 'SELECT ap.post_id, ap.schema, p.post_title, p.post_status, p.post_type FROM ' . $aioseo_posts_table . ' ap INNER JOIN ' . $posts_table . ' p ON ap.post_id = p.ID WHERE p.post_type="product" AND ap.schema IS NOT NULL AND ap.schema != "" LIMIT ' . intval( $max_pages );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL built above from safe table names and intval LIMIT.
+					$schema_rows = $wpdb->get_results( $schema_sql );
+					foreach ( (array) $schema_rows as $schema_row ) {
+						if ( 'draft' === $schema_row->post_status && ! $page_status ) {
+							continue;
+						}
+						if ( 'draft' === $schema_row->post_status && ! $post_status ) {
+							continue;
+						}
+						$texts = wpscx_aioseo_product_schema_texts( $schema_row->schema );
+						if ( '' === $texts['name'] ) {
+							continue;
+						}
+						$desc  = wpscx_clean_all( $texts['name'], $wpsc_settings );
+						$words = explode( ' ', $desc );
+						foreach ( $words as $word ) {
+							++$word_count;
+							++$total_words;
+							$word = trim( $word, "'`”“" );
+							if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+								$hold    = new SplFixedArray( 4 );
+								$hold[0] = $word;
+								$hold[1] = $schema_row->post_title;
+								$hold[2] = $schema_row->post_id;
+								$hold[3] = 'All in One SEO Product Schema Name';
+								$error_list->setSize( $error_list->getSize() + 1 );
+								$error_list[ $error_count ] = $hold;
+								++$error_count;
+							}
+						}
+					}
 				}
 
 				if ( $yoast_active ) {
@@ -3264,6 +3444,8 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 				$desc_table  = $wpdb->prefix . 'term_taxonomy';
 				$cats_list   = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_cat' AND a.term_id = b.term_id;" ) );
 				$rm_wc_cat_map = wpscx_rank_math_is_active() ? wpscx_rank_math_term_keys( 'product_cat' ) : array();
+				$aioseo_wc_cat_meta = wpscx_aioseo_term_rows_for_taxonomy( 'product_cat' );
+				$aioseo_wc_cat_types = wpscx_aioseo_term_page_types( 'product_cat' );
 
 		for ( $x = 0; $x < $cats_list->getSize(); $x++ ) {
 				$words = array();
@@ -3349,11 +3531,44 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					}
 				}
 			}
+
+			if ( wpscx_aioseo_is_active() && isset( $cats_list[ $x ]->term_id ) && ! empty( $aioseo_wc_cat_meta[ $cats_list[ $x ]->term_id ] ) ) {
+				$term_id    = $cats_list[ $x ]->term_id;
+				$term_name  = $cats_list[ $x ]->name;
+				$aioseo_row = $aioseo_wc_cat_meta[ $term_id ];
+				foreach ( array(
+					'title'       => $aioseo_wc_cat_types['title'],
+					'description' => $aioseo_wc_cat_types['description'],
+				) as $column => $page_type ) {
+					if ( empty( $aioseo_row->$column ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $aioseo_row->$column, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
 		}
 
 				// Check Tags
 				$tags_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT a.term_id, a.description, b.name FROM $desc_table a, $title_table b WHERE a.taxonomy='product_tag' AND a.term_id = b.term_id;" ) );
 				$rm_wc_tag_map = wpscx_rank_math_is_active() ? wpscx_rank_math_term_keys( 'product_tag' ) : array();
+				$aioseo_wc_tag_meta = wpscx_aioseo_term_rows_for_taxonomy( 'product_tag' );
+				$aioseo_wc_tag_types = wpscx_aioseo_term_page_types( 'product_tag' );
 
 		for ( $x = 0; $x < $tags_list->getSize(); $x++ ) {
 				$words = array();
@@ -3421,6 +3636,37 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 						continue;
 					}
 					$field_value = wpscx_clean_all( $field_value, $wpsc_settings );
+					$words       = explode( ' ', $field_value );
+					foreach ( $words as $word ) {
+						++$word_count;
+						++$total_words;
+						$word = trim( $word, "'`”“" );
+						if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+							$hold    = new SplFixedArray( 4 );
+							$hold[0] = $word;
+							$hold[1] = $term_name;
+							$hold[2] = $term_id;
+							$hold[3] = $page_type;
+							$error_list->setSize( $error_list->getSize() + 1 );
+							$error_list[ $error_count ] = $hold;
+							++$error_count;
+						}
+					}
+				}
+			}
+
+			if ( wpscx_aioseo_is_active() && isset( $tags_list[ $x ]->term_id ) && ! empty( $aioseo_wc_tag_meta[ $tags_list[ $x ]->term_id ] ) ) {
+				$term_id    = $tags_list[ $x ]->term_id;
+				$term_name  = $tags_list[ $x ]->name;
+				$aioseo_row = $aioseo_wc_tag_meta[ $term_id ];
+				foreach ( array(
+					'title'       => $aioseo_wc_tag_types['title'],
+					'description' => $aioseo_wc_tag_types['description'],
+				) as $column => $page_type ) {
+					if ( empty( $aioseo_row->$column ) ) {
+						continue;
+					}
+					$field_value = wpscx_clean_all( $aioseo_row->$column, $wpsc_settings );
 					$words       = explode( ' ', $field_value );
 					foreach ( $words as $word ) {
 						++$word_count;
