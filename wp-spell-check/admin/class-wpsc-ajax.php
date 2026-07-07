@@ -1118,7 +1118,7 @@ class Wpscx_Ajax {
 			}
 
 			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> Scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Widgets</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
-		} elseif ( 'Contact Form 7' === $type ) {
+		} elseif ( 'Contact Forms' === $type ) {
 			wpscx_clear_results();
 			wp_enqueue_script( 'results-ajax', plugin_dir_url( __FILE__ ) . '/ajax.js', array( 'jquery' ) );
 			wp_localize_script(
@@ -1135,11 +1135,13 @@ class Wpscx_Ajax {
 			++$sql_count;
 			$wpdb->update( $options_table, array( 'option_value' => time() ), array( 'option_name' => 'last_scan_date' ) );
 			++$sql_count;
-			$wpdb->update( $options_table, array( 'option_value' => 'Contact Form 7' ), array( 'option_name' => 'last_scan_type' ) );
+			$wpdb->update( $options_table, array( 'option_value' => 'Contact Forms' ), array( 'option_name' => 'last_scan_type' ) );
 			++$sql_count;
+			$cf7_active = is_plugin_active( 'contact-form-7/wp-contact-form-7.php' );
 			wpscx_check_cf7();
+			wpscx_check_wpforms( null, $cf7_active );
 
-			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> Scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Contact Form 7</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
+			echo '<img src="' . esc_url( wpsc_get_loading_spinner_url() ) . '" alt="Scan in Progress" class="wpsc-loading-spinner" /> Scan has been started for <span style="color: rgb(0, 150, 255); font-weight: bold;">Contact Forms</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>';
 		} elseif ( WPSCX_SITE_STRING === $type ) {
 			wpscx_clear_results( 'full' );
 			$rng_seed = wp_rand( 0, 999999999 );

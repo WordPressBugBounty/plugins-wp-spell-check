@@ -236,7 +236,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'wpforms' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 				$post_type_list .= "post_type='$type' OR ";
 			}
 		}
@@ -838,70 +838,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 			if ( 'true' === $ignore_flag ) {
 				continue; }
 			++$post_count;
-			$words_list             = $posts_list[ $x ]->post_content;
-						$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
-						$words_list = $words_list[0];
-						$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
-			$words                  = explode( ' ', $words_list );
 
-			foreach ( $words as $word ) {
-				++$total_words;
-				$word = trim( $word, "'`”“#" );
-				if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-							// $word = addslashes($word);
-
-							// Add the error to a new fixed holding array
-							$hold                                = new SplFixedArray( 4 );
-							$hold[0]                             = $word;
-							$hold[1]                             = $posts_list[ $x ]->post_title;
-							$hold[2]                             = $posts_list[ $x ]->ID;
-														$hold[3] = 'Contact Form 7 Form';
-
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-
-							++$error_count;
-				}
-			}
-
-					// Email Notification
-					$words_list = $posts_list[ $x ]->post_content;
-					$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
-			if ( isset( $words_list[1] ) ) {
-				$words_list = $words_list[1];
-
-				$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 3 );
-				$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
-				$words      = explode( ' ', $words_list );
-
-				foreach ( $words as $word ) {
-						++$total_words;
-						$word = trim( $word, "'`”“#" );
-					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-						// $word = addslashes($word);
-
-						// Add the error to a new fixed holding array
-						$hold                            = new SplFixedArray( 4 );
-						$hold[0]                         = $word;
-						$hold[1]                         = $posts_list[ $x ]->post_title;
-						$hold[2]                         = $posts_list[ $x ]->ID;
-												$hold[3] = 'Contact Form 7 Email Notification';
-
-						$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-						$error_list[ $error_count ] = $hold;
-
-						++$error_count;
-					}
-				}
-			}
-
-					// Email Auto Response
-						$words_list = $posts_list[ $x ]->post_content;
-						$words_list = explode( PHP_EOL . '1' . PHP_EOL, $words_list );
-			if ( isset( $words_list[2] ) ) {
-				$words_list = $words_list[2];
-
-				$words_list = preg_replace( '/(.*\n){1}/m', '', $words_list, 2 );
+			$cf7_buckets = wpscx_cf7_collect_scan_buckets( (int) $posts_list[ $x ]->ID );
+			foreach ( $cf7_buckets as $page_type => $words_list ) {
 				$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
 				$words      = explode( ' ', $words_list );
 
@@ -909,19 +848,16 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					++$total_words;
 					$word = trim( $word, "'`”“#" );
 					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
-							// $word = addslashes($word);
+						$hold       = new SplFixedArray( 4 );
+						$hold[0]    = $word;
+						$hold[1]    = $posts_list[ $x ]->post_title;
+						$hold[2]    = $posts_list[ $x ]->ID;
+						$hold[3]    = $page_type;
 
-							// Add the error to a new fixed holding array
-							$hold                                = new SplFixedArray( 4 );
-							$hold[0]                             = $word;
-							$hold[1]                             = $posts_list[ $x ]->post_title;
-							$hold[2]                             = $posts_list[ $x ]->ID;
-														$hold[3] = 'Contact Form 7 Auto Response';
+						$error_list->setSize( $error_list->getSize() + 1 );
+						$error_list[ $error_count ] = $hold;
 
-							$error_list->setSize( $error_list->getSize() + 1 ); // Increase the size of the main error array by 1
-							$error_list[ $error_count ] = $hold;
-
-							++$error_count;
+						++$error_count;
 					}
 				}
 			}
@@ -950,6 +886,151 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 
 		$end = round( microtime( true ), 5 );
 		wpscx_print_debug( 'Contact Form 7', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
+	}
+
+	function check_wpforms( $wpsc_haystack = null, $is_running = false ) {
+		$start         = round( microtime( true ), 5 );
+		$wpscx_debug_q = wpscx_debug_queries_at_start();
+		if ( ! wpscx_is_wpforms_active() || ! function_exists( 'wpforms_decode' ) ) {
+			return;
+		}
+
+		global $wpscx_scan_delay;
+		global $wpdb;
+		global $wpscx_ent_included;
+		global $wpscx_ignore_list;
+		global $wpscx_dict_list;
+		global $wpsc_settings;
+		$table_name    = $wpdb->prefix . 'spellcheck_words';
+		$options_table = $wpdb->prefix . 'spellcheck_options';
+		$ignore_table  = $wpdb->prefix . 'spellcheck_ignore';
+		$dict_table    = $wpdb->prefix . 'spellcheck_dictionary';
+		ini_set( 'memory_limit', '512M' ); // Sets the PHP memory limit
+		set_time_limit( 6000 );
+		$sql_count = 0;
+
+		wpscx_set_global_vars();
+		global $wpsc_settings;
+
+		if ( null === $wpsc_haystack ) {
+			$loc = plugins_url( '/dict/' . $wpsc_settings[11]->option_value . '.pws', __FILE__ );
+
+			$contents = wp_remote_retrieve_body( wp_remote_get( $loc ) );
+
+			$contents  = str_replace( "\r\n", "\n", $contents );
+			$dict_file = explode( "\n", $contents );
+
+			$wpsc_haystack = wpscx_dictionary_init( $dict_file );
+		}
+
+		$total_posts = 2;
+		if ( $wpscx_ent_included ) {
+			$total_posts = PHP_INT_MAX;
+		}
+		$total_words = 0;
+		$post_count  = 0;
+		$error_count = 0;
+		$word_count  = 0;
+		if ( ! $is_running ) {
+			$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'scan_in_progress' ) );
+			$start_time = time();
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'spellcheck_ignore', query contains only hardcoded value "page"
+		$ignore_posts = $wpdb->get_results( 'SELECT keyword FROM ' . $ignore_table . ' WHERE type="page";' );
+		++$sql_count;
+
+		if ( 'true' === $wpsc_settings[136]->option_value ) {
+			$post_status = array( 'publish', 'draft' );
+		} else {
+			$post_status = array( 'publish' );
+		}
+
+		$posts_list = SplFixedArray::fromArray(
+			get_posts(
+				array(
+					'posts_per_page' => $total_posts,
+					'post_type'      => 'wpforms',
+					'post_status'    => $post_status,
+				)
+			)
+		);
+		++$sql_count;
+
+		global $wpscx_ignore_list;
+		global $wpscx_dict_list;
+		global $wpsc_settings;
+		$error_list = new SplFixedArray( 1 );
+
+		$bucket_types = array(
+			'form'          => 'WPForms → Fields & General Settings',
+			'notifications' => 'WPForms → Settings → Notifications',
+			'confirmations' => 'WPForms → Settings → Confirmations',
+		);
+
+		for ( $x = 0; $x < $posts_list->getSize(); $x++ ) {
+			$ignore_flag = 'false';
+			foreach ( $ignore_posts as $ignore_check ) {
+				if ( strtoupper( trim( $posts_list[ $x ]->post_title ) ) == strtoupper( trim( $ignore_check->keyword ) ) ) {
+					$ignore_flag = 'true';
+				}
+			}
+			if ( 'true' === $ignore_flag ) {
+				continue;
+			}
+			++$post_count;
+			$form_data = wpforms_decode( $posts_list[ $x ]->post_content );
+			$buckets   = wpscx_wpforms_collect_strings( $form_data, $posts_list[ $x ]->post_title );
+
+			foreach ( $buckets as $bucket_key => $words_list ) {
+				if ( '' === trim( $words_list ) ) {
+					continue;
+				}
+				$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
+				$words      = explode( ' ', $words_list );
+
+				foreach ( $words as $word ) {
+					++$total_words;
+					$word = trim( $word, "'`”“#" );
+					if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+						$hold    = new SplFixedArray( 4 );
+						$hold[0] = $word;
+						$hold[1] = $posts_list[ $x ]->post_title;
+						$hold[2] = $posts_list[ $x ]->ID;
+						$hold[3] = $bucket_types[ $bucket_key ];
+
+						$error_list->setSize( $error_list->getSize() + 1 );
+						$error_list[ $error_count ] = $hold;
+
+						++$error_count;
+					}
+				}
+			}
+		}
+
+		$counter = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name ='total_word_count';" );
+		++$sql_count;
+		$total_words = $total_words + intval( $counter[0]->option_value );
+		$wpdb->update( $options_table, array( 'option_value' => $total_words ), array( 'option_name' => 'total_word_count' ) );
+		++$sql_count;
+
+		$word_count = $word_count + intval( $counter[0]->option_value );
+
+		wpscx_sql_insert( $error_list, 'Multi' );
+
+		if ( ! $is_running ) {
+			$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'scan_in_progress' ) );
+			++$sql_count;
+			$end_time   = time();
+			$total_time = wpscx_time_elapsed( $end_time - $start_time + 6 );
+			$wpdb->update( $options_table, array( 'option_value' => $total_time ), array( 'option_name' => 'last_scan_finished' ) );
+			++$sql_count;
+		}
+		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cf7_sip' ) );
+		++$sql_count;
+
+		$end = round( microtime( true ), 5 );
+		wpscx_print_debug( 'WPForms', round( $end - $start, 5 ), 0, round( memory_get_usage() / 1000, 5 ), $error_count, $wpscx_debug_q );
 	}
 
 	function check_author_seotitle_free( $is_running = false, $wpsc_haystack = null, $log_debug = true ) {
@@ -1626,7 +1707,7 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 		$post_types         = get_post_types( array( 'publicly_queryable' => true ) );
 			$post_type_list = '(';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'wpforms' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 				$post_type_list .= "post_type='$type' OR ";
 			}
 		}

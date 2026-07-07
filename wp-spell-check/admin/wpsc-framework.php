@@ -169,6 +169,251 @@ function wpscx_debug_queries_since( $query_start ) {
 }
 
 /**
+ * NDJSON debug log path for CF7 save tracing (session 85c60e).
+ *
+ * @since 11.9
+ * @return string
+ */
+function wpscx_cf7_debug_log_path() {
+	return dirname( __DIR__ ) . '/debug-85c60e.log';
+}
+
+/**
+ * Human-readable CF7 save debug log on the server (plugin root).
+ *
+ * @since 11.9
+ * @return string
+ */
+function wpscx_cf7_debug_readable_log_path() {
+	return dirname( __DIR__ ) . '/cf7-update-debug.log';
+}
+
+/**
+ * Append one CF7 save-debug entry (NDJSON + readable companion file).
+ *
+ * @since 11.9
+ * @param string $location      Code location identifier.
+ * @param string $message       Short description.
+ * @param array  $data          Context (no secrets/PII).
+ * @param string $hypothesis_id Hypothesis tag (H-A, H-B, etc.).
+ */
+function wpscx_cf7_debug_log( $location, $message, $data = array(), $hypothesis_id = 'INFO' ) {
+	$payload = array(
+		'sessionId'    => '85c60e',
+		'timestamp'    => (int) round( microtime( true ) * 1000 ),
+		'location'     => $location,
+		'message'      => $message,
+		'data'         => $data,
+		'hypothesisId' => $hypothesis_id,
+	);
+	// #region agent log
+	$ndjson = wp_json_encode( $payload ) . "\n";
+	@file_put_contents( wpscx_cf7_debug_log_path(), $ndjson, FILE_APPEND | LOCK_EX );
+	$readable = sprintf(
+		"[%s] %s | %s | %s\n",
+		gmdate( 'Y-m-d H:i:s' ),
+		$hypothesis_id,
+		$message,
+		wp_json_encode( $data )
+	);
+	@file_put_contents( wpscx_cf7_debug_readable_log_path(), $readable, FILE_APPEND | LOCK_EX );
+	// #endregion
+}
+
+/**
+ * Scalar-only flatten for CF7 meta word-presence checks.
+ *
+ * @since 11.9
+ * @param mixed $input Value to flatten.
+ * @return array
+ */
+function wpscx_cf7_flatten_scalars( $input ) {
+	if ( ! is_array( $input ) ) {
+		return array( is_scalar( $input ) ? (string) $input : '' );
+	}
+	$out = array();
+	foreach ( $input as $value ) {
+		$out = array_merge( $out, wpscx_cf7_flatten_scalars( $value ) );
+	}
+	return $out;
+}
+
+/**
+ * Snapshot CF7 meta buckets for save-debug (truncated, no full bodies).
+ *
+ * @since 11.9
+ * @param int    $form_id   CF7 post ID.
+ * @param string $old_word  Word being replaced (for presence checks).
+ * @return array
+ */
+function wpscx_cf7_meta_debug_snapshot( $form_id, $old_word = '' ) {
+	$form_id  = (int) $form_id;
+	$form     = get_post_meta( $form_id, '_form', true );
+	$mail     = get_post_meta( $form_id, '_mail', true );
+	$mail_2   = get_post_meta( $form_id, '_mail_2', true );
+	$messages = get_post_meta( $form_id, '_messages', true );
+	$content  = get_post_field( 'post_content', $form_id );
+
+	$word_in = function ( $value ) use ( $old_word ) {
+		if ( '' === $old_word ) {
+			return null;
+		}
+		if ( is_array( $value ) ) {
+			$flat = implode( ' ', wpscx_cf7_flatten_scalars( $value ) );
+			return ( false !== strpos( $flat, $old_word ) );
+		}
+		if ( is_string( $value ) ) {
+			return ( false !== strpos( $value, $old_word ) );
+		}
+		return false;
+	};
+
+	$mail_summary = function ( $value ) use ( $word_in ) {
+		if ( ! is_array( $value ) ) {
+			return array(
+				'type'          => gettype( $value ),
+				'old_word_here' => $word_in( $value ),
+			);
+		}
+		return array(
+			'type'          => 'array',
+			'subject'       => isset( $value['subject'] ) ? substr( (string) $value['subject'], 0, 120 ) : '',
+			'body_len'      => isset( $value['body'] ) ? strlen( (string) $value['body'] ) : 0,
+			'body_preview'  => isset( $value['body'] ) ? substr( (string) $value['body'], 0, 80 ) : '',
+			'old_word_here' => $word_in( $value ),
+		);
+	};
+
+	$messages_summary = array( 'type' => gettype( $messages ) );
+	if ( is_array( $messages ) ) {
+		$messages_summary['keys']          = array_keys( $messages );
+		$messages_summary['old_word_here'] = $word_in( $messages );
+		foreach ( array_slice( $messages, 0, 3, true ) as $key => $msg ) {
+			$messages_summary['preview'][ $key ] = substr( (string) $msg, 0, 80 );
+		}
+	}
+
+	return array(
+		'form_id'              => $form_id,
+		'post_content_len'     => is_string( $content ) ? strlen( $content ) : 0,
+		'post_content_has_word' => ( is_string( $content ) && '' !== $old_word ) ? ( false !== strpos( $content, $old_word ) ) : null,
+		'_form'                => array(
+			'len'           => is_string( $form ) ? strlen( $form ) : 0,
+			'preview'       => is_string( $form ) ? substr( $form, 0, 80 ) : '',
+			'old_word_here' => $word_in( $form ),
+		),
+		'_mail'                => $mail_summary( $mail ),
+		'_mail_2'              => $mail_summary( $mail_2 ),
+		'_messages'            => $messages_summary,
+	);
+}
+
+/**
+ * CF7 page_type labels used in scan results and save routing.
+ *
+ * @since 11.9
+ * @return string[]
+ */
+function wpscx_cf7_page_types() {
+	return array(
+		'Contact Form 7 Form',
+		'Contact Form 7 Email Notification',
+		'Contact Form 7 Auto Response',
+		'Contact Form 7 Messages',
+	);
+}
+
+/**
+ * String keys scanned/updated inside CF7 mail property arrays.
+ *
+ * @since 11.9
+ * @return string[]
+ */
+function wpscx_cf7_mail_string_keys() {
+	return array( 'subject', 'sender', 'body', 'recipient', 'additional_headers', 'attachments' );
+}
+
+/**
+ * Collect CF7 scan text buckets from postmeta (not post_content).
+ *
+ * @since 11.9
+ * @param int $form_id CF7 form post ID.
+ * @return array<string, string> page_type => text to scan.
+ */
+function wpscx_cf7_collect_scan_buckets( $form_id ) {
+	$form_id = (int) $form_id;
+	$buckets = array();
+
+	$form = get_post_meta( $form_id, '_form', true );
+	if ( is_string( $form ) && '' !== $form ) {
+		$buckets['Contact Form 7 Form'] = $form;
+	}
+
+	$mail = get_post_meta( $form_id, '_mail', true );
+	if ( is_array( $mail ) ) {
+		$parts = array();
+		foreach ( wpscx_cf7_mail_string_keys() as $key ) {
+			if ( isset( $mail[ $key ] ) && is_string( $mail[ $key ] ) && '' !== $mail[ $key ] ) {
+				$parts[] = $mail[ $key ];
+			}
+		}
+		if ( ! empty( $parts ) ) {
+			$buckets['Contact Form 7 Email Notification'] = implode( ' ', $parts );
+		}
+	}
+
+	$mail_2 = get_post_meta( $form_id, '_mail_2', true );
+	if ( is_array( $mail_2 ) ) {
+		$parts = array();
+		foreach ( wpscx_cf7_mail_string_keys() as $key ) {
+			if ( isset( $mail_2[ $key ] ) && is_string( $mail_2[ $key ] ) && '' !== $mail_2[ $key ] ) {
+				$parts[] = $mail_2[ $key ];
+			}
+		}
+		if ( ! empty( $parts ) ) {
+			$buckets['Contact Form 7 Auto Response'] = implode( ' ', $parts );
+		}
+	}
+
+	$messages = get_post_meta( $form_id, '_messages', true );
+	if ( is_array( $messages ) ) {
+		$parts = array();
+		foreach ( $messages as $message ) {
+			if ( is_string( $message ) && '' !== $message ) {
+				$parts[] = $message;
+			}
+		}
+		if ( ! empty( $parts ) ) {
+			$buckets['Contact Form 7 Messages'] = implode( ' ', $parts );
+		}
+	}
+
+	return $buckets;
+}
+
+/**
+ * Replace a word inside a CF7 meta array (mail/messages).
+ *
+ * @since 11.9
+ * @param mixed  $data     Meta value (array or string).
+ * @param string $old_word Word to replace.
+ * @param string $new_word Replacement word.
+ * @return mixed
+ */
+function wpscx_cf7_replace_in_meta_array( $data, $old_word, $new_word ) {
+	if ( is_array( $data ) ) {
+		foreach ( $data as $key => $value ) {
+			$data[ $key ] = wpscx_cf7_replace_in_meta_array( $value, $old_word, $new_word );
+		}
+		return $data;
+	}
+	if ( is_string( $data ) ) {
+		return preg_replace( wpscx_regex_pattern( $old_word ), sanitize_textarea_field( $new_word ), $data );
+	}
+	return $data;
+}
+
+/**
  * Print debug information to log file
  * Only logs if WPSCX_DEBUG_LOGGING_ENABLED is set to true
  *
@@ -494,6 +739,296 @@ function wpscx_extract_json_text( $value ) {
 	}
 
 	return $value;
+}
+
+/**
+ * Whether WPForms Lite or Pro is active.
+ *
+ * @since 11.8
+ *
+ * @return bool
+ */
+function wpscx_is_wpforms_active() {
+	return is_plugin_active( 'wpforms-lite/wpforms.php' ) || is_plugin_active( 'wpforms/wpforms.php' );
+}
+
+/**
+ * WPForms spellcheck page_type labels.
+ *
+ * @since 11.8
+ *
+ * @return array
+ */
+function wpscx_wpforms_page_types() {
+	return array(
+		'WPForms → Fields & General Settings',
+		'WPForms → Settings → Notifications',
+		'WPForms → Settings → Confirmations',
+	);
+}
+
+/**
+ * Strip WPForms smart tags from scan text (scan path only).
+ *
+ * @since 11.8
+ *
+ * @param string $content Raw field text.
+ * @return string
+ */
+function wpscx_wpforms_strip_smart_tags( $content ) {
+	if ( ! is_string( $content ) || '' === $content ) {
+		return '';
+	}
+	return preg_replace( '/\{[^}]+\}/', ' ', $content );
+}
+
+/**
+ * String keys collected from each WPForms field for spellchecking.
+ *
+ * @since 11.8
+ *
+ * @return array
+ */
+function wpscx_wpforms_field_string_keys() {
+	return array(
+		'label',
+		'description',
+		'placeholder',
+		'default_value',
+		'content',
+		'code',
+		'name',
+		'title',
+		'text',
+		'first',
+		'middle',
+		'last',
+		'address1',
+		'address2',
+		'city',
+		'state',
+		'postal',
+		'country',
+		'payment_text',
+		'captcha',
+		'internal_information',
+	);
+}
+
+/**
+ * Append stripped field string to collection parts.
+ *
+ * @since 11.8
+ *
+ * @param array  $parts String parts (by ref).
+ * @param mixed  $value Raw value.
+ */
+function wpscx_wpforms_append_field_text( array &$parts, $value ) {
+	if ( ! is_string( $value ) || '' === trim( $value ) ) {
+		return;
+	}
+	$stripped = wpscx_wpforms_strip_smart_tags( $value );
+	if ( '' !== trim( $stripped ) ) {
+		$parts[] = $stripped;
+	}
+}
+
+/**
+ * Collect user-facing strings from one WPForms field.
+ *
+ * @since 11.8
+ *
+ * @param array $field Field definition.
+ * @param array $parts Collected strings (by ref).
+ */
+function wpscx_wpforms_collect_field_strings( $field, array &$parts ) {
+	if ( ! is_array( $field ) ) {
+		return;
+	}
+	foreach ( wpscx_wpforms_field_string_keys() as $key ) {
+		if ( isset( $field[ $key ] ) ) {
+			wpscx_wpforms_append_field_text( $parts, $field[ $key ] );
+		}
+	}
+	if ( ! empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
+		foreach ( $field['choices'] as $choice ) {
+			if ( is_array( $choice ) && isset( $choice['label'] ) ) {
+				if ( is_array( $choice['label'] ) && isset( $choice['label']['text'] ) ) {
+					wpscx_wpforms_append_field_text( $parts, $choice['label']['text'] );
+				} else {
+					wpscx_wpforms_append_field_text( $parts, $choice['label'] );
+				}
+			}
+		}
+	}
+	if ( ! empty( $field['questions'] ) && is_array( $field['questions'] ) ) {
+		foreach ( $field['questions'] as $question ) {
+			if ( is_array( $question ) && isset( $question['question'] ) ) {
+				wpscx_wpforms_append_field_text( $parts, $question['question'] );
+			}
+		}
+	}
+}
+
+/**
+ * Collect WPForms form text into three scan buckets.
+ *
+ * @since 11.8
+ *
+ * @param array|false $form_data Decoded form data.
+ * @param string      $post_title Form post title.
+ * @return array Keys form, notifications, confirmations.
+ */
+function wpscx_wpforms_collect_strings( $form_data, $post_title = '' ) {
+	$buckets = array(
+		'form'          => array(),
+		'notifications' => array(),
+		'confirmations' => array(),
+	);
+	if ( ! is_array( $form_data ) ) {
+		return array(
+			'form'          => '',
+			'notifications' => '',
+			'confirmations' => '',
+		);
+	}
+	if ( ! empty( $form_data['settings'] ) && is_array( $form_data['settings'] ) ) {
+		foreach ( array( 'form_title', 'form_desc', 'submit_text', 'submit_text_processing' ) as $setting_key ) {
+			if ( isset( $form_data['settings'][ $setting_key ] ) ) {
+				wpscx_wpforms_append_field_text( $buckets['form'], $form_data['settings'][ $setting_key ] );
+			}
+		}
+		if ( ! empty( $form_data['settings']['notifications'] ) && is_array( $form_data['settings']['notifications'] ) ) {
+			foreach ( $form_data['settings']['notifications'] as $notification ) {
+				if ( ! is_array( $notification ) ) {
+					continue;
+				}
+				foreach ( array( 'notification_name', 'subject', 'message', 'sender_name' ) as $notify_key ) {
+					if ( isset( $notification[ $notify_key ] ) ) {
+						wpscx_wpforms_append_field_text( $buckets['notifications'], $notification[ $notify_key ] );
+					}
+				}
+			}
+		}
+		if ( ! empty( $form_data['settings']['confirmations'] ) && is_array( $form_data['settings']['confirmations'] ) ) {
+			foreach ( $form_data['settings']['confirmations'] as $confirmation ) {
+				if ( is_array( $confirmation ) && isset( $confirmation['message'] ) ) {
+					wpscx_wpforms_append_field_text( $buckets['confirmations'], $confirmation['message'] );
+				}
+			}
+		}
+	}
+	if ( ! empty( $form_data['fields'] ) && is_array( $form_data['fields'] ) ) {
+		foreach ( $form_data['fields'] as $field ) {
+			wpscx_wpforms_collect_field_strings( $field, $buckets['form'] );
+		}
+	}
+	return array(
+		'form'          => implode( ' ', $buckets['form'] ),
+		'notifications' => implode( ' ', $buckets['notifications'] ),
+		'confirmations' => implode( ' ', $buckets['confirmations'] ),
+	);
+}
+
+/**
+ * Recursively replace a misspelled word within a subtree (fix path only).
+ *
+ * @since 11.8
+ *
+ * @param mixed  $subtree Subtree to update (by ref).
+ * @param string $old     Old word.
+ * @param string $new     New word.
+ * @return mixed
+ */
+function wpscx_wpforms_bucket_word_replace( &$subtree, $old, $new ) {
+	if ( is_string( $subtree ) ) {
+		return preg_replace( wpscx_regex_pattern( $old ), $new, $subtree );
+	}
+	if ( ! is_array( $subtree ) ) {
+		return $subtree;
+	}
+	foreach ( $subtree as $key => $value ) {
+		if ( is_string( $value ) ) {
+			$subtree[ $key ] = preg_replace( wpscx_regex_pattern( $old ), $new, $value );
+		} elseif ( is_array( $value ) ) {
+			wpscx_wpforms_bucket_word_replace( $subtree[ $key ], $old, $new );
+		}
+	}
+	return $subtree;
+}
+
+/**
+ * Apply inline/bulk fix to a WPForms form for one page_type bucket.
+ *
+ * @since 11.8
+ *
+ * @param int    $form_id   Form post ID.
+ * @param string $page_type Spellcheck page_type label.
+ * @param string $old_word  Misspelled word.
+ * @param string $new_word  Replacement word.
+ * @return bool
+ */
+function wpscx_wpforms_apply_word_fix( $form_id, $page_type, $old_word, $new_word ) {
+	if ( ! wpscx_is_wpforms_active() || ! function_exists( 'wpforms_decode' ) || ! function_exists( 'wpforms_encode' ) ) {
+		return false;
+	}
+	$post = get_post( (int) $form_id );
+	if ( ! $post || 'wpforms' !== $post->post_type ) {
+		return false;
+	}
+	$form_data = wpforms_decode( $post->post_content );
+	if ( ! is_array( $form_data ) ) {
+		return false;
+	}
+	$update_post = array(
+		'ID' => (int) $form_id,
+	);
+	if ( 'WPForms → Fields & General Settings' === $page_type ) {
+		$update_post['post_title'] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $post->post_title );
+		if ( ! empty( $form_data['settings'] ) && is_array( $form_data['settings'] ) ) {
+			foreach ( array( 'form_title', 'form_desc', 'submit_text', 'submit_text_processing' ) as $setting_key ) {
+				if ( isset( $form_data['settings'][ $setting_key ] ) && is_string( $form_data['settings'][ $setting_key ] ) ) {
+					$form_data['settings'][ $setting_key ] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $form_data['settings'][ $setting_key ] );
+				}
+			}
+		}
+		if ( ! empty( $form_data['fields'] ) && is_array( $form_data['fields'] ) ) {
+			wpscx_wpforms_bucket_word_replace( $form_data['fields'], $old_word, $new_word );
+		}
+	} elseif ( 'WPForms → Settings → Notifications' === $page_type ) {
+		if ( ! empty( $form_data['settings']['notifications'] ) && is_array( $form_data['settings']['notifications'] ) ) {
+			wpscx_wpforms_bucket_word_replace( $form_data['settings']['notifications'], $old_word, $new_word );
+		}
+	} elseif ( 'WPForms → Settings → Confirmations' === $page_type ) {
+		if ( ! empty( $form_data['settings']['confirmations'] ) && is_array( $form_data['settings']['confirmations'] ) ) {
+			wpscx_wpforms_bucket_word_replace( $form_data['settings']['confirmations'], $old_word, $new_word );
+		}
+	} else {
+		return false;
+	}
+	$update_post['post_content'] = wpforms_encode( $form_data );
+	wp_update_post( $update_post );
+	return true;
+}
+
+/**
+ * Build WPForms builder admin URL for a spellcheck page_type.
+ *
+ * @since 11.8
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @param int    $form_id   Form post ID.
+ * @return string
+ */
+function wpscx_wpforms_builder_url( $page_type, $form_id ) {
+	$base = get_site_url() . '/wp-admin/admin.php?page=wpforms-builder&form_id=' . (int) $form_id;
+	if ( 'WPForms → Settings → Notifications' === $page_type ) {
+		return $base . '&view=settings&section=notifications';
+	}
+	if ( 'WPForms → Settings → Confirmations' === $page_type ) {
+		return $base . '&view=settings&section=confirmation';
+	}
+	return $base . '&view=fields';
 }
 
 /**
@@ -1242,6 +1777,8 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '/wp-admin/nav-menus.php?action=edit&menu=' . $id;
 	} elseif ( 'Contact Form 7' === $type ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
+	} elseif ( in_array( $type, wpscx_wpforms_page_types(), true ) ) {
+		$url = wpscx_wpforms_builder_url( $type, (int) $id );
 	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $type ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Rank Math SEO Description' === $type || 'Rank Math SEO Title' === $type || 'All in One SEO Focus Keyphrase' === $type || 'All in One SEO Product Schema Name' === $type || 'All in One SEO Product Schema Description' === $type || 'All in One SEO Product Brand' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = wpscx_get_post_edit_url( $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Tag ' ) ) {
@@ -1645,6 +2182,13 @@ function wpscx_check_cf7( $wpsc_haystack = null, $is_running = false ) {
 }
 add_action( 'admincheckcf7', 'wpscx_check_cf7' );
 
+function wpscx_check_wpforms( $wpsc_haystack = null, $is_running = false ) {
+	$scanner = new Wpscx_Spellcheck_Scanner();
+
+	$scanner->check_wpforms( $wpsc_haystack, $is_running );
+}
+add_action( 'admincheckwpforms', 'wpscx_check_wpforms' );
+
 function wphcx_clear_results( $clear_type = '' ) {
 	global $wpdb;
 	$table_name    = $wpdb->prefix . 'spellcheck_html';
@@ -1720,7 +2264,7 @@ function wpscx_set_scan_in_progress( $rng_seed = 0 ) {
 	if ( 'true' === $settings[5]->option_value ) {
 		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'post_sip' ) );
 	}
-	if ( 'true' === $settings[37]->option_value && is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) {
+	if ( 'true' === $settings[37]->option_value && ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) || wpscx_is_wpforms_active() ) ) {
 		$wpdb->update( $options_table, array( 'option_value' => 'true' ), array( 'option_name' => 'cf7_sip' ) );
 	}
 	if ( 'true' === $settings[44]->option_value ) {
@@ -1883,6 +2427,9 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 		}
 		if ( 'true' === $settings[37]->option_value ) {
 			wpscx_check_cf7( $wpsc_haystack, true );
+			if ( wpscx_is_wpforms_active() ) {
+				wpscx_check_wpforms( $wpsc_haystack, true );
+			}
 		}
 		if ( 'true' === $settings[44]->option_value ) {
 			wpscx_check_authors( $wpsc_haystack, true );
@@ -1902,6 +2449,9 @@ function wpscx_scan_site_event( $rng_seed = 0, $log_debug = true ) {
 		}
 		if ( 'true' === $settings[37]->option_value ) {
 			wpscx_check_cf7( $wpsc_haystack, true );
+			if ( wpscx_is_wpforms_active() ) {
+				wpscx_check_wpforms( $wpsc_haystack, true );
+			}
 		}
 	}
 

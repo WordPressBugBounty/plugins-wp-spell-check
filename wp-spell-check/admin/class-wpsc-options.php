@@ -1221,7 +1221,7 @@ function wpscx_render_options() {
 					if ( 'true' === $check_cf7 ) {
 						echo 'checked';}
 					?>
-				>Contact Form 7</td>
+				>Contact Form 7 / WPForms</td>
 				<td><input type="checkbox" name="check-authors" value="check-authors" 
 					<?php
 					if ( 'true' === $check_authors ) {
@@ -1288,7 +1288,7 @@ function wpscx_render_options() {
 					if ( 'true' === $check_cf7 ) {
 						echo 'checked';}
 					?>
-				>Contact Form 7</td></tr>
+				>Contact Form 7 / WPForms</td></tr>
 				<tr><td><input type="checkbox" name="check-authors" value="check-authors" 
 					<?php
 					if ( 'true' === $check_authors ) {

@@ -630,58 +630,158 @@ class Wpscx_Results_Utils {
 				$wpdb->update( $meta_table, array( 'meta_value' => $updated_meta ), array( 'meta_id' => $page_names[ $x ] ) );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
-			} elseif ( 'Contact Form 7 Form' === $page_types[ $x ] || 'Contact Form 7 Email Notification' === $page_types[ $x ] || 'Contact Form 7 Auto Response' === $page_types[ $x ] ) {
+			} elseif ( in_array( $page_types[ $x ], wpscx_cf7_page_types(), true ) ) {
+
+				// #region agent log
+				wpscx_cf7_debug_log(
+					'class-wpsc-utils.php:update_word_admin:cf7_entry',
+					'CF7 save branch entered',
+					array(
+						'index'        => $x,
+						'word_id'      => $word_id,
+						'page_type'    => $page_types[ $x ],
+						'form_id'      => (int) $page_names[ $x ],
+						'old_word'     => $old_words[ $x ],
+						'new_word'     => $new_words[ $x ],
+						'before_meta'  => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] ),
+					),
+					'H-A'
+				);
+				// #endregion
 
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
 				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT post_content, post_title FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
 
 				$updated_content = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], html_entity_decode( $page_result[0]->post_content ) );
+				$post_content_changed = ( $updated_content !== html_entity_decode( $page_result[0]->post_content ) );
 
 				$old_name = $page_result[0]->post_title;
 				$wpdb->update( $table_name, array( 'post_content' => $updated_content ), array( 'ID' => $page_names[ $x ] ) );
+
+				// #region agent log
+				wpscx_cf7_debug_log(
+					'class-wpsc-utils.php:update_word_admin:cf7_post_content',
+					'CF7 post_content update attempted',
+					array(
+						'form_id'              => (int) $page_names[ $x ],
+						'page_type'            => $page_types[ $x ],
+						'post_content_changed' => $post_content_changed,
+					),
+					'H-D'
+				);
+				// #endregion
+
 				if ( 'Contact Form 7 Form' === $page_types[ $x ] ) {
 					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
 					$meta_result  = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%s AND meta_key="_form"', $page_names[ $x ] ) );
 					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], $meta_result[0]->meta_value );
+					$form_meta_changed = ( $updated_meta !== $meta_result[0]->meta_value );
 					// $wpdb->update($meta_table, array('meta_value' => $updated_meta), array('post_id' => $page_names[$x], 'meta_key' => '_form'));
 					$updated_meta = sanitize_textarea_field( $updated_meta );
 					update_post_meta( $page_names[ $x ], '_form', $updated_meta );
+
+					// #region agent log
+					wpscx_cf7_debug_log(
+						'class-wpsc-utils.php:update_word_admin:cf7_form',
+						'CF7 _form meta update',
+						array(
+							'form_id'           => (int) $page_names[ $x ],
+							'target'            => '_form',
+							'meta_changed'      => $form_meta_changed,
+							'old_word_in_form'  => ( false !== strpos( (string) $meta_result[0]->meta_value, $old_words[ $x ] ) ),
+							'after_meta'        => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] ),
+						),
+						$form_meta_changed ? 'H-B-ok' : 'H-B'
+					);
+					// #endregion
 				} elseif ( 'Contact Form 7 Email Notification' === $page_types[ $x ] ) {
-					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-					$meta_result  = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%s AND meta_key="_mail"', $page_names[ $x ] ) );
-					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), sanitize_textarea_field( $new_words[ $x ] ), maybe_unserialize( $meta_result[0]->meta_value ) );
-					// $wpdb->update($meta_table, array('meta_value' => $updated_meta), array('post_id' => $page_names[$x], 'meta_key' => '_mail'));
+					$mail_before       = get_post_meta( $page_names[ $x ], '_mail', true );
+					$mail_before_type  = gettype( $mail_before );
+					$updated_meta      = wpscx_cf7_replace_in_meta_array( $mail_before, $old_words[ $x ], $new_words[ $x ] );
+					$mail_meta_changed = ( wp_json_encode( $updated_meta ) !== wp_json_encode( $mail_before ) );
 
 					update_post_meta( $page_names[ $x ], '_mail', $updated_meta );
 
-					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-					$meta_result  = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%s AND meta_key="_mail_2"', $page_names[ $x ] ) );
-					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), sanitize_textarea_field( $new_words[ $x ] ), maybe_unserialize( $meta_result[0]->meta_value ) );
-					// $wpdb->update($meta_table, array('meta_value' => $updated_meta), array('post_id' => $page_names[$x], 'meta_key' => '_mail_2'));
-					$updated_meta = preg_replace_callback(
-						'!s:\d+:"(.*?)";!s',
-						function ( $m ) {
-							return 's:' . strlen( $m[1] ) . ':"' . $m[1] . '";';
-						},
-						$updated_meta
+					// #region agent log
+					wpscx_cf7_debug_log(
+						'class-wpsc-utils.php:update_word_admin:cf7_mail1',
+						'CF7 _mail (Mail 1) meta update',
+						array(
+							'form_id'            => (int) $page_names[ $x ],
+							'target'             => '_mail',
+							'before_type'        => $mail_before_type,
+							'meta_changed'       => $mail_meta_changed,
+							'old_word_still_in_mail_after' => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] )['_mail']['old_word_here'],
+							'after_meta'         => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] ),
+						),
+						$mail_meta_changed ? 'H-B-ok' : 'H-B'
 					);
-
-					update_post_meta( $page_names[ $x ], '_mail_2', $updated_meta );
+					// #endregion
 				} elseif ( 'Contact Form 7 Auto Response' === $page_types[ $x ] ) {
-					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-					$meta_result  = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%s AND meta_key="_mail_2"', $page_names[ $x ] ) );
-					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), sanitize_textarea_field( $new_words[ $x ] ), maybe_unserialize( $meta_result[0]->meta_value ) );
-					// $wpdb->update($meta_table, array('meta_value' => $updated_meta), array('post_id' => $page_names[$x], 'meta_key' => '_mail_2'));
-					$updated_meta = preg_replace_callback(
-						'!s:\d+:"(.*?)";!s',
-						function ( $m ) {
-							return 's:' . strlen( $m[1] ) . ':"' . $m[1] . '";';
-						},
-						$updated_meta
-					);
+					$mail2_before       = get_post_meta( $page_names[ $x ], '_mail_2', true );
+					$mail2_before_type  = gettype( $mail2_before );
+					$updated_meta       = wpscx_cf7_replace_in_meta_array( $mail2_before, $old_words[ $x ], $new_words[ $x ] );
+					$mail2_meta_changed = ( wp_json_encode( $updated_meta ) !== wp_json_encode( $mail2_before ) );
 
 					update_post_meta( $page_names[ $x ], '_mail_2', $updated_meta );
+
+					// #region agent log
+					wpscx_cf7_debug_log(
+						'class-wpsc-utils.php:update_word_admin:cf7_mail2',
+						'CF7 _mail_2 (Mail 2) meta update',
+						array(
+							'form_id'             => (int) $page_names[ $x ],
+							'target'              => '_mail_2',
+							'before_type'         => $mail2_before_type,
+							'meta_changed'        => $mail2_meta_changed,
+							'old_word_in_mail_2'  => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] )['_mail_2']['old_word_here'],
+							'after_meta'          => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] ),
+						),
+						$mail2_meta_changed ? 'H-B-ok' : 'H-B'
+					);
+					// #endregion
+				} elseif ( 'Contact Form 7 Messages' === $page_types[ $x ] ) {
+					$messages_before       = get_post_meta( $page_names[ $x ], '_messages', true );
+					$messages_before_type  = gettype( $messages_before );
+					$updated_meta          = wpscx_cf7_replace_in_meta_array( $messages_before, $old_words[ $x ], $new_words[ $x ] );
+					$messages_meta_changed = ( wp_json_encode( $updated_meta ) !== wp_json_encode( $messages_before ) );
+
+					update_post_meta( $page_names[ $x ], '_messages', $updated_meta );
+
+					// #region agent log
+					wpscx_cf7_debug_log(
+						'class-wpsc-utils.php:update_word_admin:cf7_messages',
+						'CF7 _messages meta update',
+						array(
+							'form_id'              => (int) $page_names[ $x ],
+							'target'               => '_messages',
+							'before_type'          => $messages_before_type,
+							'meta_changed'         => $messages_meta_changed,
+							'old_word_in_messages' => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] )['_messages']['old_word_here'] ?? null,
+							'after_meta'           => wpscx_cf7_meta_debug_snapshot( (int) $page_names[ $x ], $old_words[ $x ] ),
+						),
+						$messages_meta_changed ? 'H-E-ok' : 'H-E'
+					);
+					// #endregion
 				}
+
+				// #region agent log
+				wpscx_cf7_debug_log(
+					'class-wpsc-utils.php:update_word_admin:cf7_exit',
+					'CF7 save branch complete — result removed from spellcheck table',
+					array(
+						'form_id'   => (int) $page_names[ $x ],
+						'page_type' => $page_types[ $x ],
+						'word_id'   => $word_id,
+					),
+					'INFO'
+				);
+				// #endregion
+
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( in_array( $page_types[ $x ], wpscx_wpforms_page_types(), true ) ) {
+				wpscx_wpforms_apply_word_fix( (int) $page_names[ $x ], $page_types[ $x ], $old_words[ $x ], $new_words[ $x ] );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( 'WooCommerce Product Short Description' === $page_types[ $x ] || 'WooCommerce Variation Short Description' === $page_types[ $x ] ) {

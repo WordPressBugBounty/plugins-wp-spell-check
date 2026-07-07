@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Plugin Name: WP Spell Check
  * Description: The fastest proofreading plugin that allows you to find & fix spelling errors, grammar errors, broken HTML & shortcodes and SEO opportunities to create a professional image and take your site to the next level.
- * Version: 11.8
+ * Version: 11.9
  * Author: WP Spell Check
  * Author URI: https://www.wpspellcheck.com
  * License: GPLv2 or later
@@ -195,6 +195,8 @@ function wpscx_enqueue_uninstall_page_styles() {
 add_action( 'admin_enqueue_scripts', 'wpscx_enqueue_uninstall_page_styles', 1 );
 
 function wpscx_load_plugin() {
+	$wpsc_pro_loader = __DIR__ . '-pro/pro-loader.php';
+
 	if ( ! ( current_user_can( 'administrator' ) || current_user_can( 'editor' ) || current_user_can( 'author' ) || current_user_can( 'contributor' ) ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		require_once ABSPATH . 'wp-includes/pluggable.php';
@@ -211,8 +213,8 @@ function wpscx_load_plugin() {
 		require_once 'admin/class-wpsc-seo.php';
 		require_once 'admin/class-wpsc-options.php';
 
-		if ( is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) {
-			include __DIR__ . '-pro/pro-loader.php';
+		if ( is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) && file_exists( $wpsc_pro_loader ) ) {
+			include $wpsc_pro_loader;
 		}
 		return;
 	}
@@ -220,8 +222,8 @@ function wpscx_load_plugin() {
 	require_once 'admin/class-wpsc-admin.php';
 	$wpscx = new Wpscx_Admin();
 
-	if ( is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) ) {
-		include __DIR__ . '-pro/pro-loader.php';
+	if ( is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) && file_exists( $wpsc_pro_loader ) ) {
+		include $wpsc_pro_loader;
 	}
 	// Show activation notice only on Plugins page. Option is unset (false) or '' right after activation; after showing we set it so it does not show again.
 	$wpsc_acti = get_option( 'wpsc_data_acti' );
@@ -249,7 +251,7 @@ function wpscx_set_global_vars() {
 	global $wpsc_version;
 	global $wpsc_globals_loaded;
 
-	$wpsc_version = '11.8';
+	$wpsc_version = '11.9';
 
 	// Return early if globals are already loaded to prevent duplicate queries
 	if ( isset( $wpsc_globals_loaded ) && $wpsc_globals_loaded === true ) {

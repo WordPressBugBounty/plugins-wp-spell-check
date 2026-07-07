@@ -309,8 +309,10 @@ class Wpscx_Table extends WP_List_Table {
 
 		if ( 'Menu Item' === $item['page_type'] ) {
 			$output = '<a href="/wp-admin/nav-menus.php?action=edit&menu=' . $item['page_id'] . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '"  target="_blank">View</a>';
-		} elseif ( 'Contact Form 7' === $item['page_type'] || 'Contact Form 7 Auto Response' === $item['page_type'] || 'Contact Form 7 Form' === $item['page_type'] || 'Contact Form 7 Email Notification' === $item['page_type'] ) {
+		} elseif ( in_array( $item['page_type'], wpscx_cf7_page_types(), true ) || 'Contact Form 7' === $item['page_type'] ) {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+		} elseif ( in_array( $item['page_type'], wpscx_wpforms_page_types(), true ) ) {
+			$output = '<a href="' . esc_url( wpscx_wpforms_builder_url( $item['page_type'], (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $item['page_type'] ) || 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || 'Rank Math SEO Description' === $item['page_type'] || 'Rank Math SEO Title' === $item['page_type'] || 'All in One SEO Focus Keyphrase' === $item['page_type'] || 'All in One SEO Product Schema Name' === $item['page_type'] || 'All in One SEO Product Schema Description' === $item['page_type'] || 'All in One SEO Product Brand' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '"  target="_blank">View</a>';
 		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Tag ' ) ) {
@@ -897,11 +899,44 @@ function wpscx_admin_render() {
 		$get_page_names = isset( $_GET['page_names'] ) ? ( is_array( $_GET['page_names'] ) ? array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_GET['page_names'] ) ) : array( sanitize_text_field( wp_unslash( $_GET['page_names'] ) ) ) ) : array();
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Unslashed and sanitized before use (wp_unslash + sanitize_text_field).
 		$get_page_types = isset( $_GET['page_types'] ) ? ( is_array( $_GET['page_types'] ) ? array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_GET['page_types'] ) ) : array( sanitize_text_field( wp_unslash( $_GET['page_types'] ) ) ) ) : array();
+		// The JS encodes literal '&' in page_type labels (e.g. "WPForms → Fields & General Settings") as '%amp;' so it survives the query string; decode it back here.
+		$get_page_types = array_map(
+			function ( $page_type ) {
+				return str_replace( '%amp;', '&', $page_type );
+			},
+			$get_page_types
+		);
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Unslashed and sanitized before use (wp_unslash + sanitize_text_field).
 		$get_old_word_ids = isset( $_GET['old_word_ids'] ) ? ( is_array( $_GET['old_word_ids'] ) ? array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_GET['old_word_ids'] ) ) : array( sanitize_text_field( wp_unslash( $_GET['old_word_ids'] ) ) ) ) : array();
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Unslashed and sanitized before use (wp_unslash + sanitize_text_field).
 		$get_mass_edit = isset( $_GET['mass_edit'] ) ? ( is_array( $_GET['mass_edit'] ) ? array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_GET['mass_edit'] ) ) : sanitize_text_field( wp_unslash( $_GET['mass_edit'] ) ) ) : '';
 		if ( ! empty( $get_old_words ) && ! empty( $get_new_words ) && ! empty( $get_page_types ) && ! empty( $get_old_word_ids ) ) {
+			// #region agent log
+			$cf7_save_items = array();
+			foreach ( $get_page_types as $idx => $pt ) {
+				if ( false !== strpos( $pt, 'Contact Form 7' ) ) {
+					$cf7_save_items[] = array(
+						'index'     => $idx,
+						'page_type' => $pt,
+						'form_id'   => isset( $get_page_names[ $idx ] ) ? (int) $get_page_names[ $idx ] : 0,
+						'old_word'  => isset( $get_old_words[ $idx ] ) ? $get_old_words[ $idx ] : '',
+						'new_word'  => isset( $get_new_words[ $idx ] ) ? $get_new_words[ $idx ] : '',
+						'word_id'   => isset( $get_old_word_ids[ $idx ] ) ? $get_old_word_ids[ $idx ] : '',
+					);
+				}
+			}
+			if ( ! empty( $cf7_save_items ) ) {
+				wpscx_cf7_debug_log(
+					'class-wpsc-results.php:save_request',
+					'Save all Changes — CF7 items in request',
+					array(
+						'cf7_count' => count( $cf7_save_items ),
+						'items'     => $cf7_save_items,
+					),
+					'H-A'
+				);
+			}
+			// #endregion
 			$message = $utils->update_word_admin( $get_old_words, $get_new_words, $get_page_names, $get_page_types, $get_old_word_ids, $get_mass_edit );
 		} elseif ( ! empty( $get_new_words ) && ! empty( $get_page_types ) && ! empty( $get_old_word_ids ) ) {
 			$message = $utils->update_empty_admin( $get_new_words, $get_page_names, $get_page_types, $get_old_word_ids );
@@ -1110,10 +1145,10 @@ function wpscx_admin_render() {
 								?>
 								></p>
 						<?php
-						if ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) {
+						if ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) || wpscx_is_wpforms_active() ) {
 							?>
 							<p class="submit wpsc-mouseleave-scfeature"><input type="submit" name="submit" id="submit"
-									class="button button-primary wpscScan" value="Contact Form 7" 
+									class="button button-primary wpscScan" value="Contact Forms" 
 									<?php
 									if ( 'false' === $check_cf7 ) {
 										echo ' disabled';

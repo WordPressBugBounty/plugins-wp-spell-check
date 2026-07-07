@@ -187,7 +187,7 @@ class Wpscx_Grammar_Scanner extends wpscx_scanner {
 		$post_types                     = get_post_types();
 						$post_type_list = 'AND (';
 		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
+			if ( 'revision' !== $type && 'page' !== $type && 'slider' !== $type && 'attachment' !== $type && 'optionsframework' !== $type && 'product' !== $type && 'wpcf7_contact_form' !== $type && 'wpforms' !== $type && 'nav_menu_item' !== $type && 'gal_display_source' !== $type && 'lightbox_library' !== $type && 'wpcf7s' !== $type ) {
 							$post_type_list .= "post_type='$type' OR ";
 			}
 		}

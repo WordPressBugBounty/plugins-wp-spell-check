@@ -583,7 +583,10 @@ jQuery(document).ready(function () {
         if (jQuery(this).attr("value").length !== 0) {
           page_types +=
             "page_types[]=" +
-            jQuery(this).attr("value").replace("(", "%28") +
+            jQuery(this)
+              .attr("value")
+              .replace("(", "%28")
+              .replace("&", "%amp;") +
             "&";
         }
       }
@@ -708,7 +711,7 @@ jQuery(document).ready(function () {
       if (jQuery(this).attr("value") != undefined) {
         page_types +=
           "page_types[]=" +
-          jQuery(this).attr("value").replace("(", "%28") +
+          jQuery(this).attr("value").replace("(", "%28").replace("&", "%amp;") +
           "&";
       }
     });
@@ -716,7 +719,7 @@ jQuery(document).ready(function () {
       if (jQuery(this).attr("value") != undefined) {
         page_types +=
           "page_types[]=" +
-          jQuery(this).attr("value").replace("(", "%28") +
+          jQuery(this).attr("value").replace("(", "%28").replace("&", "%amp;") +
           "&";
       }
     });
