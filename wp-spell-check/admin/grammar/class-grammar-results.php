@@ -262,7 +262,6 @@ function wpgcx_render_results() {
 	$message = '';
 
 	$options_list = $wpgc_settings;
-	$total_posts  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
 
 	$pro_word_count = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name='pro_error_count';" );
 	$pro_words      = ( ! empty( $pro_word_count ) && isset( $pro_word_count[0]->option_value ) ) ? $pro_word_count[0]->option_value : '0';
@@ -289,13 +288,13 @@ function wpgcx_render_results() {
 
 	$post_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='post' AND (post_status='draft' OR post_status='publish')" );
 	$page_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='page' AND (post_status='draft' OR post_status='publish')" );
-	$total_pages = $page_count;
+	$total_pages = wpscx_wp_admin_all_count( 'page' );
 
 	$post_scan_count = $options_list[5]->option_value;
 	if ( $post_scan_count > $post_count ) {
 		$post_scan_count = $post_count;
 	}
-	$total_posts = $post_count;
+	$total_posts = wpscx_wp_admin_all_count( 'post' );
 
 	$max_pages = $wpdb->get_results( "SELECT option_value FROM $sc_options_table WHERE option_name = 'pro_max_pages'" );
 	$max_pages = intval( $max_pages[0]->option_value );

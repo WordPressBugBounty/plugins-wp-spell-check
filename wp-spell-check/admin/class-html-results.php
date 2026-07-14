@@ -267,8 +267,13 @@ function wphcx_admin_render() {
 	$message = '';
 
 	$options_list = $wpsc_settings;
-	$total_pages  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-	$total_posts  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+	$total_pages  = wpscx_wp_admin_all_count( 'page' );
+	$total_posts  = wpscx_wp_admin_all_count( 'post' );
+
+	$page_scan_count = $options_list[143]->option_value;
+	if ( $page_scan_count > $total_pages ) {
+		$page_scan_count = $total_pages;
+	}
 
 	$post_scan_count = $options_list[144]->option_value;
 	if ( $post_scan_count > $total_posts ) {
@@ -285,10 +290,6 @@ function wphcx_admin_render() {
 
 	$check_scan = wphcx_check_scan_progress();
 
-	$post_status = array( 'publish', 'draft' );
-
-	$post_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='post' AND (post_status='draft' OR post_status='publish')" );
-	$page_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='page' AND (post_status='draft' OR post_status='publish')" );
 	$error_count = $wpdb->get_var( "SELECT COUNT(*) FROM $error_table WHERE ignore_word = 0" );
 
 	$max_pages = $wpdb->get_results( "SELECT option_value FROM $options_table WHERE option_name = 'pro_max_pages'" );
@@ -435,7 +436,7 @@ function wphcx_admin_render() {
 								<?php echo esc_html( $options_list[27]->option_value ); ?>
 							</h3><br />
 							<?php
-							if ( ( ( $post_count + $page_count ) > $max_pages ) & $wpscx_ent_included ) {
+							if ( ( ( $total_posts + $total_pages ) > $max_pages ) & $wpscx_ent_included ) {
 								?>
 								<h3 class='sc-message error'>You have more than
 									<?php echo esc_attr( $max_pages ); ?> Pages/Posts. <a
@@ -476,10 +477,10 @@ function wphcx_admin_render() {
 						<?php echo esc_html( $error_count ); ?>
 					</h3>
 					<h3 class='sc-message sc-page'>Pages scanned:
-						<?php echo esc_html( $options_list[143]->option_value ); ?> / <?php echo esc_html( $page_count ); ?>
+						<?php echo esc_html( $page_scan_count ); ?> / <?php echo esc_html( $total_pages ); ?>
 					</h3>
 					<h3 class='sc-message sc-post'>Posts scanned:
-						<?php echo esc_html( $post_scan_count ); ?> / </php echo esc_html( $total_posts ); ?>
+						<?php echo esc_html( $post_scan_count ); ?> / <?php echo esc_html( $total_posts ); ?>
 					</h3>
 				</div>
 			</div>

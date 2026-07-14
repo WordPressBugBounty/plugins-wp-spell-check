@@ -131,7 +131,7 @@
 						"Errors found on <span class='wpsc-site-span'> Entire Site</span>: " +
 						response.totalErrors
 					);
-					if (Number( response.pageCount ) >= Number( response.totalPages )) {
+					if (Number( response.postCount ) >= Number( response.totalPosts )) {
 						$( ".sc-post" ).html(
 							"Posts scanned: " + response.totalPosts + "/" + response.totalPosts
 						);

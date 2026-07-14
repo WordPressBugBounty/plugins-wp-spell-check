@@ -579,7 +579,19 @@ class Wpscx_Results_Utils {
 				}
 
 				// Update SeedProd Page Builder
-				// $rows_affected = $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} " . "SET `post_content_filtered` = REPLACE(`post_content_filtered`, '%s', '%s') " . "WHERE `ID` = '%s'", $old_words[ $x ], $new_words[ $x ], $page_names[ $x ] ) );
+				if ( is_plugin_active( 'coming-soon/coming-soon.php' ) || is_plugin_active( 'seedprod-coming-soon-pro-5/seedprod-coming-soon-pro-5.php' ) ) {
+					$old_word = stripslashes( trim( json_encode( $old_words[ $x ] ), '"' ) );
+					$new_word = stripslashes( trim( json_encode( $new_words[ $x ] ), '"' ) );
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: {$wpdb->posts} uses WordPress core table reference
+					$rows_affected = $wpdb->query(
+						$wpdb->prepare(
+							"UPDATE {$wpdb->posts} SET `post_content_filtered` = REPLACE(`post_content_filtered`, %s, %s) WHERE `ID` = %d",
+							$old_word,
+							$new_word,
+							$page_names[ $x ]
+						)
+					);
+				}
 
 				// Update Visual composer
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
@@ -587,36 +599,6 @@ class Wpscx_Results_Utils {
 				if ( isset( $meta_result[0]->meta_value ) ) {
 					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], $meta_result[0]->meta_value );
 					update_post_meta( $page_names[ $x ], 'vcv-pageContent', sanitize_text_field( $updated_meta ) );
-				}
-
-				// Update Page Builder by SiteOrigin Postmeta data
-				/*
-				$oldWord = $old_words[$x];
-				$new_word = $new_words[$x];
-				$rows_affected = $wpdb->query(
-				"UPDATE {$wpdb->postmeta} " .
-				"SET `meta_value` = REPLACE(`meta_value`, '" . $old_word . "', '" . $new_word . "') " .
-				"WHERE `meta_key` = 'panels_data' AND `post_id` = '" . $page_names[$x] . "'" );*/
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'postmeta'
-				$meta_result = $wpdb->get_results( $wpdb->prepare( 'SELECT meta_value FROM ' . $meta_table . ' WHERE post_id=%d AND meta_key="panels_data"', $page_names[ $x ] ) );
-				if ( isset( $meta_result[0]->meta_value ) ) {
-					$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), sanitize_text_field( $new_words[ $x ] ), maybe_unserialize( $meta_result[0]->meta_value ) );
-					$updated_meta = preg_replace_callback(
-						'!s:\d+:"(.*?)";!s',
-						function ( $m ) {
-							return 's:' . strlen( $m[1] ) . ':"' . $m[1] . '";';
-						},
-						$updated_meta
-					);
-				}
-				if ( isset( $meta_result[0]->meta_value['widgets'] ) ) {
-					$test_data = maybe_unserialize( $meta_result[0]->meta_value )['widgets'];
-					for ( $z = 0; $z < sizeof( $test_data ); $z++ ) {
-						foreach ( $test_data[ $z ] as $key => $val ) {
-							$test_data[0][ $key ] = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], $val );
-						}
-					}
-					update_post_meta( $page_names[ $x ], 'panels_data', serialize( $test_data ) );
 				}
 
 				$wpdb->update( $table_name, array( 'post_content' => $updated_content ), array( 'ID' => $page_names[ $x ] ) );
@@ -628,6 +610,10 @@ class Wpscx_Results_Utils {
 				$updated_meta = preg_replace( wpscx_regex_pattern( $old_words[ $x ] ), $new_words[ $x ], $meta_result[0]->meta_value );
 
 				$wpdb->update( $meta_table, array( 'meta_value' => $updated_meta ), array( 'meta_id' => $page_names[ $x ] ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( in_array( $page_types[ $x ], array_values( wpscx_siteorigin_page_types() ), true ) ) {
+				wpscx_siteorigin_apply_word_fix( (int) $page_names[ $x ], $old_words[ $x ], $new_words[ $x ] );
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( in_array( $page_types[ $x ], wpscx_cf7_page_types(), true ) ) {
@@ -1086,6 +1072,16 @@ class Wpscx_Results_Utils {
 
 				$old_name = $page_result[0]->post_title;
 				$wpdb->update( $meta_table, array( 'meta_value' => $updated_content ), array( 'post_id' => $page_result[0]->ID ) );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
+				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
+			} elseif ( null !== wpscx_seedprod_page_type_to_json_key( $page_types[ $x ] ) ) {
+				$json_key = wpscx_seedprod_page_type_to_json_key( $page_types[ $x ] );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'posts'
+				$page_result = $wpdb->get_results( $wpdb->prepare( 'SELECT post_content_filtered FROM ' . $table_name . ' WHERE ID=%s', $page_names[ $x ] ) );
+				if ( ! empty( $page_result[0]->post_content_filtered ) ) {
+					$updated_content = wpscx_seedprod_apply_fix_to_json( $page_result[0]->post_content_filtered, $json_key, $old_words[ $x ], $new_words[ $x ] );
+					$wpdb->update( $table_name, array( 'post_content_filtered' => $updated_content ), array( 'ID' => $page_names[ $x ] ) );
+				}
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + 'spellcheck_words'
 				$wpdb->query( $wpdb->prepare( "DELETE FROM $words_table WHERE id=%d", $word_id ) );
 			} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $page_types[ $x ] ) ) {

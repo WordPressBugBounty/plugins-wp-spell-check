@@ -433,8 +433,8 @@ class Wpscx_Ajax {
 			$scan_type = 'Categories';
 		}
 		$total_errors    = $wpdb->get_var( "SELECT COUNT(*) FROM $errors_table WHERE ignore_word='false'" );
-		$total_pages     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-		$total_posts     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+		$total_pages     = wpscx_wp_admin_all_count( 'page' );
+		$total_posts     = wpscx_wp_admin_all_count( 'post' );
 		$total_media     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'attachment'" );
 		$literacy_factor = $settings[64]->option_value;
 
@@ -479,8 +479,8 @@ class Wpscx_Ajax {
 		$empty_factor    = $settings[65]->option_value;
 		$empty_eps       = $settings[62]->option_value;
 		$total_errors    = $wpdb->get_var( "SELECT COUNT(*) FROM $errors_table WHERE ignore_word='false'" );
-		$total_pages     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-		$total_posts     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+		$total_pages     = wpscx_wp_admin_all_count( 'page' );
+		$total_posts     = wpscx_wp_admin_all_count( 'post' );
 		$total_media     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'attachment'" );
 		$literacy_factor = $settings[64]->option_value;
 
@@ -522,8 +522,8 @@ class Wpscx_Ajax {
 		$scan_time    = $settings[3]->option_value;
 		$scan_type    = $settings[7]->option_value;
 		$total_errors = $settings[6]->option_value;
-		$total_pages  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-		$total_posts  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+		$total_pages  = wpscx_wp_admin_all_count( 'page' );
+		$total_posts  = wpscx_wp_admin_all_count( 'post' );
 
 		if ( isset( $_POST['scantime'] ) ) {
 			$scan_time = wpscx_time_elapsed( (int) sanitize_text_field( wp_unslash( $_POST['scantime'] ) ) );
@@ -558,8 +558,8 @@ class Wpscx_Ajax {
 		$media_count     = $settings[145]->option_value;
 		$scan_time       = $settings[27]->option_value;
 		$total_errors    = $wpdb->get_var( "SELECT COUNT(*) FROM $errors_table WHERE ignore_word='false'" );
-		$total_pages     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-		$total_posts     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+		$total_pages     = wpscx_wp_admin_all_count( 'page' );
+		$total_posts     = wpscx_wp_admin_all_count( 'post' );
 		$total_media     = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'attachment'" );
 		$literacy_factor = $settings[64]->option_value;
 

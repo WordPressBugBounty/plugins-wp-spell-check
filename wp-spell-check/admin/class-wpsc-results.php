@@ -313,6 +313,8 @@ class Wpscx_Table extends WP_List_Table {
 			$output = '<a href="admin.php?page=wpcf7&post=' . $item['page_id'] . '&action=edit" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
 		} elseif ( in_array( $item['page_type'], wpscx_wpforms_page_types(), true ) ) {
 			$output = '<a href="' . esc_url( wpscx_wpforms_builder_url( $item['page_type'], (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
+		} elseif ( in_array( $item['page_type'], array_values( wpscx_seedprod_page_types() ), true ) ) {
+			$output = '<a href="' . esc_url( wpscx_seedprod_builder_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $item['page_type'] ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $item['page_type'] ) || 'Post Title' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Yoast SEO Description' === $item['page_type'] || 'All in One SEO Description' === $item['page_type'] || 'SEO Description' === $item['page_type'] || 'Yoast SEO Title' === $item['page_type'] || 'All in One SEO Title' === $item['page_type'] || 'SEO Title' === $item['page_type'] || 'Rank Math SEO Description' === $item['page_type'] || 'Rank Math SEO Title' === $item['page_type'] || 'All in One SEO Focus Keyphrase' === $item['page_type'] || 'All in One SEO Product Schema Name' === $item['page_type'] || 'All in One SEO Product Schema Description' === $item['page_type'] || 'All in One SEO Product Brand' === $item['page_type'] || WPSCX_SLUG === $item['page_type'] || WPSCX_PAGE === $item['page_type'] ) {
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '"  target="_blank">View</a>';
 		} elseif ( 0 === strpos( $item['page_type'], 'Yoast SEO Tag ' ) ) {
@@ -582,7 +584,7 @@ class Wpscx_Table extends WP_List_Table {
 			array(
 				'total_items' => $total_items,
 				'per_page'    => $per_page,
-				'total_pages' => floor( $total_items / $per_page ),
+				'total_pages' => (int) ceil( $total_items / $per_page ),
 			)
 		);
 	}
@@ -770,9 +772,9 @@ function wpscx_admin_render() {
 	$it_table          = $wpdb->prefix . 'huge_itslider_images';
 	$smartslider_table = $wpdb->prefix . 'nextend_smartslider_slides';
 
-	$total_pages = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
+	$total_pages = wpscx_wp_admin_all_count( 'page' );
 	++$sql_count;
-	$total_posts = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+	$total_posts = wpscx_wp_admin_all_count( 'post' );
 	++$sql_count;
 	$total_media = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'attachment'" );
 	++$sql_count;

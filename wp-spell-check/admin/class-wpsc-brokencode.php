@@ -47,9 +47,7 @@ class Wpscx_Broken_Code_Scanner extends wpscx_scanner {
 		$word_count  = 0;
 		$error_count = 0;
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, ID, post_type FROM $page_table WHERE (post_type='page' OR post_type='post')$post_status" ) );
 			++$sql_count;

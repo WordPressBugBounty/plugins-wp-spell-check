@@ -188,8 +188,8 @@ function wpscx_admin_empty_render() {
 	$it_table          = $wpdb->prefix . 'huge_itslider_images';
 	$smartslider_table = $wpdb->prefix . 'nextend_smartslider_slides';
 
-	$total_pages = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'page'" );
-	$total_posts = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'post'" );
+	$total_pages = wpscx_wp_admin_all_count( 'page' );
+	$total_posts = wpscx_wp_admin_all_count( 'post' );
 	$total_media = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type = 'attachment'" );
 
 	if ( isset( $_GET['action'] ) ) {
@@ -446,8 +446,8 @@ function wpscx_admin_empty_render() {
 
 	$post_status = array( 'publish', 'draft' );
 
-	$post_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='post' AND (post_status='draft' OR post_status='publish')" );
-	$page_count  = $wpdb->get_var( "SELECT COUNT(*) FROM $post_table WHERE post_type='page' AND (post_status='draft' OR post_status='publish')" );
+	$post_count  = wpscx_wp_admin_all_count( 'post' );
+	$page_count  = wpscx_wp_admin_all_count( 'page' );
 	$media_count = $total_media;
 
 	$page_scan  = $wpdb->Get_results( "SELECT option_value FROM $options_table WHERE option_name='page_count';" );
@@ -458,6 +458,11 @@ function wpscx_admin_empty_render() {
 	$empty_post_scan  = $wpdb->Get_results( "SELECT option_value FROM $options_table WHERE option_name='empty_post_count';" );
 	$empty_media_scan = $wpdb->Get_results( "SELECT option_value FROM $options_table WHERE option_name='empty_media_count';" );
 	$options_list     = $wpdb->Get_results( "SELECT option_value FROM $options_table;" );
+
+	$empty_page_scan_count = $empty_page_scan[0]->option_value;
+	if ( $empty_page_scan_count > $page_count ) {
+		$empty_page_scan_count = $page_count;
+	}
 
 	$empty_post_scan_count = $empty_post_scan[0]->option_value;
 	if ( $empty_post_scan_count > $post_count ) {
@@ -835,7 +840,7 @@ function wpscx_admin_empty_render() {
 			<div class="wpsc-stats-summary">
 				<?php echo "<h3 class='sc-message sc-type'>SEO problems found on <span>" . esc_html( $empty_type[0]->option_value ) . '</span>: ' . esc_html( $empty_count ) . '</h3>'; ?>
 				<?php
-				echo "<h3 class='sc-message sc-page'>Pages scanned: " . esc_html( $empty_page_scan[0]->option_value ) . '/' . esc_html( $page_count );
+				echo "<h3 class='sc-message sc-page'>Pages scanned: " . esc_html( $empty_page_scan_count ) . '/' . esc_html( $page_count );
 				if ( ! $wpscx_ent_included && sizeof( (array) $page_count ) >= 500 ) {
 					?>
 					<span class='wpsc-mouseover-button-page'>?<span

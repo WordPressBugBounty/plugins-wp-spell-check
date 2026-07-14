@@ -102,6 +102,41 @@ function wpscx_debug_logging_enabled() {
 }
 
 /**
+ * Match WP admin Posts/Pages "All" tab count (excludes trash and auto-draft).
+ *
+ * @since 11.10
+ *
+ * @param string $post_type Post type slug.
+ * @return int
+ */
+function wpscx_wp_admin_all_count( $post_type ) {
+	$counts = wp_count_posts( $post_type );
+	if ( ! $counts ) {
+		return 0;
+	}
+
+	$total = 0;
+	foreach ( array( 'publish', 'future', 'draft', 'pending', 'private' ) as $status ) {
+		if ( isset( $counts->$status ) ) {
+			$total += (int) $counts->$status;
+		}
+	}
+
+	return $total;
+}
+
+/**
+ * SQL WHERE fragment for WP admin "All" tab post statuses.
+ *
+ * @since 11.10
+ *
+ * @return string
+ */
+function wpscx_wp_admin_all_status_where() {
+	return " AND post_status IN ('publish','future','draft','pending','private')";
+}
+
+/**
  * Reset SEO empty scan status-poll AJAX counter (debug only).
  *
  * @since 11.2
@@ -1032,6 +1067,577 @@ function wpscx_wpforms_builder_url( $page_type, $form_id ) {
 }
 
 /**
+ * Whether SeedProd Lite or Pro is active.
+ *
+ * @since 11.9
+ *
+ * @return bool
+ */
+function wpscx_seedprod_is_active() {
+	return is_plugin_active( 'coming-soon/coming-soon.php' ) || is_plugin_active( 'seedprod-coming-soon-pro-5/seedprod-coming-soon-pro-5.php' );
+}
+
+/**
+ * SeedProd SEO page_type labels keyed by JSON field.
+ *
+ * @since 11.9
+ *
+ * @return array
+ */
+function wpscx_seedprod_page_types() {
+	return array(
+		'seo_title'       => 'SeedProd SEO Title',
+		'seo_description' => 'SeedProd SEO Description',
+	);
+}
+
+/**
+ * Map SeedProd SEO page_type label to JSON key.
+ *
+ * @since 11.9
+ *
+ * @param string $page_type Spellcheck page_type label.
+ * @return string|null
+ */
+function wpscx_seedprod_page_type_to_json_key( $page_type ) {
+	foreach ( wpscx_seedprod_page_types() as $json_key => $label ) {
+		if ( $label === $page_type ) {
+			return $json_key;
+		}
+	}
+	return null;
+}
+
+/**
+ * Build SeedProd builder admin URL for a page.
+ *
+ * @since 11.9
+ *
+ * @param int $post_id Post ID.
+ * @return string
+ */
+function wpscx_seedprod_builder_url( $post_id ) {
+	$post_id = (int) $post_id;
+	$base    = get_site_url() . '/wp-admin/admin.php?page=';
+	if ( is_plugin_active( 'seedprod-coming-soon-pro-5/seedprod-coming-soon-pro-5.php' ) ) {
+		return $base . 'seedprod_pro_builder&id=' . $post_id . '#/setup/' . $post_id;
+	}
+	return $base . 'seedprod_lite_builder&id=' . $post_id . '#/setup/' . $post_id;
+}
+
+/**
+ * Query SeedProd pages with non-empty post_content_filtered JSON.
+ *
+ * @since 11.9
+ *
+ * @param int $limit Max rows.
+ * @return array
+ */
+function wpscx_seedprod_get_pages_for_scan( $limit ) {
+	global $wpdb;
+	$posts_table = $wpdb->posts;
+	$postmeta    = $wpdb->postmeta;
+	$limit       = intval( $limit );
+	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb; LIMIT uses intval().
+	$sql = $wpdb->prepare(
+		'SELECT p.ID, p.post_title, p.post_status, p.post_type, p.post_content_filtered
+		FROM ' . $posts_table . ' p
+		WHERE p.post_content_filtered != ""
+		AND (
+			p.post_type = "seedprod"
+			OR p.ID IN (
+				SELECT post_id FROM ' . $postmeta . '
+				WHERE meta_key IN ("_seedprod_page", "_seedprod_edited_with_seedprod", "_seedprod_page_uuid")
+			)
+		)
+		LIMIT %d',
+		$limit
+	);
+	return $wpdb->get_results( $sql );
+}
+
+/**
+ * Extract one SEO string from SeedProd post_content_filtered JSON.
+ *
+ * @since 11.9
+ *
+ * @param string $json       Raw post_content_filtered value.
+ * @param string $field_key  seo_title or seo_description.
+ * @return string
+ */
+function wpscx_seedprod_get_seo_text( $json, $field_key ) {
+	if ( ! is_string( $json ) || '' === $json ) {
+		return '';
+	}
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || empty( $decoded[ $field_key ] ) || ! is_string( $decoded[ $field_key ] ) ) {
+		return '';
+	}
+	return $decoded[ $field_key ];
+}
+
+/**
+ * Apply a spellcheck fix to one SeedProd SEO key in post_content_filtered JSON.
+ *
+ * @since 11.9
+ *
+ * @param string $json       Raw post_content_filtered value.
+ * @param string $field_key  seo_title or seo_description.
+ * @param string $old_word   Misspelled word.
+ * @param string $new_word   Replacement word.
+ * @return string
+ */
+function wpscx_seedprod_apply_fix_to_json( $json, $field_key, $old_word, $new_word ) {
+	$decoded = json_decode( $json, true );
+	if ( ! is_array( $decoded ) || ! isset( $decoded[ $field_key ] ) ) {
+		return $json;
+	}
+	$decoded[ $field_key ] = preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $decoded[ $field_key ] );
+	return wp_json_encode( $decoded );
+}
+
+/**
+ * Whether SiteOrigin Panels is active.
+ *
+ * @since 11.9
+ *
+ * @return bool
+ */
+function wpscx_siteorigin_is_active() {
+	return is_plugin_active( 'siteorigin-panels/siteorigin-panels.php' );
+}
+
+/**
+ * SiteOrigin page_type labels keyed by post type.
+ *
+ * @since 11.9
+ *
+ * @return array
+ */
+function wpscx_siteorigin_page_types() {
+	return array(
+		'page' => 'Site Origin Page',
+		'post' => 'Site Origin Post',
+	);
+}
+
+/**
+ * Whether a SiteOrigin widget key should be skipped during walk.
+ *
+ * @since 11.9
+ *
+ * @param string $key Widget array key.
+ * @return bool
+ */
+function wpscx_siteorigin_is_skip_key( $key ) {
+	if ( 'panels_info' === $key ) {
+		return true;
+	}
+	if ( 'origin_style' === $key || 0 === strpos( $key, 'origin_style_' ) ) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * SiteOrigin widget keys that hold human-readable copy for spellcheck extract.
+ *
+ * @since 11.9
+ *
+ * @return array<int, string>
+ */
+function wpscx_siteorigin_copy_keys() {
+	return array( 'text', 'title', 'caption', 'content', 'description', 'html', 'label' );
+}
+
+/**
+ * Whether a widget key holds scannable human copy (extract mode only).
+ *
+ * @since 11.9
+ *
+ * @param string|int $key Widget array key.
+ * @return bool
+ */
+function wpscx_siteorigin_is_copy_key( $key ) {
+	return in_array( $key, wpscx_siteorigin_copy_keys(), true );
+}
+
+/**
+ * Recursively collect or replace string values inside SiteOrigin widget data.
+ *
+ * @since 11.9
+ *
+ * @param mixed  $data     Widget or nested array.
+ * @param string $mode     'extract' or 'replace'.
+ * @param string $old_word Word to replace (replace mode only).
+ * @param string $new_word Replacement word (replace mode only).
+ * @return array|string|null Extract parts array, modified data, or null.
+ */
+function wpscx_siteorigin_walk_value( $data, $mode = 'extract', $old_word = '', $new_word = '' ) {
+	if ( is_array( $data ) ) {
+		if ( 'extract' === $mode ) {
+			$parts = array();
+			foreach ( $data as $key => $value ) {
+				if ( wpscx_siteorigin_is_skip_key( $key ) ) {
+					continue;
+				}
+				if ( 'panels_data' === $key && is_array( $value ) ) {
+					$nested = wpscx_siteorigin_walk_panels_data( $value, $mode, $old_word, $new_word );
+					if ( is_array( $nested ) ) {
+						$parts = array_merge( $parts, $nested );
+					}
+					continue;
+				}
+				if ( is_array( $value ) ) {
+					$walked = wpscx_siteorigin_walk_value( $value, $mode, $old_word, $new_word );
+					if ( is_array( $walked ) ) {
+						$parts = array_merge( $parts, $walked );
+					}
+					continue;
+				}
+				if ( is_string( $value ) && wpscx_siteorigin_is_copy_key( $key ) && '' !== $value ) {
+					$parts[] = $value;
+				}
+			}
+			return $parts;
+		}
+
+		foreach ( $data as $key => $value ) {
+			if ( wpscx_siteorigin_is_skip_key( $key ) ) {
+				continue;
+			}
+			if ( 'panels_data' === $key && is_array( $value ) ) {
+				$data[ $key ] = wpscx_siteorigin_walk_panels_data( $value, $mode, $old_word, $new_word );
+				continue;
+			}
+			$data[ $key ] = wpscx_siteorigin_walk_value( $value, $mode, $old_word, $new_word );
+		}
+		return $data;
+	}
+
+	if ( is_string( $data ) ) {
+		if ( 'extract' === $mode ) {
+			return array();
+		}
+		return preg_replace( wpscx_regex_pattern( $old_word ), $new_word, $data );
+	}
+
+	return 'extract' === $mode ? array() : $data;
+}
+
+/**
+ * Walk one panels_data array (widgets tree).
+ *
+ * @since 11.9
+ *
+ * @param array  $panels_data panels_data structure.
+ * @param string $mode        'extract' or 'replace'.
+ * @param string $old_word    Word to replace.
+ * @param string $new_word    Replacement word.
+ * @return array|string|null
+ */
+function wpscx_siteorigin_walk_panels_data( $panels_data, $mode = 'extract', $old_word = '', $new_word = '' ) {
+	if ( ! is_array( $panels_data ) || ! isset( $panels_data['widgets'] ) || ! is_array( $panels_data['widgets'] ) ) {
+		return 'extract' === $mode ? array() : $panels_data;
+	}
+
+	if ( 'extract' === $mode ) {
+		$parts = array();
+		foreach ( $panels_data['widgets'] as $widget ) {
+			if ( ! is_array( $widget ) ) {
+				continue;
+			}
+			$walked = wpscx_siteorigin_walk_value( $widget, $mode, $old_word, $new_word );
+			if ( is_array( $walked ) ) {
+				$parts = array_merge( $parts, $walked );
+			}
+		}
+		return $parts;
+	}
+
+	for ( $z = 0; $z < count( $panels_data['widgets'] ); $z++ ) {
+		if ( ! is_array( $panels_data['widgets'][ $z ] ) ) {
+			continue;
+		}
+		$panels_data['widgets'][ $z ] = wpscx_siteorigin_walk_value( $panels_data['widgets'][ $z ], $mode, $old_word, $new_word );
+	}
+	return $panels_data;
+}
+
+/**
+ * Concatenate scannable text from one panels_data array.
+ *
+ * @since 11.9
+ *
+ * @param array $panels_data panels_data structure.
+ * @return string
+ */
+function wpscx_siteorigin_extract_widget_text( $panels_data ) {
+	$parts = wpscx_siteorigin_walk_panels_data( $panels_data, 'extract' );
+	if ( ! is_array( $parts ) ) {
+		return '';
+	}
+	return implode( ' ', array_filter( $parts ) );
+}
+
+/**
+ * Collect panels_data from postmeta and layout blocks.
+ *
+ * @since 11.9
+ *
+ * @param int $post_id Post ID.
+ * @return array{meta: array|null, blocks: array}
+ */
+function wpscx_siteorigin_get_panels_sources( $post_id ) {
+	$post_id = (int) $post_id;
+	$sources = array(
+		'meta'   => null,
+		'blocks' => array(),
+	);
+
+	$meta = get_post_meta( $post_id, 'panels_data', true );
+	if ( ! empty( $meta ) ) {
+		$sources['meta'] = maybe_unserialize( $meta );
+	}
+
+	$post = get_post( $post_id );
+	if ( $post && function_exists( 'has_blocks' ) && has_blocks( $post->post_content ) && function_exists( 'parse_blocks' ) ) {
+		$sources['blocks'] = wpscx_siteorigin_collect_blocks_panels_data( parse_blocks( $post->post_content ) );
+	}
+
+	return $sources;
+}
+
+/**
+ * Collect panelsData from parsed blocks (including innerBlocks).
+ *
+ * @since 11.9
+ *
+ * @param array $blocks Parsed block list.
+ * @return array
+ */
+function wpscx_siteorigin_collect_blocks_panels_data( $blocks ) {
+	$collected = array();
+	if ( ! is_array( $blocks ) ) {
+		return $collected;
+	}
+	foreach ( $blocks as $block ) {
+		if ( ! is_array( $block ) ) {
+			continue;
+		}
+		if (
+			'siteorigin-panels/layout-block' === $block['blockName']
+			&& ! empty( $block['attrs']['panelsData'] )
+			&& is_array( $block['attrs']['panelsData'] )
+		) {
+			$collected[] = $block['attrs']['panelsData'];
+		}
+		if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+			$collected = array_merge( $collected, wpscx_siteorigin_collect_blocks_panels_data( $block['innerBlocks'] ) );
+		}
+	}
+	return $collected;
+}
+
+/**
+ * Replace words inside layout-block panelsData in parsed blocks.
+ *
+ * @since 11.9
+ *
+ * @param array  $blocks   Parsed block list (by ref).
+ * @param string $old_word Word to replace.
+ * @param string $new_word Replacement word.
+ * @return array
+ */
+function wpscx_siteorigin_replace_in_blocks( $blocks, $old_word, $new_word ) {
+	if ( ! is_array( $blocks ) ) {
+		return $blocks;
+	}
+	foreach ( $blocks as $index => $block ) {
+		if ( ! is_array( $block ) ) {
+			continue;
+		}
+		if (
+			'siteorigin-panels/layout-block' === $block['blockName']
+			&& ! empty( $block['attrs']['panelsData'] )
+			&& is_array( $block['attrs']['panelsData'] )
+		) {
+			$blocks[ $index ]['attrs']['panelsData'] = wpscx_siteorigin_walk_panels_data(
+				$block['attrs']['panelsData'],
+				'replace',
+				$old_word,
+				$new_word
+			);
+		}
+		if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+			$blocks[ $index ]['innerBlocks'] = wpscx_siteorigin_replace_in_blocks( $block['innerBlocks'], $old_word, $new_word );
+		}
+	}
+	return $blocks;
+}
+
+/**
+ * Collect SiteOrigin scan text buckets for one post.
+ *
+ * @since 11.9
+ *
+ * @param int $post_id Post ID.
+ * @return array<string, string> page_type => text to scan.
+ */
+function wpscx_siteorigin_collect_scan_buckets( $post_id ) {
+	if ( ! wpscx_siteorigin_is_active() ) {
+		return array();
+	}
+
+	$post_id = (int) $post_id;
+	$sources = wpscx_siteorigin_get_panels_sources( $post_id );
+	$parts   = array();
+
+	if ( ! empty( $sources['meta'] ) && is_array( $sources['meta'] ) ) {
+		$text = wpscx_siteorigin_extract_widget_text( $sources['meta'] );
+		if ( '' !== $text ) {
+			$parts[] = $text;
+		}
+	}
+
+	foreach ( (array) $sources['blocks'] as $panels_data ) {
+		$text = wpscx_siteorigin_extract_widget_text( $panels_data );
+		if ( '' !== $text ) {
+			$parts[] = $text;
+		}
+	}
+
+	if ( empty( $parts ) ) {
+		return array();
+	}
+
+	$labels    = wpscx_siteorigin_page_types();
+	$post_type = get_post_type( $post_id );
+	if ( ! isset( $labels[ $post_type ] ) ) {
+		return array();
+	}
+
+	return array( $labels[ $post_type ] => implode( ' ', $parts ) );
+}
+
+/**
+ * Scan SiteOrigin widget text buckets for one post and append errors.
+ *
+ * @since 11.9
+ *
+ * @param int            $post_id           Post ID.
+ * @param string         $post_title        Post title for error rows.
+ * @param array          $wpsc_haystack     Dictionary haystack.
+ * @param array          $wpsc_settings     Plugin settings.
+ * @param int            $page_count        Current page/post count in scan.
+ * @param int            $total_pages       Free-tier page limit.
+ * @param SplFixedArray  $error_list        Error list (by reference).
+ * @param int            $error_count       Error count (by reference).
+ * @param int            $total_words       Total words scanned (by reference).
+ * @param int            $over_limit_count  Over-limit counter (by reference).
+ * @param array|null     $so_buckets        Pre-collected buckets, or null to collect.
+ * @param bool           $clean_all_strict  True for 2-arg wpscx_clean_all (base); false for Pro.
+ * @return void
+ */
+function wpscx_siteorigin_scan_post_buckets(
+	$post_id,
+	$post_title,
+	$wpsc_haystack,
+	$wpsc_settings,
+	$page_count,
+	$total_pages,
+	&$error_list,
+	&$error_count,
+	&$total_words,
+	&$over_limit_count,
+	$so_buckets = null,
+	$clean_all_strict = true
+) {
+	if ( ! wpscx_siteorigin_is_active() ) {
+		return;
+	}
+
+	if ( null === $so_buckets ) {
+		$so_buckets = wpscx_siteorigin_collect_scan_buckets( (int) $post_id );
+	}
+
+	if ( empty( $so_buckets ) ) {
+		return;
+	}
+
+	foreach ( $so_buckets as $page_type => $words_list ) {
+		if ( $clean_all_strict ) {
+			$words_list = wpscx_clean_all( $words_list, $wpsc_settings );
+		} else {
+			$words_list = wpscx_clean_all( $words_list, $wpsc_settings, false );
+		}
+		$words = explode( ' ', $words_list );
+
+		foreach ( $words as $word ) {
+			++$total_words;
+			$word = trim( $word, "'`”“$" );
+
+			if ( wpscx_check_word( $word, $wpsc_haystack, $wpsc_settings ) ) {
+				if ( $page_count <= $total_pages ) {
+					$hold    = new SplFixedArray( 4 );
+					$hold[0] = $word;
+					$hold[1] = $post_title;
+					$hold[2] = $post_id;
+					$hold[3] = $page_type;
+
+					$error_list->setSize( $error_list->getSize() + 1 );
+					$error_list[ $error_count ] = $hold;
+					++$error_count;
+				} else {
+					++$over_limit_count;
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Apply a spellcheck fix to SiteOrigin panels_data (meta and/or blocks).
+ *
+ * @since 11.9
+ *
+ * @param int    $post_id  Post ID.
+ * @param string $old_word Word to replace.
+ * @param string $new_word Replacement word.
+ * @return void
+ */
+function wpscx_siteorigin_apply_word_fix( $post_id, $old_word, $new_word ) {
+	if ( ! wpscx_siteorigin_is_active() ) {
+		return;
+	}
+
+	$post_id = (int) $post_id;
+	$sources = wpscx_siteorigin_get_panels_sources( $post_id );
+
+	if ( ! empty( $sources['meta'] ) && is_array( $sources['meta'] ) && isset( $sources['meta']['widgets'] ) ) {
+		$panels_data = maybe_unserialize( get_post_meta( $post_id, 'panels_data', true ) );
+		if ( is_array( $panels_data ) && isset( $panels_data['widgets'] ) ) {
+			$panels_data = wpscx_siteorigin_walk_panels_data( $panels_data, 'replace', $old_word, $new_word );
+			update_post_meta( $post_id, 'panels_data', $panels_data );
+		}
+	}
+
+	if ( ! empty( $sources['blocks'] ) ) {
+		$post = get_post( $post_id );
+		if ( $post && function_exists( 'parse_blocks' ) && function_exists( 'serialize_blocks' ) ) {
+			$blocks = parse_blocks( $post->post_content );
+			$blocks = wpscx_siteorigin_replace_in_blocks( $blocks, $old_word, $new_word );
+			wp_update_post(
+				array(
+					'ID'           => $post_id,
+					'post_content' => serialize_blocks( $blocks ),
+				)
+			);
+		}
+	}
+}
+
+/**
  * Collect user-facing copy from Smart Slider 3 slide JSON (layer tree + item.values).
  * Only reads known value keys per item type; ignores layout, fonts, and style payloads.
  *
@@ -1779,6 +2385,10 @@ function wpscx_construct_url( $type, $id ) {
 		$url = $blog . '"admin.php?page=wpcf7&post=' . $id . '&action=edit';
 	} elseif ( in_array( $type, wpscx_wpforms_page_types(), true ) ) {
 		$url = wpscx_wpforms_builder_url( $type, (int) $id );
+	} elseif ( null !== wpscx_seedprod_page_type_to_json_key( $type ) ) {
+		$url = wpscx_seedprod_builder_url( $id );
+	} elseif ( in_array( $type, array_values( wpscx_siteorigin_page_types() ), true ) ) {
+		$url = wpscx_get_post_edit_url( $id );
 	} elseif ( null !== wpscx_yoast_page_type_to_postmeta_key( $type ) || null !== wpscx_rank_math_page_type_to_postmeta_key( $type ) || null !== wpscx_aioseo_page_type_to_postmeta_key( $type ) || 'Post Title' === $type || 'Page Title' === $type || 'Yoast SEO Description' === $type || 'All in One SEO Description' === $type || 'SEO Description' === $type || 'Yoast SEO Title' === $type || 'All in One SEO Title' === $type || 'SEO Title' === $type || 'Rank Math SEO Description' === $type || 'Rank Math SEO Title' === $type || 'All in One SEO Focus Keyphrase' === $type || 'All in One SEO Product Schema Name' === $type || 'All in One SEO Product Schema Description' === $type || 'All in One SEO Product Brand' === $type || 'Post Slug' === $type || 'Page Slug' === $type ) {
 		$url = wpscx_get_post_edit_url( $id );
 	} elseif ( 0 === strpos( $type, 'Yoast SEO Tag ' ) ) {

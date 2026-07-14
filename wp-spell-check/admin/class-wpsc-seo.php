@@ -30,9 +30,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 			$start_time = time();
 		}
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_title, ID FROM $page_table WHERE post_type='page'$post_status LIMIT $wpscx_base_page_max" ) );
 
@@ -120,27 +118,9 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 		++$sql_count;
 				$ignore_list = $wpdb->get_results( 'SELECT page_name, page_type, page_id FROM ' . esc_sql( $table_name ) . ' WHERE ignore_word=1' );
 
-		$post_types     = get_post_types();
-		$post_type_list = array();
-		foreach ( $post_types as $type ) {
-			if ( 'revision' !== $type && 'page' !== $type && 'nav_menu_item' !== $type && 'optionsframework' !== $type && 'slider' !== $type && 'attachment' !== $type && 'oembed_cache' !== $type ) {
-				array_push( $post_type_list, $type );
-			}
-		}
-
-		if ( 'true' === $wpsc_settings[137]->option_value ) {
-			$post_status = array( 'publish', 'draft' ); } else {
-			$post_status = array( 'publish' ); }
-
-			$posts_list = SplFixedArray::fromArray(
-				get_posts(
-					array(
-						'posts_per_page' => $wpscx_base_page_max,
-						'post_type'      => $post_type_list,
-						'post_status'    => $post_status,
-					)
-				)
-			);
+		$page_table  = $wpdb->prefix . 'posts';
+		$post_status = wpscx_wp_admin_all_status_where();
+		$posts_list  = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_title, ID FROM $page_table WHERE post_type='post'$post_status LIMIT $wpscx_base_page_max" ) );
 		++$sql_count;
 
 		for ( $x = 0;$x < $posts_list->getSize();$x++ ) {
@@ -935,9 +915,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				$haystack[ $value->post_id ] = 'true';
 		}
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='page'$post_status" ) );
 
@@ -996,9 +974,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				$haystack[ $value->post_id ] = 'true';
 		}
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='page'$post_status" ) );
 
@@ -1057,9 +1033,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				$haystack[ $value->post_id ] = 'true';
 		}
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='post'$post_status" ) );
 
@@ -1118,9 +1092,7 @@ class Wpscx_Seo_Scanner extends wpscx_scanner {
 				$haystack[ $value->post_id ] = 'true';
 		}
 
-		if ( 'true' === $wpsc_settings[136]->option_value ) {
-			$post_status = " AND (post_status='publish' OR post_status='draft')"; } else {
-			$post_status = " AND post_status='publish'"; }
+		$post_status = wpscx_wp_admin_all_status_where();
 
 			$page_list = SplFixedArray::fromArray( $wpdb->get_results( "SELECT post_content, post_title, post_name, ID FROM $posts_table WHERE post_type='post'$post_status" ) );
 
