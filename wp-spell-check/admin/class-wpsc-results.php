@@ -545,8 +545,23 @@ class Wpscx_Table extends WP_List_Table {
 		$start = round( microtime( true ), 5 );
 
 		function usort_reorder( $a, $b ) {
+			// Named nested functions cannot access outer $orderby/$order; read from request (same pattern as dictionary table).
+			if ( isset( $_REQUEST['orderby'] ) ) {
+				$orderby = sanitize_text_field( wp_unslash( $_REQUEST['orderby'] ) );
+			} else {
+				$orderby = 'word';
+			}
+			if ( isset( $_REQUEST['order'] ) ) {
+				$order = sanitize_text_field( wp_unslash( $_REQUEST['order'] ) );
+			} else {
+				$order = 'asc';
+			}
 			$orderby = ( ! empty( $orderby ) ) ? $orderby : 'word';
 			$order   = ( ! empty( $order ) ) ? $order : 'asc';
+			$allowed_orderby = array( 'word', 'page_name', 'page_type', 'count' );
+			if ( ! in_array( $orderby, $allowed_orderby, true ) ) {
+				$orderby = 'word';
+			}
 
 			$result = strcmp( $a[ $orderby ], $b[ $orderby ] );
 			return ( 'asc' === $order ) ? $result : -$result;

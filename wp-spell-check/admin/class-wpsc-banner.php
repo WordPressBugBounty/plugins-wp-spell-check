@@ -34,12 +34,42 @@ class Wpscx_Banner {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
+		$this->check_pro_inactive_notice();
 		if ( WPSC_BANNER_SHOW_UPGRADE_NOTICE ) {
 			$this->check_upgrade_message();
 		}
 		if ( WPSC_BANNER_SHOW_REVIEW_NOTICE ) {
 			$this->check_review_notice();
 		}
+	}
+
+	/**
+	 * Admin notice when Pro is installed but not active.
+	 *
+	 * @since 12.1
+	 */
+	function check_pro_inactive_notice() {
+		$pro_plugin = 'wp-spell-check-pro/wpspellcheckpro.php';
+		if ( ! file_exists( WP_PLUGIN_DIR . '/' . $pro_plugin ) || is_plugin_active( $pro_plugin ) ) {
+			return;
+		}
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		$activate_url = wp_nonce_url(
+			self_admin_url( 'plugins.php?action=activate&plugin=' . rawurlencode( $pro_plugin ) ),
+			'activate-plugin_' . $pro_plugin
+		);
+
+		printf(
+			'<div class="wpsc-promo-notice wpsc-promo-notice--warning" role="alert" aria-label="%1$s"><div class="wpsc-promo-notice__inner"><div class="wpsc-promo-notice__badge" aria-hidden="true"><span class="dashicons dashicons-warning"></span></div><div class="wpsc-promo-notice__body"><p class="wpsc-promo-notice__title">%2$s</p><p class="wpsc-promo-notice__text">%3$s</p></div><div class="wpsc-promo-notice__actions"><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--primary" href="%4$s">%5$s</a></div></div></div>',
+			esc_attr__( 'WP Spell Check Pro is installed but not active', 'wp-spell-check' ),
+			esc_html__( 'WP Spell Check Pro is installed but not active', 'wp-spell-check' ),
+			esc_html__( 'Activate Pro to unlock your licensed features.', 'wp-spell-check' ),
+			esc_url( $activate_url ),
+			esc_html__( 'Activate WP Spell Check Pro', 'wp-spell-check' )
+		);
 	}
 
 	/**
@@ -440,9 +470,9 @@ class Wpscx_Banner {
 			'<div class="wpsc-promo-notice wpsc-promo-notice--upgrade" role="region" aria-label="%1$s"><div class="wpsc-promo-notice__inner"><div class="wpsc-promo-notice__badge" aria-hidden="true"><span class="dashicons dashicons-awards"></span></div><div class="wpsc-promo-notice__body"><p class="wpsc-promo-notice__title">%2$s</p><p class="wpsc-promo-notice__text">%3$s</p></div><div class="wpsc-promo-notice__actions"><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--primary" href="%4$s" target="_blank" rel="noopener noreferrer">%5$s</a><a class="wpsc-promo-notice__btn wpsc-promo-notice__btn--ghost" href="%6$s">%7$s</a></div></div></div>',
 			esc_attr__( 'Upgrade to Pro', 'wp-spell-check' ),
 			esc_html__( 'Unlock WP Spell Check Pro', 'wp-spell-check' ),
-			esc_html__( 'Scan your entire site, catch more issues, and use advanced checks built for serious sites.', 'wp-spell-check' ),
+			esc_html__( 'Visitors spot typos fast and they cost you trust. Pro scans your entire site, so you catch mistakes before customers do.', 'wp-spell-check' ),
 			esc_url( $product_url ),
-			esc_html__( 'Explore Pro features', 'wp-spell-check' ),
+			esc_html__( 'Upgrade to Pro Now', 'wp-spell-check' ),
 			esc_url( $dismiss_url ),
 			esc_html__( 'Dismiss', 'wp-spell-check' )
 		);
@@ -507,7 +537,8 @@ class Wpscx_Banner {
 			$show_notice = true;
 		}
 
-		if ( ! is_plugin_active( 'wp-spell-check-pro/wpspellcheckpro.php' ) && ! is_plugin_active( 'wp-spell-check-enterprise/wpspellcheckenterprise.php' ) && $show_notice && ! $wpscx_ent_included ) {
+		$pro_plugin = 'wp-spell-check-pro/wpspellcheckpro.php';
+		if ( ! file_exists( WP_PLUGIN_DIR . '/' . $pro_plugin ) && ! is_plugin_active( $pro_plugin ) && ! is_plugin_active( 'wp-spell-check-enterprise/wpspellcheckenterprise.php' ) && $show_notice && ! $wpscx_ent_included ) {
 			$this->show_upgrade_message();
 		}
 	}
