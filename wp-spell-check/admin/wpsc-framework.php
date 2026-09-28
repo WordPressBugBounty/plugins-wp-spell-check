@@ -1397,7 +1397,7 @@ function wpscx_siteorigin_get_panels_sources( $post_id ) {
 
 	$meta = get_post_meta( $post_id, 'panels_data', true );
 	if ( ! empty( $meta ) ) {
-		$sources['meta'] = maybe_unserialize( $meta );
+		$sources['meta'] = is_serialized( $meta ) ? @unserialize( $meta, array( 'allowed_classes' => false ) ) : $meta; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 	}
 
 	$post = get_post( $post_id );
@@ -1615,7 +1615,8 @@ function wpscx_siteorigin_apply_word_fix( $post_id, $old_word, $new_word ) {
 	$sources = wpscx_siteorigin_get_panels_sources( $post_id );
 
 	if ( ! empty( $sources['meta'] ) && is_array( $sources['meta'] ) && isset( $sources['meta']['widgets'] ) ) {
-		$panels_data = maybe_unserialize( get_post_meta( $post_id, 'panels_data', true ) );
+		$panels_data = get_post_meta( $post_id, 'panels_data', true );
+		$panels_data = is_serialized( $panels_data ) ? @unserialize( $panels_data, array( 'allowed_classes' => false ) ) : $panels_data; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 		if ( is_array( $panels_data ) && isset( $panels_data['widgets'] ) ) {
 			$panels_data = wpscx_siteorigin_walk_panels_data( $panels_data, 'replace', $old_word, $new_word );
 			update_post_meta( $post_id, 'panels_data', $panels_data );
