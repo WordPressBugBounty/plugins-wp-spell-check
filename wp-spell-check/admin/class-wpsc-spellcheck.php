@@ -2442,9 +2442,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
 				}
 
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 				$results = SplFixedArray::fromArray( array() );
 				if ( ! empty( $where_parts ) ) {
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 					$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE ' . implode( ' OR ', $where_parts ) . ' LIMIT ' . $max_pages ) );
 					++$sql_count;
 				}
@@ -2698,9 +2698,9 @@ class Wpscx_Spellcheck_Scanner extends wpscx_scanner {
 					$where_parts[] = wpscx_yoast_postmeta_sql_or_clause( array_keys( $rm_types ) );
 				}
 
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 				$results = SplFixedArray::fromArray( array() );
 				if ( ! empty( $where_parts ) ) {
+					// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: $wpdb->prefix . 'postmeta', $max_pages is sanitized with intval(), query contains only hardcoded meta_key values
 					$results = SplFixedArray::fromArray( $wpdb->get_results( 'SELECT post_id, meta_value, meta_key FROM ' . $table_name . ' WHERE ' . implode( ' OR ', $where_parts ) . ' LIMIT ' . $max_pages ) );
 					++$sql_count;
 				}

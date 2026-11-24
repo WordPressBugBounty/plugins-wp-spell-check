@@ -1138,7 +1138,7 @@ function wpscx_seedprod_get_pages_for_scan( $limit ) {
 	$posts_table = $wpdb->posts;
 	$postmeta    = $wpdb->postmeta;
 	$limit       = intval( $limit );
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb; LIMIT uses intval().
+	// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- Table names from $wpdb; LIMIT uses intval(); query passed through prepare().
 	$sql = $wpdb->prepare(
 		'SELECT p.ID, p.post_title, p.post_status, p.post_type, p.post_content_filtered
 		FROM ' . $posts_table . ' p
@@ -1154,6 +1154,7 @@ function wpscx_seedprod_get_pages_for_scan( $limit ) {
 		$limit
 	);
 	return $wpdb->get_results( $sql );
+	// phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
 }
 
 /**
@@ -1828,7 +1829,8 @@ function wpscx_yoast_archive_field_map() {
 function wpscx_yoast_postmeta_sql_or_clause( $keys ) {
 	$parts = array();
 	foreach ( $keys as $key ) {
-		$parts[] = 'meta_key="' . $key . '"';
+		// Escape the key as a safety measure; keys are fixed plugin values so output is unchanged.
+		$parts[] = 'meta_key="' . esc_sql( $key ) . '"';
 	}
 	return implode( ' OR ', $parts );
 }

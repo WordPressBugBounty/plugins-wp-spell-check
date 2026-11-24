@@ -85,6 +85,11 @@ body.wpsc-admin-page.wpsc-theme-dark label {
   color: #e0e0e0;
 }
 
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-pages-ignore-help,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-pages-ignore-help strong {
+  color: #fff;
+}
+
 /* Upgrade to Pro section - match dark card background (Spell Check, Grammar, SEO options tabs) */
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-upgrade-pro-row,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-upgrade-pro-row td {
@@ -530,6 +535,10 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
   body.wpsc-admin-page.wpsc-theme-system .form-table td,
   body.wpsc-admin-page.wpsc-theme-system label {
     color: #e0e0e0;
+  }
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-pages-ignore-help,
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-pages-ignore-help strong {
+    color: #fff;
   }
   body.wpsc-admin-page.wpsc-theme-system .wpsc-upgrade-pro-row,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-upgrade-pro-row td {

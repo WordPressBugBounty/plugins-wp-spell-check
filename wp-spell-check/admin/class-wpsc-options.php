@@ -713,7 +713,15 @@ function wpscx_render_options() {
 		if ( isset( $_POST['api_key'] ) ) {
 			$wpdb->update( $table_name, array( 'option_value' => sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) ), array( 'option_name' => 'api_key' ) ); }
 
-		$pages = explode( PHP_EOL, sanitize_text_field( wp_unslash( $_POST['pages-ignore'] ) ) );
+		$pages_ignore_raw = isset( $_POST['pages-ignore'] ) ? (string) wp_unslash( $_POST['pages-ignore'] ) : '';
+		$pages_lines      = preg_split( '/\r\n|\r|\n/', $pages_ignore_raw );
+		$pages            = array();
+		foreach ( $pages_lines as $page_line ) {
+			$page = sanitize_text_field( trim( $page_line ) );
+			if ( '' !== $page ) {
+				$pages[] = $page;
+			}
+		}
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string
 		$wpdb->query( 'TRUNCATE TABLE ' . $ignore_table );
@@ -934,7 +942,17 @@ function wpscx_render_options() {
 	?>
 >English (UK)</option>
 </select></td></tr>
-				<tr><td><label>Pages/Posts to ignore (Please enter Page/Post titles and place one on each line)</label></td><td colspan="2"><textarea name="pages-ignore" rows="4" cols="50"><?php echo esc_html( $page_list ); ?></textarea></td></tr>
+				<tr>
+					<td>
+						<p id="wpsc-pages-ignore-label" class="wpsc-pages-ignore-help description" style="max-width: 360px; margin: 0;">
+							<strong><?php esc_html_e( 'Ignore pages & posts by title', 'wp-spell-check' ); ?></strong><br />
+							<?php esc_html_e( 'Use the exact title from Pages or Posts (one per line). Do not use URLs or slugs.', 'wp-spell-check' ); ?>
+						</p>
+					</td>
+					<td colspan="2">
+						<textarea id="wpsc-pages-ignore" name="pages-ignore" rows="4" cols="50" aria-labelledby="wpsc-pages-ignore-label" placeholder="<?php echo esc_attr( __( "About Us\nContact", 'wp-spell-check' ) ); ?>"><?php echo esc_html( $page_list ); ?></textarea>
+					</td>
+				</tr>
 								<tr><td colspan="2"><hr style="width: 50%;"><p style="text-align: center; margin-top: -5px; font-weight: bold;">Choose if you want to scan the pages/posts that are saved as drafts</p></td></tr>
 				<tr><td><input class="ignore-check-all" type="checkbox" name="check-page-drafts" value="check-page-drafts" 
 				<?php
