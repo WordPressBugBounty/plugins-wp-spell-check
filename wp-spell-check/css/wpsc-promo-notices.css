@@ -559,11 +559,11 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost:focus {
 	color: var(--wpsc-bf-text);
 }
 
-.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__limited,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__limited strong {
+.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__limited strong,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__limited strong {
 	font-weight: 700;
 }
 
-.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__limited,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__limited em {
+.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__limited em,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__limited em {
 	font-style: italic;
 }
 
@@ -629,7 +629,7 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-promo-notice__btn--ghost:focus {
 	transition: color 0.15s ease;
 }
 
-.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__footer-link,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__footer-link .dashicons {
+.wpsc-promo-notice.wpsc-promo-notice--black-friday .wpsc-bf-banner__footer-link .dashicons,.wpsc-promo-notice.wpsc-promo-notice--cyber-monday .wpsc-bf-banner__footer-link .dashicons {
 	width: 16px;
 	height: 16px;
 	font-size: 16px;
