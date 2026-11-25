@@ -928,32 +928,6 @@ function wpscx_admin_render() {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Unslashed and sanitized before use (wp_unslash + sanitize_text_field).
 		$get_mass_edit = isset( $_GET['mass_edit'] ) ? ( is_array( $_GET['mass_edit'] ) ? array_map( 'sanitize_text_field', array_map( 'wp_unslash', $_GET['mass_edit'] ) ) : sanitize_text_field( wp_unslash( $_GET['mass_edit'] ) ) ) : '';
 		if ( ! empty( $get_old_words ) && ! empty( $get_new_words ) && ! empty( $get_page_types ) && ! empty( $get_old_word_ids ) ) {
-			// #region agent log
-			$cf7_save_items = array();
-			foreach ( $get_page_types as $idx => $pt ) {
-				if ( false !== strpos( $pt, 'Contact Form 7' ) ) {
-					$cf7_save_items[] = array(
-						'index'     => $idx,
-						'page_type' => $pt,
-						'form_id'   => isset( $get_page_names[ $idx ] ) ? (int) $get_page_names[ $idx ] : 0,
-						'old_word'  => isset( $get_old_words[ $idx ] ) ? $get_old_words[ $idx ] : '',
-						'new_word'  => isset( $get_new_words[ $idx ] ) ? $get_new_words[ $idx ] : '',
-						'word_id'   => isset( $get_old_word_ids[ $idx ] ) ? $get_old_word_ids[ $idx ] : '',
-					);
-				}
-			}
-			if ( ! empty( $cf7_save_items ) ) {
-				wpscx_cf7_debug_log(
-					'class-wpsc-results.php:save_request',
-					'Save all Changes — CF7 items in request',
-					array(
-						'cf7_count' => count( $cf7_save_items ),
-						'items'     => $cf7_save_items,
-					),
-					'H-A'
-				);
-			}
-			// #endregion
 			$message = $utils->update_word_admin( $get_old_words, $get_new_words, $get_page_names, $get_page_types, $get_old_word_ids, $get_mass_edit );
 		} elseif ( ! empty( $get_new_words ) && ! empty( $get_page_types ) && ! empty( $get_old_word_ids ) ) {
 			$message = $utils->update_empty_admin( $get_new_words, $get_page_names, $get_page_types, $get_old_word_ids );
@@ -1055,11 +1029,14 @@ function wpscx_admin_render() {
 	$start = round( microtime( true ), 5 );
 	?>
 	<div id="wpsc-mass-edit-block" title="Are you sure?" style="display: none;">
-		<p>You have changes pending on the current page. Please go back and click save all changes.</p>
+		<p><?php esc_html_e( 'You have changes pending on the current page.', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'Please go back and click Save All Changes.', 'wp-spell-check' ); ?></p>
 	</div>
-	<div id="wpsc-mass-edit-confirm" title="Are you sure?" style="display: none;">
-		<p>Have you backed up your database? This will update all areas of your website that you have selected WP Spell
-			Check to scan. Are you sure you wish to proceed with the changes?</p>
+	<div id="wpsc-mass-edit-confirm" title="<?php echo esc_attr__( 'Warning!', 'wp-spell-check' ); ?>" style="display: none;">
+		<p><?php esc_html_e( 'Have you backed up your database?', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'This will find all matching errors on your scan list and apply this fix to them.', 'wp-spell-check' ); ?></p>
+		<p class="wpsc-mass-edit-confirm-backup"><?php esc_html_e( 'Make sure you have backed up your website so you can always revert back.', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'Continue?', 'wp-spell-check' ); ?></p>
 	</div>
 	<div class="wrap wpsc-table wpsc-page-spell">
 		<h2><a href="admin.php?page=wp-spellcheck.php"><img
@@ -1441,7 +1418,7 @@ function wpscx_admin_render() {
 				?>
 				<?php
 				if ( $wpscx_ent_included ) {
-					$url = plugins_url( '/wp-spell-check-pro/admin/changes.php' );
+					$url = admin_url( 'admin-ajax.php?action=wpscx_changelog' );
 					echo "<h3 class='sc-message' style='color: rgb(0, 115, 0);'><a target='_blank' href='" . esc_html( $url ) . "'>Click here</a> to view the changelog</h3>";
 				} else {
 					?>
@@ -1594,11 +1571,14 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 	$start = round( microtime( true ), 5 );
 	?>
 	<div id="wpsc-mass-edit-block" title="Are you sure?" style="display: none;">
-		<p>You have changes pending on the current page. Please go back and click save all changes.</p>
+		<p><?php esc_html_e( 'You have changes pending on the current page.', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'Please go back and click Save All Changes.', 'wp-spell-check' ); ?></p>
 	</div>
-	<div id="wpsc-mass-edit-confirm" title="Are you sure?" style="display: none;">
-		<p>Have you backed up your database? This will update all areas of your website that you have selected WP Spell
-			Check to scan. Are you sure you wish to proceed with the changes?</p>
+	<div id="wpsc-mass-edit-confirm" title="<?php echo esc_attr__( 'Warning!', 'wp-spell-check' ); ?>" style="display: none;">
+		<p><?php esc_html_e( 'Have you backed up your database?', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'This will find all matching errors on your scan list and apply this fix to them.', 'wp-spell-check' ); ?></p>
+		<p class="wpsc-mass-edit-confirm-backup"><?php esc_html_e( 'Make sure you have backed up your website so you can always revert back.', 'wp-spell-check' ); ?></p>
+		<p><?php esc_html_e( 'Continue?', 'wp-spell-check' ); ?></p>
 	</div>
 	<div class="wrap wpsc-table wpsc-page-spell">
 		<?php if ( ( '' !== $message || '' !== $ignore_message[0] || '' !== $dict_message[0] || '' !== $mass_edit_message ) && 'empty' !== $_GET['wpsc-scan-tab'] ) { ?>

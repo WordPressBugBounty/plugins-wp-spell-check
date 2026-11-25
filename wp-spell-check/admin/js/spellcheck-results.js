@@ -12,9 +12,12 @@
 
 	// Global variables
 	var scanStartTime;
-	var scan_in_progress          = false;
-	var auto_click_fired          = false; // Track if auto-click has already fired to prevent loops
-	var admin_bar_trigger_handled = false; // Track if admin bar trigger was handled
+	var scan_in_progress            = false;
+	var auto_click_fired            = false; // Track if auto-click has already fired to prevent loops
+	var admin_bar_trigger_handled   = false; // Track if admin bar trigger was handled
+	var activeScanType              = "";
+	var scan_start_request_pending  = false;
+	var scan_server_confirmed       = false;
 
 	/**
 	 * Initialize results page functionality
@@ -113,12 +116,18 @@
 								{
 									resizable: false,
 									height: "auto",
-									width: 400,
+									width: 460,
 									modal: true,
+									dialogClass: "wpsc-mass-edit-confirm-dialog",
+									close: function () {
+										if ( ! should_submit ) {
+											shown_box = false;
+										}
+									},
 									buttons: {
 										Yes: function () {
-											$( this ).dialog( "close" );
 											should_submit = true;
+											$( this ).dialog( "close" );
 											$( "#wpsc-edit-update-button-hidden" ).trigger( "click" );
 										},
 										Cancel: function () {
@@ -179,10 +188,11 @@
 							{
 								resizable: false,
 								height: "auto",
-								width: 400,
+								width: 460,
 								modal: true,
+								dialogClass: "wpsc-mass-edit-confirm-dialog",
 								buttons: {
-									Cancel: function () {
+									"Go Back": function () {
 										$( this ).dialog( "close" );
 									},
 									"Move Forward Anyway": function () {
@@ -202,6 +212,37 @@
 	}
 
 	/**
+	 * Map scan button value to display label (matches server last_scan_type labels).
+	 */
+	function wpscScanTypeLabel(scanType) {
+		if (scanType === "Pages") {
+			return "Page Content";
+		}
+		if (scanType === "Posts") {
+			return "Post Content";
+		}
+		return scanType;
+	}
+
+	/**
+	 * Build in-progress status HTML after server confirms scan flags are set.
+	 */
+	function wpscBuildScanInProgressMessage(scanType) {
+		var loadingGif =
+			typeof wpscResultsPage !== "undefined" && wpscResultsPage.loadingGif
+				? wpscResultsPage.loadingGif
+				: "";
+		var label = wpscScanTypeLabel(scanType);
+		return (
+			'<img src="' +
+			loadingGif +
+			'" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' +
+			label +
+			'</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>'
+		);
+	}
+
+	/**
 	 * Start scan via AJAX (extracted to reusable function)
 	 */
 	function startScanAjax(scanType, buttonElement) {
@@ -209,7 +250,10 @@
 			return;
 		}
 
-		scan_in_progress = true;
+		scan_in_progress               = true;
+		activeScanType                 = scanType;
+		scan_start_request_pending     = true;
+		scan_server_confirmed          = false;
 
 		// Initialize wpscx__spell_ajax_object if not already defined
 		var wpscx__spell_ajax_object =
@@ -255,6 +299,7 @@
 			'" alt="Scan in Progress" class="wpsc-loading-spinner" /> Starting New Scan'
 		);
 		$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
+		setTimeout( wpscx_recheck_scan_temp, 500 );
 
 		$.ajax(
 			{
@@ -268,11 +313,13 @@
 				},
 				dataType: "html",
 				success: function (response) {
-					$( "#wpscScanMessage" ).html( response ); // Update the scan message
+					scan_start_request_pending = false;
 					var scanEndTime = scanTime.getTime();
 					var scanFinal   = (scanEndTime - scanStartTime) / 1000;
 
-					setTimeout( wpscx_recheck_scan_temp, 500 );
+					if ( ! scan_server_confirmed) {
+						setTimeout( wpscx_recheck_scan_temp, 0 );
+					}
 					$( "tr.wpsc-row" ).animate(
 						{ opacity: 0 },
 						500,
@@ -289,6 +336,7 @@
 					);
 				},
 				error: function (xhr, status, thrownError) {
+					scan_start_request_pending = false;
 					setTimeout( wpscx_recheck_scan_temp, 500 );
 				},
 			}
@@ -377,10 +425,11 @@
 						{
 							resizable: false,
 							height: "auto",
-							width: 400,
+							width: 460,
 							modal: true,
+							dialogClass: "wpsc-mass-edit-confirm-dialog",
 							buttons: {
-								cancel: function () {
+								"Go Back": function () {
 									$( this ).dialog( "close" );
 								},
 								"Move Forward Anyway": function () {
@@ -511,7 +560,17 @@
 				dataType: "html",
 				success: function (response) {
 					if (response === "true") {
+						if ( ! scan_server_confirmed && activeScanType) {
+							$( "#wpscScanMessage" ).html(
+								wpscBuildScanInProgressMessage( activeScanType )
+							);
+							scan_server_confirmed = true;
+						}
 						setTimeout( wpscx_recheck_scan_temp, 1000 );
+					} else if (scan_server_confirmed) {
+						wpscx_finish_scan_temp();
+					} else if (scan_start_request_pending) {
+						setTimeout( wpscx_recheck_scan_temp, 500 );
 					} else {
 						wpscx_finish_scan_temp();
 					}

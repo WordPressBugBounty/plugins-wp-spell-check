@@ -65,6 +65,8 @@ class Wpscx_Wordpress_Interface {
 			add_action( 'admin_init', array( $banner, 'ignore_review_notice' ) );
 			add_action( 'admin_init', array( $banner, 'ignore_notice' ) );
 			add_action( 'admin_init', array( $banner, 'ignore_upgrade_notice' ) );
+			add_action( 'admin_init', array( $banner, 'ignore_black_friday_notice' ) );
+			add_action( 'admin_init', array( $banner, 'ignore_cyber_monday_notice' ) );
 			add_action( 'admin_head', array( $banner, 'check_install_notice' ) );
 		}
 	}

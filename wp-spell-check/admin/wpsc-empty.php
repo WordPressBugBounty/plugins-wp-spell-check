@@ -65,20 +65,29 @@ function wpscx_clear_results_empty() {
 
 function wpscx_clear_empty_scan() {
 	global $wpdb;
-	global $wpsc_settings;
 	$options_table = $wpdb->prefix . 'spellcheck_options';
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'entire_empty_scan' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_author_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_page_title_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_post_title_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_menu_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_page_seo_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_post_seo_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_media_seo_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_media_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_ecommerce_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_tag_desc_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'empty_cat_desc_sip' ) );
+
+	$empty_scan_options = array(
+		'entire_empty_scan',
+		'empty_author_sip',
+		'empty_page_title_sip',
+		'empty_post_title_sip',
+		'empty_menu_sip',
+		'empty_page_seo_sip',
+		'empty_post_seo_sip',
+		'empty_media_seo_sip',
+		'empty_media_sip',
+		'empty_ecommerce_sip',
+		'empty_tag_desc_sip',
+		'empty_cat_desc_sip',
+	);
+
+	foreach ( $empty_scan_options as $option_name ) {
+		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => $option_name ) );
+		if ( function_exists( 'wpscx_sync_wpsc_settings_option_value' ) ) {
+			wpscx_sync_wpsc_settings_option_value( $option_name, 'false' );
+		}
+	}
 }
 
 function wpscx_set_empty_scan_in_progress( $rng_seed = 0 ) {

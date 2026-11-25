@@ -288,6 +288,11 @@ body.wpsc-admin-page.wpsc-theme-dark h2 {
 body.wpsc-admin-page.wpsc-theme-dark h3 {
   color: #e0e0e0;
 }
+body.wpsc-admin-page.wpsc-theme-dark
+  .wpsc-html-results-page
+  h3.wpsc-error-message {
+  color: var(--wpsc-msg-error) !important;
+}
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-message h3 {
   color: var(--wpsc-color-success);
 }
@@ -705,6 +710,11 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
   body.wpsc-admin-page.wpsc-theme-system h2,
   body.wpsc-admin-page.wpsc-theme-system h3 {
     color: #e0e0e0;
+  }
+  body.wpsc-admin-page.wpsc-theme-system
+    .wpsc-html-results-page
+    h3.wpsc-error-message {
+    color: var(--wpsc-msg-error) !important;
   }
   body.wpsc-admin-page.wpsc-theme-system .wpsc-message h3 {
     color: var(--wpsc-color-success);

@@ -436,7 +436,7 @@ function wphcx_admin_render() {
 								<?php echo esc_html( $options_list[27]->option_value ); ?>
 							</h3><br />
 							<?php
-							if ( ( ( $total_posts + $total_pages ) > $max_pages ) & $wpscx_ent_included ) {
+							if ( $wpscx_ent_included && $max_pages > 0 && ( $total_posts + $total_pages ) > $max_pages ) {
 								?>
 								<h3 class='sc-message error'>You have more than
 									<?php echo esc_attr( $max_pages ); ?> Pages/Posts. <a

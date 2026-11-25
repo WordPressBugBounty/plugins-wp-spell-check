@@ -1265,6 +1265,103 @@ td {
 /* HTML Results Page (wp-spellcheck-html.php) Specific Styles */
 /* Scoped to .wpsc-html-results-page and #wphc-scan-results-tab to ensure page-specific targeting */
 
+/* Apply-to-entire-site confirmation (spell results) */
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar {
+  background: #d63638;
+  border-color: #b32d2e;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-title {
+  color: #fff;
+  width: calc(100% - 3em);
+  box-sizing: border-box;
+  font-size: 1.35em;
+  font-weight: 700;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  right: 0.5em;
+  padding: 0;
+  border: none !important;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2) !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close:hover,
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close:focus {
+  background: rgba(255, 255, 255, 0.35) !important;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close .ui-button-text,
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close .ui-icon {
+  display: none !important;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-titlebar-close::before {
+  content: "\00d7";
+  display: block;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 30px;
+  text-align: center;
+  text-indent: 0;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-content {
+  padding: 1.25em 1.5em;
+  line-height: 1.5;
+  font-weight: 700;
+  color: #1d2327;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-content p {
+  margin: 0 0 0.75em;
+  color: inherit;
+  font-weight: inherit;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-content p:last-child {
+  margin-bottom: 0;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane {
+  text-align: center;
+  padding: 1em 1.25em 1.25em;
+  border-top: 1px solid #dcdcde;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+  float: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane button {
+  margin: 0;
+  min-width: 100px;
+  padding: 10px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  border: none !important;
+  border-radius: var(--wpsc-btn-radius-modern);
+  box-shadow: var(--wpsc-btn-shadow);
+  cursor: pointer;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane button:first-child {
+  background: var(--wpsc-btn-save-bg) !important;
+  color: #fff !important;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane button:first-child:hover {
+  filter: brightness(1.05);
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane button:last-child {
+  background: var(--wpsc-btn-uninstall-bg) !important;
+  color: #fff !important;
+}
+.ui-dialog.wpsc-mass-edit-confirm-dialog .ui-dialog-buttonpane button:last-child:hover {
+  background: var(--wpsc-btn-uninstall-bg-hover) !important;
+}
+
 /* Dialog element */
 .wpsc-html-results-page #wpsc-dialog-confirm {
   display: none;
@@ -1435,9 +1532,9 @@ td {
   color: red;
 }
 
-/* Error message */
-.wpsc-html-results-page .wpsc-error-message {
-  color: red;
+/* Free Broken Code scan count – red (overrides default h3 color) */
+.wpsc-html-results-page h3.wpsc-error-message {
+  color: var(--wpsc-msg-error) !important;
 }
 
 /* Loading spinner - SVG, size via CSS only, rotation animation */

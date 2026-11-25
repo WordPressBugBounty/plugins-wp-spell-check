@@ -20,6 +20,27 @@ if ( ! defined( 'WPSC_BANNER_SHOW_UPGRADE_NOTICE' ) ) {
 
 class Wpscx_Banner {
 
+	/**
+	 * Black Friday coupon for pricing URL and notice footer (plugin release only).
+	 *
+	 * @var string
+	 */
+	private static $wpsc_black_friday_coupon_code = 'BF2026';
+
+	/**
+	 * Cyber Monday coupon for pricing URL and notice footer (plugin release only).
+	 *
+	 * @var string
+	 */
+	private static $wpsc_cyber_monday_coupon_code = 'CM2026';
+
+	/**
+	 * Show Cyber Monday banner outside its date window (for design review). Set false before release.
+	 *
+	 * @var bool
+	 */
+	private static $wpsc_cyber_monday_preview_active = false;
+
 	function __construct() {}
 
 	/**
@@ -35,12 +56,474 @@ class Wpscx_Banner {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 		$this->check_pro_inactive_notice();
+		$seasonal_notice = $this->check_black_friday_sale_notice();
+		$seasonal_notice = $this->check_cyber_monday_sale_notice() || $seasonal_notice;
+		if ( $seasonal_notice ) {
+			return;
+		}
 		if ( WPSC_BANNER_SHOW_UPGRADE_NOTICE ) {
 			$this->check_upgrade_message();
 		}
 		if ( WPSC_BANNER_SHOW_REVIEW_NOTICE ) {
 			$this->check_review_notice();
 		}
+	}
+
+	/**
+	 * Sale end: 00:00 on Cyber Monday (last full day is the Sunday before).
+	 *
+	 * @since 12.2
+	 * @param int               $year Calendar year.
+	 * @param DateTimeZone|null $tz   Site timezone.
+	 * @return DateTimeImmutable
+	 */
+	private function wpsc_get_black_friday_sale_end( $year, $tz ) {
+		$thursday_count = 0;
+		for ( $day = 1; $day <= 30; $day++ ) {
+			$date = new DateTimeImmutable( sprintf( '%d-11-%02d 00:00:00', $year, $day ), $tz );
+			if ( 4 === (int) $date->format( 'N' ) ) {
+				++$thursday_count;
+				if ( 4 === $thursday_count ) {
+					return $date->modify( '+4 days' );
+				}
+			}
+		}
+
+		return new DateTimeImmutable( $year . '-12-01 00:00:00', $tz );
+	}
+
+	/**
+	 * Whether the annual Black Friday sale window is active (Nov 23–Sunday before Cyber Monday).
+	 *
+	 * @since 12.2
+	 * @return bool
+	 */
+	private function wpsc_is_black_friday_sale_active() {
+		$tz    = wp_timezone();
+		$year  = (int) wp_date( 'Y', time(), $tz );
+		$start = new DateTimeImmutable( $year . '-11-23 00:00:00', $tz );
+		$end   = $this->wpsc_get_black_friday_sale_end( $year, $tz );
+		$now   = new DateTimeImmutable( 'now', $tz );
+		return $now >= $start && $now < $end;
+	}
+
+	/**
+	 * Whether the Cyber Monday sale window is active (Nov 30–Dec 6, site timezone).
+	 *
+	 * @since 12.2
+	 * @return bool
+	 */
+	private function wpsc_is_cyber_monday_sale_active() {
+		if ( self::$wpsc_cyber_monday_preview_active ) {
+			return true;
+		}
+
+		$tz    = wp_timezone();
+		$year  = (int) wp_date( 'Y', time(), $tz );
+		$start = new DateTimeImmutable( $year . '-11-30 00:00:00', $tz );
+		$end   = new DateTimeImmutable( $year . '-12-07 00:00:00', $tz );
+		$now   = new DateTimeImmutable( 'now', $tz );
+		return $now >= $start && $now < $end;
+	}
+
+	/**
+	 * Logo markup for seasonal sale banners.
+	 *
+	 * @since 12.2
+	 * @return string
+	 */
+	private function wpsc_get_sale_banner_logo_markup() {
+		$plugin_main = dirname( __DIR__ ) . '/wpspellcheck.php';
+		$logo_files  = array(
+			'images/logo-square.png',
+			'images/logo.png',
+			'admin/images/logo.png',
+			'admin/images/logo-icon-16x16.png',
+			'images/logo-icon-16x16.png',
+		);
+		foreach ( $logo_files as $logo_relative ) {
+			if ( file_exists( dirname( __DIR__ ) . '/' . $logo_relative ) ) {
+				return '<img class="wpsc-bf-banner__logo" src="' . esc_url( plugins_url( $logo_relative, $plugin_main ) ) . '" width="40" height="40" alt="" decoding="async" />';
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Coupon footnote line for seasonal sale banners.
+	 *
+	 * @since 12.2
+	 * @param string $coupon_code Sanitized coupon code.
+	 * @return string
+	 */
+	private function wpsc_get_sale_banner_footnote_html( $coupon_code ) {
+		$footnote_html = '<p class="wpsc-bf-banner__footnote wpsc-bf-banner__limited wpsc-bf-banner__offer-line">'
+			. '<strong><em>' . esc_html__( 'Limited Time Offer', 'wp-spell-check' ) . '</em></strong>'
+			. '<span class="wpsc-bf-banner__offer-sep" aria-hidden="true">:</span> ';
+		if ( '' !== $coupon_code ) {
+			$footnote_html .= '<span class="wpsc-bf-banner__coupon-label">' . esc_html__( 'Use coupon code', 'wp-spell-check' ) . '</span> '
+				. '<span class="wpsc-bf-banner__code">' . esc_html( $coupon_code ) . '</span> '
+				. '<span class="wpsc-bf-banner__coupon-hint">' . esc_html__( 'at checkout', 'wp-spell-check' ) . '</span>';
+		}
+		$footnote_html .= '</p>';
+		return $footnote_html;
+	}
+
+	/**
+	 * Whether the site has an active Pro or Enterprise license (hide Black Friday promo).
+	 *
+	 * Base-plugin only: uses existing globals and cached api_check — no remote API calls.
+	 *
+	 * @since 12.2
+	 * @return bool
+	 */
+	private function wpsc_site_has_valid_pro_license() {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( is_plugin_active( 'wp-spell-check-enterprise/wpspellcheckenterprise.php' ) ) {
+			return true;
+		}
+
+		$pro_plugin = 'wp-spell-check-pro/wpspellcheckpro.php';
+		if ( ! is_plugin_active( $pro_plugin ) ) {
+			return false;
+		}
+
+		global $wpscx_ent_included;
+		if ( ! empty( $wpscx_ent_included ) ) {
+			return true;
+		}
+
+		if ( isset( $wpscx_ent_included ) && ! $wpscx_ent_included ) {
+			return false;
+		}
+
+		return $this->wpsc_read_cached_pro_api_check_valid();
+	}
+
+	/**
+	 * Read cached api_check from the options table (no remote validation).
+	 *
+	 * @since 12.2
+	 * @return bool
+	 */
+	private function wpsc_read_cached_pro_api_check_valid() {
+		if ( ! function_exists( 'wpscx_set_global_vars' ) ) {
+			return false;
+		}
+
+		wpscx_set_global_vars();
+
+		global $wpdb;
+		global $wpscx_check_opt;
+
+		if ( empty( $wpscx_check_opt ) || 0 === count( (array) $wpscx_check_opt ) ) {
+			return false;
+		}
+
+		$options_table = $wpdb->prefix . 'spellcheck_options';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix.
+		$api_check = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$options_table} WHERE option_name = %s LIMIT 1", 'api_check' ) );
+
+		return ( 'true' === $api_check );
+	}
+
+	/**
+	 * Black Friday upgrade notice (replaces standard upgrade/review promos while active).
+	 *
+	 * @since 12.2
+	 * @return bool True when the notice was output.
+	 */
+	function check_black_friday_sale_notice() {
+		if ( ! $this->wpsc_is_black_friday_sale_active() ) {
+			return false;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( $this->wpsc_site_has_valid_pro_license() ) {
+			return false;
+		}
+
+		$user_id      = get_current_user_id();
+		$dismissed    = get_user_meta( $user_id, 'wpsc_bf_notice_dismissed', true );
+		$remind_until = (int) get_user_meta( $user_id, 'wpsc_bf_notice_remind_until', true );
+		if ( 'hide' === $dismissed ) {
+			return false;
+		}
+		if ( $remind_until > time() ) {
+			return false;
+		}
+
+		$this->show_black_friday_sale_notice();
+		return true;
+	}
+
+	/**
+	 * Handle Black Friday notice remind / dismiss (admin_init).
+	 *
+	 * @since 12.2
+	 */
+	function ignore_black_friday_notice() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce verified below.
+		if ( ! isset( $_GET['wpsc_bf_notice_action'], $_GET['_wpsc_bf_notice_nonce'] ) ) {
+			return;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( ! $this->wpsc_is_black_friday_sale_active() ) {
+			return;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpsc_bf_notice_nonce'] ) ), 'wpsc_dismiss_bf_notice' ) ) {
+			return;
+		}
+
+		$which   = sanitize_text_field( wp_unslash( $_GET['wpsc_bf_notice_action'] ) );
+		$user_id = get_current_user_id();
+
+		if ( '1' === $which ) {
+			update_user_meta( $user_id, 'wpsc_bf_notice_remind_until', time() + DAY_IN_SECONDS );
+		} elseif ( '2' === $which ) {
+			update_user_meta( $user_id, 'wpsc_bf_notice_dismissed', 'hide' );
+		} else {
+			return;
+		}
+
+		wp_safe_redirect( remove_query_arg( array( 'wpsc_bf_notice_action', '_wpsc_bf_notice_nonce' ) ) );
+		exit;
+	}
+
+	/**
+	 * Cyber Monday upgrade notice (replaces standard upgrade/review promos while active).
+	 *
+	 * @since 12.2
+	 * @return bool True when the notice was output.
+	 */
+	function check_cyber_monday_sale_notice() {
+		if ( ! $this->wpsc_is_cyber_monday_sale_active() ) {
+			return false;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( $this->wpsc_site_has_valid_pro_license() ) {
+			return false;
+		}
+
+		$user_id      = get_current_user_id();
+		$dismissed    = get_user_meta( $user_id, 'wpsc_cm_notice_dismissed', true );
+		$remind_until = (int) get_user_meta( $user_id, 'wpsc_cm_notice_remind_until', true );
+		if ( 'hide' === $dismissed ) {
+			return false;
+		}
+		if ( $remind_until > time() ) {
+			return false;
+		}
+
+		$this->show_cyber_monday_sale_notice();
+		return true;
+	}
+
+	/**
+	 * Handle Cyber Monday notice remind / dismiss (admin_init).
+	 *
+	 * @since 12.2
+	 */
+	function ignore_cyber_monday_notice() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce verified below.
+		if ( ! isset( $_GET['wpsc_cm_notice_action'], $_GET['_wpsc_cm_notice_nonce'] ) ) {
+			return;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( ! $this->wpsc_is_cyber_monday_sale_active() ) {
+			return;
+		}
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpsc_cm_notice_nonce'] ) ), 'wpsc_dismiss_cm_notice' ) ) {
+			return;
+		}
+
+		$which   = sanitize_text_field( wp_unslash( $_GET['wpsc_cm_notice_action'] ) );
+		$user_id = get_current_user_id();
+
+		if ( '1' === $which ) {
+			update_user_meta( $user_id, 'wpsc_cm_notice_remind_until', time() + DAY_IN_SECONDS );
+		} elseif ( '2' === $which ) {
+			update_user_meta( $user_id, 'wpsc_cm_notice_dismissed', 'hide' );
+		} else {
+			return;
+		}
+
+		wp_safe_redirect( remove_query_arg( array( 'wpsc_cm_notice_action', '_wpsc_cm_notice_nonce' ) ) );
+		exit;
+	}
+
+	/**
+	 * Output Black Friday sale admin notice markup.
+	 *
+	 * @since 12.2
+	 */
+	function show_black_friday_sale_notice() {
+		global $wpsc_version;
+		$ver = is_string( $wpsc_version ) ? $wpsc_version : '';
+
+		$product_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=black_friday&utm_medium=admin_notice&utm_content=' . rawurlencode( $ver );
+		$coupon      = sanitize_text_field( self::$wpsc_black_friday_coupon_code );
+		if ( '' !== $coupon ) {
+			$product_url = add_query_arg( 'coupon', rawurlencode( $coupon ), $product_url );
+		}
+
+		$body_text = esc_html__( 'Save 30% on WP Spell Check Pro—full-site proofreading for spelling, grammar, SEO, and broken code in one place.', 'wp-spell-check' );
+
+		$footnote_html = $this->wpsc_get_sale_banner_footnote_html( $coupon );
+		$logo_markup   = $this->wpsc_get_sale_banner_logo_markup();
+		$cta_text = sprintf(
+			/* translators: %d: discount percentage. */
+			esc_html__( 'Upgrade & save %d%%', 'wp-spell-check' ),
+			30
+		);
+
+		$remind_url = wp_nonce_url(
+			add_query_arg( 'wpsc_bf_notice_action', '1' ),
+			'wpsc_dismiss_bf_notice',
+			'_wpsc_bf_notice_nonce'
+		);
+		$dismiss_url = wp_nonce_url(
+			add_query_arg( 'wpsc_bf_notice_action', '2' ),
+			'wpsc_dismiss_bf_notice',
+			'_wpsc_bf_notice_nonce'
+		);
+
+		printf(
+			'<div class="wpsc-promo-notice wpsc-promo-notice--black-friday" role="region" aria-label="%1$s">'
+			. '<div class="wpsc-bf-banner__shimmer" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__orb wpsc-bf-banner__orb--left" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__orb wpsc-bf-banner__orb--right" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__inner">'
+			. '<div class="wpsc-bf-banner__mark" aria-hidden="true">'
+			. '%2$s'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__copy">'
+			. '<p class="wpsc-bf-banner__headline">%3$s <span class="wpsc-bf-banner__discount">%4$s</span></p>'
+			. '<p class="wpsc-bf-banner__text">%5$s</p>'
+			. '<div class="wpsc-bf-banner__meta">%6$s</div>'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__actions">'
+			. '<a class="wpsc-bf-banner__btn" href="%7$s" target="_blank" rel="noopener noreferrer">%8$s <span class="wpsc-bf-banner__btn-arrow" aria-hidden="true">→</span></a>'
+			. '</div>'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__footer">'
+			. '<a class="wpsc-bf-banner__footer-link" href="%9$s"><span class="dashicons dashicons-clock" aria-hidden="true"></span>%10$s</a>'
+			. '<a class="wpsc-bf-banner__footer-link" href="%11$s"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span>%12$s</a>'
+			. '</div>'
+			. '</div>',
+			esc_attr__( 'Black Friday sale', 'wp-spell-check' ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: trusted banner HTML from wpsc_get_sale_banner_logo_markup(), src escaped with esc_url().
+			$logo_markup,
+			esc_html__( 'Black Friday Sale —', 'wp-spell-check' ),
+			esc_html__( '30% off WP Spell Check Pro', 'wp-spell-check' ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: already escaped with esc_html__().
+			$body_text,
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: trusted banner HTML from wpsc_get_sale_banner_footnote_html(), strings escaped with esc_html__() / esc_html().
+			$footnote_html,
+			esc_url( $product_url ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: already escaped with esc_html__() in sprintf().
+			$cta_text,
+			esc_url( $remind_url ),
+			esc_html__( 'Remind me later', 'wp-spell-check' ),
+			esc_url( $dismiss_url ),
+			esc_html__( 'Dismiss this message', 'wp-spell-check' )
+		);
+	}
+
+	/**
+	 * Output Cyber Monday sale admin notice markup.
+	 *
+	 * @since 12.2
+	 */
+	function show_cyber_monday_sale_notice() {
+		global $wpsc_version;
+		$ver = is_string( $wpsc_version ) ? $wpsc_version : '';
+
+		$product_url = 'https://www.wpspellcheck.com/pricing/?utm_source=baseplugin&utm_campaign=cyber_monday&utm_medium=admin_notice&utm_content=' . rawurlencode( $ver );
+		$coupon      = sanitize_text_field( self::$wpsc_cyber_monday_coupon_code );
+		if ( '' !== $coupon ) {
+			$product_url = add_query_arg( 'coupon', rawurlencode( $coupon ), $product_url );
+		}
+
+		$body_text       = esc_html__( 'Save 25% on WP Spell Check Pro—full-site proofreading for spelling, grammar, SEO, and broken code in one place.', 'wp-spell-check' );
+		$footnote_html   = $this->wpsc_get_sale_banner_footnote_html( $coupon );
+		$logo_markup     = $this->wpsc_get_sale_banner_logo_markup();
+		$cta_text        = sprintf(
+			/* translators: %d: discount percentage. */
+			esc_html__( 'Upgrade & save %d%%', 'wp-spell-check' ),
+			25
+		);
+		$remind_url      = wp_nonce_url(
+			add_query_arg( 'wpsc_cm_notice_action', '1' ),
+			'wpsc_dismiss_cm_notice',
+			'_wpsc_cm_notice_nonce'
+		);
+		$dismiss_url     = wp_nonce_url(
+			add_query_arg( 'wpsc_cm_notice_action', '2' ),
+			'wpsc_dismiss_cm_notice',
+			'_wpsc_cm_notice_nonce'
+		);
+
+		printf(
+			'<div class="wpsc-promo-notice wpsc-promo-notice--cyber-monday" role="region" aria-label="%1$s">'
+			. '<div class="wpsc-bf-banner__shimmer" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__orb wpsc-bf-banner__orb--left" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__orb wpsc-bf-banner__orb--right" aria-hidden="true"></div>'
+			. '<div class="wpsc-bf-banner__inner">'
+			. '<div class="wpsc-bf-banner__mark" aria-hidden="true">'
+			. '%2$s'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__copy">'
+			. '<p class="wpsc-bf-banner__headline">%3$s <span class="wpsc-bf-banner__discount">%4$s</span></p>'
+			. '<p class="wpsc-bf-banner__text">%5$s</p>'
+			. '<div class="wpsc-bf-banner__meta">%6$s</div>'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__actions">'
+			. '<a class="wpsc-bf-banner__btn" href="%7$s" target="_blank" rel="noopener noreferrer">%8$s <span class="wpsc-bf-banner__btn-arrow" aria-hidden="true">→</span></a>'
+			. '</div>'
+			. '</div>'
+			. '<div class="wpsc-bf-banner__footer">'
+			. '<a class="wpsc-bf-banner__footer-link" href="%9$s"><span class="dashicons dashicons-clock" aria-hidden="true"></span>%10$s</a>'
+			. '<a class="wpsc-bf-banner__footer-link" href="%11$s"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span>%12$s</a>'
+			. '</div>'
+			. '</div>',
+			esc_attr__( 'Cyber Monday sale', 'wp-spell-check' ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: trusted banner HTML from wpsc_get_sale_banner_logo_markup(), src escaped with esc_url().
+			$logo_markup,
+			esc_html__( 'Cyber Monday Sale —', 'wp-spell-check' ),
+			esc_html__( '25% off WP Spell Check Pro', 'wp-spell-check' ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: already escaped with esc_html__().
+			$body_text,
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: trusted banner HTML from wpsc_get_sale_banner_footnote_html(), strings escaped with esc_html__() / esc_html().
+			$footnote_html,
+			esc_url( $product_url ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is safe: already escaped with esc_html__() in sprintf().
+			$cta_text,
+			esc_url( $remind_url ),
+			esc_html__( 'Remind me later', 'wp-spell-check' ),
+			esc_url( $dismiss_url ),
+			esc_html__( 'Dismiss this message', 'wp-spell-check' )
+		);
 	}
 
 	/**

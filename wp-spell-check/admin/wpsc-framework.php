@@ -204,146 +204,6 @@ function wpscx_debug_queries_since( $query_start ) {
 }
 
 /**
- * NDJSON debug log path for CF7 save tracing (session 85c60e).
- *
- * @since 11.9
- * @return string
- */
-function wpscx_cf7_debug_log_path() {
-	return dirname( __DIR__ ) . '/debug-85c60e.log';
-}
-
-/**
- * Human-readable CF7 save debug log on the server (plugin root).
- *
- * @since 11.9
- * @return string
- */
-function wpscx_cf7_debug_readable_log_path() {
-	return dirname( __DIR__ ) . '/cf7-update-debug.log';
-}
-
-/**
- * Append one CF7 save-debug entry (NDJSON + readable companion file).
- *
- * @since 11.9
- * @param string $location      Code location identifier.
- * @param string $message       Short description.
- * @param array  $data          Context (no secrets/PII).
- * @param string $hypothesis_id Hypothesis tag (H-A, H-B, etc.).
- */
-function wpscx_cf7_debug_log( $location, $message, $data = array(), $hypothesis_id = 'INFO' ) {
-	$payload = array(
-		'sessionId'    => '85c60e',
-		'timestamp'    => (int) round( microtime( true ) * 1000 ),
-		'location'     => $location,
-		'message'      => $message,
-		'data'         => $data,
-		'hypothesisId' => $hypothesis_id,
-	);
-	// #region agent log
-	$ndjson = wp_json_encode( $payload ) . "\n";
-	@file_put_contents( wpscx_cf7_debug_log_path(), $ndjson, FILE_APPEND | LOCK_EX );
-	$readable = sprintf(
-		"[%s] %s | %s | %s\n",
-		gmdate( 'Y-m-d H:i:s' ),
-		$hypothesis_id,
-		$message,
-		wp_json_encode( $data )
-	);
-	@file_put_contents( wpscx_cf7_debug_readable_log_path(), $readable, FILE_APPEND | LOCK_EX );
-	// #endregion
-}
-
-/**
- * Scalar-only flatten for CF7 meta word-presence checks.
- *
- * @since 11.9
- * @param mixed $input Value to flatten.
- * @return array
- */
-function wpscx_cf7_flatten_scalars( $input ) {
-	if ( ! is_array( $input ) ) {
-		return array( is_scalar( $input ) ? (string) $input : '' );
-	}
-	$out = array();
-	foreach ( $input as $value ) {
-		$out = array_merge( $out, wpscx_cf7_flatten_scalars( $value ) );
-	}
-	return $out;
-}
-
-/**
- * Snapshot CF7 meta buckets for save-debug (truncated, no full bodies).
- *
- * @since 11.9
- * @param int    $form_id   CF7 post ID.
- * @param string $old_word  Word being replaced (for presence checks).
- * @return array
- */
-function wpscx_cf7_meta_debug_snapshot( $form_id, $old_word = '' ) {
-	$form_id  = (int) $form_id;
-	$form     = get_post_meta( $form_id, '_form', true );
-	$mail     = get_post_meta( $form_id, '_mail', true );
-	$mail_2   = get_post_meta( $form_id, '_mail_2', true );
-	$messages = get_post_meta( $form_id, '_messages', true );
-	$content  = get_post_field( 'post_content', $form_id );
-
-	$word_in = function ( $value ) use ( $old_word ) {
-		if ( '' === $old_word ) {
-			return null;
-		}
-		if ( is_array( $value ) ) {
-			$flat = implode( ' ', wpscx_cf7_flatten_scalars( $value ) );
-			return ( false !== strpos( $flat, $old_word ) );
-		}
-		if ( is_string( $value ) ) {
-			return ( false !== strpos( $value, $old_word ) );
-		}
-		return false;
-	};
-
-	$mail_summary = function ( $value ) use ( $word_in ) {
-		if ( ! is_array( $value ) ) {
-			return array(
-				'type'          => gettype( $value ),
-				'old_word_here' => $word_in( $value ),
-			);
-		}
-		return array(
-			'type'          => 'array',
-			'subject'       => isset( $value['subject'] ) ? substr( (string) $value['subject'], 0, 120 ) : '',
-			'body_len'      => isset( $value['body'] ) ? strlen( (string) $value['body'] ) : 0,
-			'body_preview'  => isset( $value['body'] ) ? substr( (string) $value['body'], 0, 80 ) : '',
-			'old_word_here' => $word_in( $value ),
-		);
-	};
-
-	$messages_summary = array( 'type' => gettype( $messages ) );
-	if ( is_array( $messages ) ) {
-		$messages_summary['keys']          = array_keys( $messages );
-		$messages_summary['old_word_here'] = $word_in( $messages );
-		foreach ( array_slice( $messages, 0, 3, true ) as $key => $msg ) {
-			$messages_summary['preview'][ $key ] = substr( (string) $msg, 0, 80 );
-		}
-	}
-
-	return array(
-		'form_id'              => $form_id,
-		'post_content_len'     => is_string( $content ) ? strlen( $content ) : 0,
-		'post_content_has_word' => ( is_string( $content ) && '' !== $old_word ) ? ( false !== strpos( $content, $old_word ) ) : null,
-		'_form'                => array(
-			'len'           => is_string( $form ) ? strlen( $form ) : 0,
-			'preview'       => is_string( $form ) ? substr( $form, 0, 80 ) : '',
-			'old_word_here' => $word_in( $form ),
-		),
-		'_mail'                => $mail_summary( $mail ),
-		'_mail_2'              => $mail_summary( $mail_2 ),
-		'_messages'            => $messages_summary,
-	);
-}
-
-/**
  * CF7 page_type labels used in scan results and save routing.
  *
  * @since 11.9
@@ -2654,7 +2514,7 @@ function wpscx_email_cleanup( $content ) {
 function wpscx_website_cleanup( $content ) {
 	$content = preg_replace( '/((http|https|ftp)\S+)/', '', $content );
 	$content = preg_replace( '/www\.\S+/', '', $content );
-	$content = preg_replace( '/\b\S+\.(?:COM|NET|ORG|GOV|INFO|XYZ|US|TOP|LOAN|BIZ|WANG|WIN|CLUB|ONLINE|VIP|MOBI|BID|SITE|MEN|TECH|PRO|SPACE|SHOP|WEBSITE|ASIA|KIWI|XIN|LINK|PARTY|TRADE|LIFE|STORE|NAME|CLOUD|STREAM|CAT|LIVE|TEL|XXX|ACCOUNTANT|DATE|DOWNLOAD|BLOG|WORK|RACING|REVIEW|TODAY|CLICK|ROCKS|NYC|WORLD|EMAIL|SOLUTIONS|NEWS|TOKYO|DESIGN|GURU|LONDON|LTD|ONE|PUB|REALTY|COMPANY|BERLIN|WEBCAM|HOST|PHOTOGRAPHY|PRESS|SCIENCE|FAITH|JOBS|REALTOR|REN|CITY|OVH|RED|AGENCY|SERVICES|MEDIA|GROUP|CENTER|STUDIO|GLOBAL|NINJA|TECHNOLOGY|TIPS|BAYERN|EXPERT|SALE|AMSTERDAM|DIGITAL|ACADEMY|NETWORK|HAMBURG|gdn|DE|CN|UK|NL|EU|RU|TK|AR|BR|IT|PL|FR|AU|CH|CA|ES|JP|KR|DK|BE|SE|AT|CZ|IN|HU|NO|TW|NZ|MX|PT|CL|FI|HK|TR|TRAVEL|AERO|COOP|MUSEUM|SHOW)(?:\S+)?\b/i', ' ', $content );
+	$content = preg_replace( '/\b\S+\.(?:AC|ACADEMY|ACCOUNTANT|ACCOUNTANTS|ACTOR|AE|AERO|AGENCY|AI|AIRFORCE|AM|AMSTERDAM|APARTMENTS|APP|AR|ARCHI|ARMY|ART|ASIA|ASSOCIATES|AT|ATTORNEY|AU|AUCTION|AUDIO|AZ|BABY|BAND|BAR|BARGAINS|BAYERN|BD|BE|BEER|BERLIN|BEST|BET|BG|BID|BIKE|BINGO|BIZ|BLACK|BLACKFRIDAY|BLOG|BLUE|BO|BOND|BOSTON|BOUTIQUE|BR|BUILD|BUILDERS|BUSINESS|BUZZ|BY|BZ|CA|CAB|CAFE|CAM|CAMERA|CAMP|CAPITAL|CARDS|CARE|CAREERS|CASA|CASH|CASINO|CAT|CATERING|CC|CENTER|CF|CH|CHARITY|CHAT|CHEAP|CHRISTMAS|CHURCH|CI|CITY|CL|CLAIMS|CLEANING|CLICK|CLINIC|CLOTHING|CLOUD|CLUB|CM|CN|CO|COACH|CODES|COFFEE|COLLEGE|COM|COMMUNITY|COMPANY|COMPUTER|CONDOS|CONSTRUCTION|CONSULTING|CONTACT|CONTRACTORS|COOKING|COOL|COOP|COUPONS|COURSES|CR|CREDIT|CREDITCARD|CRICKET|CRUISES|CX|CY|CYMRU|CZ|DANCE|DATE|DATING|DE|DEALS|DEGREE|DELIVERY|DEMOCRAT|DENTAL|DENTIST|DESI|DESIGN|DEV|DIAMONDS|DIET|DIGITAL|DIRECT|DIRECTORY|DISCOUNT|DK|DO|DOCTOR|DOG|DOMAINS|DOWNLOAD|DZ|EARTH|EC|ECO|EDU|EDUCATION|EE|EG|EMAIL|ENERGY|ENGINEER|ENGINEERING|ENTERPRISES|EQUIPMENT|ES|ESTATE|ET|EU|EXPERT|FAITH|FI|FM|FR|FUN|GA|GAMES|GDN|GE|GG|GH|GL|GLOBAL|GOV|GQ|GR|GROUP|GT|GURU|HAMBURG|HK|HOST|HR|HU|ICU|ID|IE|IL|IM|IN|INFO|IO|IQ|IR|IS|IT|JO|JOBS|JP|KE|KH|KIWI|KR|KW|KZ|LA|LB|LI|LIFE|LINK|LIVE|LK|LOAN|LOL|LONDON|LT|LTD|LU|LV|LY|MA|MD|ME|MEDIA|MEN|MIL|ML|MM|MN|MO|MOBI|MT|MUSEUM|MX|MY|NAME|NET|NETWORK|NEWS|NG|NINJA|NL|NO|NP|NU|NYC|NZ|OM|ONE|ONLINE|ORG|OVH|PA|PAGE|PARTY|PE|PH|PHOTOGRAPHY|PK|PL|PRESS|PRO|PT|PUB|PW|PY|QA|RACING|REALTOR|REALTY|RED|REN|REVIEW|RO|ROCKS|RS|RU|SA|SALE|SCIENCE|SE|SERVICES|SG|SH|SHOP|SHOW|SI|SITE|SK|SN|SOLUTIONS|SPACE|ST|STORE|STREAM|STUDIO|SU|TEAM|TECH|TECHNOLOGY|TEL|TH|TIPS|TK|TN|TO|TODAY|TOKYO|TOP|TR|TRADE|TRAVEL|TV|TW|TZ|UA|UG|UK|US|UY|UZ|VE|VIP|VN|WANG|WEBCAM|WEBSITE|WIKI|WIN|WORK|WORKS|WORLD|WS|XIN|XXX|XYZ|ZA|ZONE)(?:\S+)?\b/i', ' ', $content );
 
 	return $content;
 }
@@ -2912,29 +2772,57 @@ function wpscx_set_scan_in_progress( $rng_seed = 0 ) {
 	}
 }
 
+/**
+ * Mirror spellcheck_options updates into the cached $wpsc_settings array for the current request.
+ *
+ * @since 12.4
+ *
+ * @param string $option_name  Option row name.
+ * @param string $option_value New option_value.
+ */
+function wpscx_sync_wpsc_settings_option_value( $option_name, $option_value ) {
+	global $wpsc_settings;
+
+	if ( ! isset( $wpsc_settings ) || ! is_iterable( $wpsc_settings ) ) {
+		return;
+	}
+
+	foreach ( $wpsc_settings as $setting ) {
+		if ( is_object( $setting ) && isset( $setting->option_name ) && $option_name === $setting->option_name ) {
+			$setting->option_value = $option_value;
+			return;
+		}
+	}
+}
+
 function wpscx_clear_scan() {
 	global $wpdb;
-	global $wpsc_settings;
 	$options_table = $wpdb->prefix . 'spellcheck_options';
-	$settings      = $wpsc_settings;
 
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'entire_scan' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'page_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'post_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cf7_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'author_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'menu_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'tag_title_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cat_title_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_desc_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'seo_title_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'slider_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'media_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'tag_desc_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'tag_slug_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cat_desc_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'cat_slug_sip' ) );
-	$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => 'ecommerce_sip' ) );
+	$scan_options = array(
+		'entire_scan',
+		'page_sip',
+		'post_sip',
+		'cf7_sip',
+		'author_sip',
+		'menu_sip',
+		'tag_title_sip',
+		'cat_title_sip',
+		'seo_desc_sip',
+		'seo_title_sip',
+		'slider_sip',
+		'media_sip',
+		'tag_desc_sip',
+		'tag_slug_sip',
+		'cat_desc_sip',
+		'cat_slug_sip',
+		'ecommerce_sip',
+	);
+
+	foreach ( $scan_options as $option_name ) {
+		$wpdb->update( $options_table, array( 'option_value' => 'false' ), array( 'option_name' => $option_name ) );
+		wpscx_sync_wpsc_settings_option_value( $option_name, 'false' );
+	}
 }
 
 function wpscx_scan_all( $rng_seed = 0, $log_debug = true ) {
