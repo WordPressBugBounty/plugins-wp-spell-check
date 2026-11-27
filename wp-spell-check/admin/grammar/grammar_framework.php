@@ -576,7 +576,7 @@ function wpgcx_publish_box() {
 		}
 		if ( sizeof( (array) $score ) > 0 || sizeof( (array) $spell_score ) > 0 ) {
 			?>
-			<div>
+			<div class="wpgc-proofread-stats">
 			<div class="wpsc-editor-message"></div>
 						<div><span style="background: #59c033; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 15px;"></span><strong>Grammar Errors:</strong> 
 						<?php
@@ -594,27 +594,31 @@ function wpgcx_publish_box() {
 			<?php if ( isset( $_GET['wpgc-scan-page'] ) && 'Spell Check' === $_GET['wpgc-scan-page'] ) { ?>
 			<div class="wpgc-success-message">Spelling check completed on this page</div>
 			<?php } ?>
+			<div class="wpgc-proofread-buttons">
 			<div class="wpgc-button-container-first">
-				<input type="button" value="Spell Check" class="wpgc-scan-page wp-media-buttons button wpgc-btn-spell-check" />
-				<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight wp-media-buttons button wpgc-btn-highlight-spelling" />
+				<input type="button" value="Spell Check" class="wpgc-scan-page button wpgc-btn-spell-check" />
+				<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight button wpgc-btn-highlight-spelling" />
 			</div>
 			<div class="wpgc-button-container">
-				<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar wp-media-buttons button wpgc-btn-grammar-check" />
-				<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight wp-media-buttons button wpgc-btn-highlight-grammar" />
+				<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar button wpgc-btn-grammar-check" />
+				<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight button wpgc-btn-highlight-grammar" />
+			</div>
 			</div>
 			<?php
 		} else {
 			?>
-			<div>
+			<div class="wpgc-proofread-stats">
 			<div><strong>Click on the buttons below to proofread your page</strong></div>
 			</div>
+			<div class="wpgc-proofread-buttons">
 			<div class="wpgc-button-container-first">
-				<input type="button" value="Spell Check" class="wpgc-scan-page wp-media-buttons button wpgc-btn-spell-check" />
-				<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight wp-media-buttons button wpgc-btn-highlight-spelling" />
+				<input type="button" value="Spell Check" class="wpgc-scan-page button wpgc-btn-spell-check" />
+				<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight button wpgc-btn-highlight-spelling" />
 			</div>
 			<div class="wpgc-button-container">
-				<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar wp-media-buttons button wpgc-btn-grammar-check" />
-				<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight wp-media-buttons button wpgc-btn-highlight-grammar" />
+				<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar button wpgc-btn-grammar-check" />
+				<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight button wpgc-btn-highlight-grammar" />
+			</div>
 			</div>
 			<?php
 		}
@@ -623,16 +627,18 @@ function wpgcx_publish_box() {
 		<?php
 	} else {
 		?>
-		<div>
+		<div class="wpgc-proofread-stats">
 		<div><strong>Click on the buttons below to proofread your page</strong></div>
 		</div>
+		<div class="wpgc-proofread-buttons">
 		<div class="wpgc-button-container-first">
-			<input type="button" value="Spell Check" class="wpgc-scan-page wp-media-buttons button wpgc-btn-spell-check" />
-			<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight wp-media-buttons button wpgc-btn-highlight-spelling" />
+			<input type="button" value="Spell Check" class="wpgc-scan-page button wpgc-btn-spell-check" />
+			<input type="button" value="Highlight Spelling" class="wpgc-spelling-highlight button wpgc-btn-highlight-spelling" />
 		</div>
 		<div class="wpgc-button-container">
-			<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar wp-media-buttons button wpgc-btn-grammar-check" />
-			<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight wp-media-buttons button wpgc-btn-highlight-grammar" />
+			<input type="button" value="Grammar Check" class="wpgc-scan-page-grammar button wpgc-btn-grammar-check" />
+			<input type="button" value="Highlight Grammar" class="wpgc-grammar-highlight button wpgc-btn-highlight-grammar" />
+		</div>
 		</div>
 		<?php
 	}

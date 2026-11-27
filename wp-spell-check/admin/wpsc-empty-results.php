@@ -57,8 +57,23 @@ function wpscx_admin_empty_render() {
 	if ( isset( $_POST['apiKey'] ) ) {
 		check_admin_referer( 'wpsc_update_openai' );
 		$apiKey = sanitize_text_field( wp_unslash( $_POST['apiKey'] ) );
+		if ( ! wpscx_openai_key_is_configured( $apiKey ) ) {
+			$apiKey = 'None';
+		}
 
-		$wpdb->update( $options_table, array( 'option_value' => $apiKey ), array( 'option_name' => 'openAIKey' ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string.
+		$openai_row = $wpdb->get_var( $wpdb->prepare( 'SELECT option_name FROM ' . $options_table . ' WHERE option_name = %s LIMIT 1', 'openAIKey' ) );
+		if ( $openai_row ) {
+			$wpdb->update( $options_table, array( 'option_value' => $apiKey ), array( 'option_name' => 'openAIKey' ) );
+		} else {
+			$wpdb->insert(
+				$options_table,
+				array(
+					'option_name'  => 'openAIKey',
+					'option_value' => $apiKey,
+				)
+			);
+		}
 	}
 
 	wp_enqueue_script( 'jquery-ui-dialog' );
@@ -182,6 +197,7 @@ function wpscx_admin_empty_render() {
 			break;
 		}
 	}
+	$openAIKeyConfigured = wpscx_openai_key_is_configured( $openAIKey );
 
 	$postmeta_table    = $wpdb->prefix . 'postmeta';
 	$post_table        = $wpdb->prefix . 'posts';
@@ -492,7 +508,8 @@ function wpscx_admin_empty_render() {
 				'wpsc_get_stats_empty'       => wp_create_nonce( 'wpsc_get_stats_empty' ),
 				'wpsc_openai'                => wp_create_nonce( 'wpsc_openai' ),
 			),
-			'version'            => $wpsc_version,
+			'version'               => $wpsc_version,
+			'openai_key_configured' => $openAIKeyConfigured,
 		)
 	);
 
@@ -530,7 +547,7 @@ function wpscx_admin_empty_render() {
 				<?php wp_nonce_field( 'wpsc_update_openai' ); ?>
 				<div class="wpsc-openai-key-row">
 					<strong style="margin-right: 5px;">OpenAI API Key</strong>
-					<input type="text" name="apiKey" value="<?php echo esc_attr( $openAIKey ); ?>" style="flex: 1; min-width: 300px; max-width: 500px;" />
+					<input type="text" name="apiKey" value="<?php echo esc_attr( $openAIKeyConfigured ? trim( (string) $openAIKey ) : '' ); ?>" placeholder="<?php esc_attr_e( 'None', 'wp-spell-check' ); ?>" style="flex: 1; min-width: 300px; max-width: 500px;" />
 					<span class="wpsc-mouseover-text-emfeature-seo"><span class="wpsc-pro-feature-header">
 						This is a Pro Feature</span><span class="wpsc-pro-feature-content">To generate
 						SEO Titles and Descriptions with OpenAI, <a href="https://www.wpspellcheck.com/pricing/"

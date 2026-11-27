@@ -364,7 +364,7 @@ class Wpscx_Table extends WP_List_Table {
 			$result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $postmeta WHERE meta_id = %d", $item['page_id'] ) );
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $result[0]->post_id ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		} else {
-			$output = '<a href="' . $link . '" id="wpsc-page-name" page="' . $item['page_id'] . '" title="' . $item['page_name'] . '" target="_blank">View</a>';
+			$output = '<a href="' . esc_url( $link ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
 		}
 		if ( ( 'WooCommerce Product Excerpt' === $item['page_type'] || 'WooCommerce Product Title' === $item['page_type'] || 'WooCommerce Product Short Description' === $item['page_type'] || 'WooCommerce Category Title' === $item['page_type'] || 'WooCommerce Category Description' === $item['page_type'] || 'WooCommerce Tag Title' === $item['page_type'] || 'WooCommerce Tag Description' === $item['page_type'] || 'WooCommerce Product Name' === $item['page_type'] || 'Page Title' === $item['page_type'] || 'Post Title' === $item['page_type'] || 'Yoast SEO Page Description' === $item['page_type'] || 'All in One SEO Page Description' === $item['page_type'] || 'SEO Page Description' === $item['page_type'] || 'Yoast SEO Page Title' === $item['page_type'] || 'All in One SEO Page Title' === $item['page_type'] || 'SEO Page Title' === $item['page_type'] || 'Yoast SEO Post Description' === $item['page_type'] || 'All in One SEO Post Description' === $item['page_type'] || 'SEO Post Description' === $item['page_type'] || 'Yoast SEO Post Title' === $item['page_type'] || 'All in One SEO Post Title' === $item['page_type'] || 'SEO Post Title' === $item['page_type'] || 'Yoast SEO Media Description' === $item['page_type'] || 'All in One SEO Media Description' === $item['page_type'] || 'SEO Media Description' === $item['page_type'] || 'Yoast SEO Media Title' === $item['page_type'] || 'All in One SEO Media Title' === $item['page_type'] || 'SEO Media Title' === $item['page_type'] ) && 'Empty Field' === $item['word'] ) {
 			$output = '<a href="' . esc_url( wpscx_get_post_edit_url( (int) $item['page_id'] ) ) . '" id="wpsc-page-name" page="' . esc_attr( $item['page_id'] ) . '" title="' . esc_attr( $item['page_name'] ) . '" target="_blank">View</a>';
@@ -376,7 +376,7 @@ class Wpscx_Table extends WP_List_Table {
 
 		return sprintf(
 			'%1$s <span style="color:silver"></span>%3$s',
-			$item['page_name'],
+			esc_html( $item['page_name'] ),
 			$item['ID'],
 			$this->row_actions( $actions )
 		);
@@ -1354,7 +1354,7 @@ function wpscx_admin_render() {
 				</div>
 			<?php } ?>
 			<form id="words-list" method="get" style="width: 75%; float: left; margin-top: 10px;">
-				<input name="wpsc-edit-update-button-hidden" id="wpsc-edit-update-button-hidden" type="submit"
+				<input name="wpsc-edit-update-button-hidden" id="wpsc-edit-update-button-hidden" type="button"
 					value="Save all Changes" class="button button-primary" style="display:none;" />
 				<p class="search-box" style="position: relative; margin-top: 8px;">
 					<label class="screen-reader-text" for="search_id-search-input">search:</label>
@@ -1600,7 +1600,7 @@ function wpscx_admin_render_single( $wpsc_data, $page_id ) {
 			</div>
 		<?php } ?>
 		<form id="words-list" method="get" style="width: 100%; margin-top: 10px;">
-			<input name="wpsc-edit-update-button-hidden" id="wpsc-edit-update-button-hidden" type="submit"
+			<input name="wpsc-edit-update-button-hidden" id="wpsc-edit-update-button-hidden" type="button"
 				value="Save all Changes" class="button button-primary" style="display:none;" />
 			<p class="search-box" style="position: relative; margin-top: 8px;">
 				<label class="screen-reader-text" for="search_id-search-input">search:</label>

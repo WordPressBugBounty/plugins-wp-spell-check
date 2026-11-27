@@ -1170,6 +1170,12 @@ class Wpscx_Ajax {
 	function wpscx_openAI_ajax() {
 		$this->check_permissions();
 		check_ajax_referer( 'wpsc_openai', 'nonce' );
+		global $wpsc_settings;
+		wpscx_set_global_vars();
+		$api_key = isset( $wpsc_settings[151] ) ? trim( (string) $wpsc_settings[151]->option_value ) : '';
+		if ( '' === $api_key ) {
+			wp_send_json( __( 'Enter your API key to enable this feature.', 'wp-spell-check' ) );
+		}
 		$type    = sanitize_text_field( wp_unslash( $_POST['type'] ) );
 		$post_id = sanitize_text_field( wp_unslash( $_POST['id'] ) );
 

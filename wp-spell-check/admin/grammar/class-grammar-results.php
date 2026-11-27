@@ -86,7 +86,7 @@ class Wpgcx_Table extends WP_List_Table {
 
 		return sprintf(
 			'%1$s <span style="color:silver"></span>%3$s',
-			$page_name,
+			esc_html( $page_name ),
 			$item['ID'],
 			$this->row_actions( $actions )
 		);

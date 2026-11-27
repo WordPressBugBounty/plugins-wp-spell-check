@@ -320,11 +320,10 @@
 					if ( ! scan_server_confirmed) {
 						setTimeout( wpscx_recheck_scan_temp, 0 );
 					}
-					$( "tr.wpsc-row" ).animate(
-						{ opacity: 0 },
+					$( "#wpsc-table-results tr.wpsc-row" ).fadeOut(
 						500,
 						function () {
-							$( "tr.wpsc-row" ).hide();
+							$( this ).remove();
 						}
 					);
 					$( ".wpsc-mesage-container" ).animate(

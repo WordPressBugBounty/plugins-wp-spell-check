@@ -189,6 +189,7 @@ body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-page,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-post,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-emfeature,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-emfeature-seo,
+body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-generate-seo-api,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-emfeature-2,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-emfeature-3,
 body.wpsc-admin-page.wpsc-theme-dark .wpsc-mouseover-text-scfeature,
@@ -242,6 +243,16 @@ body.wpsc-admin-page.wpsc-theme-dark textarea {
 body.wpsc-admin-page.wpsc-theme-dark input::placeholder,
 body.wpsc-admin-page.wpsc-theme-dark textarea::placeholder {
   color: #888;
+}
+
+/* Options page: API key field – silver border and lighter italic placeholder */
+body.wpsc-admin-page.wpsc-theme-dark #wpsc-api-key {
+  border-color: #c0c0c0;
+}
+
+body.wpsc-admin-page.wpsc-theme-dark #wpsc-api-key::placeholder {
+  color: #c8c8c8;
+  font-style: italic;
 }
 
 /* Notices and status blocks */
@@ -630,6 +641,7 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-post,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-emfeature,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-emfeature-seo,
+  body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-generate-seo-api,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-emfeature-2,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-emfeature-3,
   body.wpsc-admin-page.wpsc-theme-system .wpsc-mouseover-text-scfeature,
@@ -675,6 +687,13 @@ body.wpsc-admin-page.wpsc-theme-dark #footer-thankyou a:hover {
   body.wpsc-admin-page.wpsc-theme-system input::placeholder,
   body.wpsc-admin-page.wpsc-theme-system textarea::placeholder {
     color: #888;
+  }
+  body.wpsc-admin-page.wpsc-theme-system #wpsc-api-key {
+    border-color: #c0c0c0;
+  }
+  body.wpsc-admin-page.wpsc-theme-system #wpsc-api-key::placeholder {
+    color: #c8c8c8;
+    font-style: italic;
   }
   body.wpsc-admin-page.wpsc-theme-system .notice,
   body.wpsc-admin-page.wpsc-theme-system .updated,

@@ -13,6 +13,9 @@
   // Initialize scan_in_progress from PHP variable
   var scan_in_progress = uiData.check_scan || false;
   var scanStartTime;
+  var activeScanType = "";
+  var scan_start_request_pending = false;
+  var scan_server_confirmed = false;
 
   // Ensure wpscx_seo_ajax_object exists (may come from emptyresults-ajax.js or use fallback)
   if (typeof wpscx_seo_ajax_object === "undefined") {
@@ -131,6 +134,19 @@
     });
   });
 
+  function wpscexBuildScanInProgressMessage(scanType) {
+    var loadingSpinnerUrl =
+      uiData.loading_spinner_url ||
+      (uiData.plugin_url || "") + "images/loading.svg";
+    return (
+      '<img src="' +
+      loadingSpinnerUrl +
+      '" alt="Scan in Progress" class="wpsc-loading-spinner" /> A scan is currently in progress for <span class="sc-message" style="color: rgb(0, 150, 255); font-weight: bold;">' +
+      scanType +
+      '</span>. <a href="/wp-admin/admin.php?page=wp-spellcheck-seo.php">Click here</a> to see scan results. <span class="wpsc-mouseover-button-refresh" style="border-radius: 29px; border: 1px solid green; display: inline-block; margin-left: 10px; padding: 4px 10px; cursor: help;">?</span><span class="wpsc-mouseover-text-refresh">The page will automatically refresh when the scan is finished. You do not need to remain on this page for the scan to run.<br /><br />Time estimate may vary based on server strength.</span>'
+    );
+  }
+
   // BLOCK 2: Scan progress functions
   function wpscex_recheck_scan_temp() {
     $.ajax({
@@ -138,11 +154,24 @@
       type: "POST",
       data: {
         action: "emptyresults_sc",
+        nonce: wpscx_seo_ajax_object.wpsc_empty_scan_nonce,
       },
       dataType: "html",
       success: function (response) {
-        if (response == "true") {
-          window.setInterval(wpscex_recheck_scan_temp(), 500);
+        if (response === "true") {
+          if (!scan_server_confirmed && activeScanType) {
+            $("#wpscScanMessage").html(
+              wpscexBuildScanInProgressMessage(activeScanType),
+            );
+            scan_server_confirmed = true;
+          }
+          window.setTimeout(wpscex_recheck_scan_temp, 1000);
+        } else if (scan_server_confirmed && !scan_start_request_pending) {
+          wpscex_finish_scan_temp();
+        } else if (scan_server_confirmed && scan_start_request_pending) {
+          window.setTimeout(wpscex_recheck_scan_temp, 500);
+        } else if (scan_start_request_pending) {
+          window.setTimeout(wpscex_recheck_scan_temp, 500);
         } else {
           wpscex_finish_scan_temp();
         }
@@ -270,9 +299,16 @@
   }
 
   // BLOCK 3: SEO Listener function
+  function wpscx_openai_key_configured() {
+    return !!uiData.openai_key_configured;
+  }
+
   function wpscx_seoListener() {
     $(".wpsc-generate-seo-button").click(function (event) {
       event.preventDefault();
+      if (!wpscx_openai_key_configured()) {
+        return;
+      }
 
       var postID = $(this)
         .closest("tr")
@@ -351,6 +387,32 @@
   }
   window.wpscx_seoListener = wpscx_seoListener;
 
+  $(document).on("mouseenter", ".wpsc-generate-seo-wrap", function () {
+    if (!$(this).find(".wpsc-generate-seo-button.wpsc-generate-seo-disabled").length) {
+      return;
+    }
+    var $tip = $(this).find(".wpsc-mouseover-text-generate-seo-api");
+    $tip
+      .stop()
+      .css({ display: "block", zIndex: 100 })
+      .animate({ opacity: 1 }, 400);
+  });
+  $(document).on("mouseleave", ".wpsc-generate-seo-wrap", function () {
+    var $wrap = $(this);
+    if (
+      $wrap.find(".wpsc-generate-seo-button:hover").length ||
+      $wrap.find(".wpsc-mouseover-text-generate-seo-api:hover").length
+    ) {
+      return;
+    }
+    $wrap
+      .find(".wpsc-mouseover-text-generate-seo-api")
+      .stop()
+      .animate({ opacity: 0 }, 400, function () {
+        $(this).css({ display: "none", zIndex: -100 });
+      });
+  });
+
   // BLOCK 3: Scan button click handler
   $(".wpscScan").click(function (event) {
     event.preventDefault();
@@ -358,6 +420,9 @@
       return;
     }
     scan_in_progress = true;
+    activeScanType = $(this).attr("value") || "";
+    scan_start_request_pending = true;
+    scan_server_confirmed = false;
 
     if (typeof wpscx_seo_ajax_object === "undefined") {
       wpscx_seo_ajax_object = {};
@@ -383,7 +448,7 @@
         : "";
     }
 
-    var scanType = $(this).attr("value");
+    var scanType = activeScanType;
     var loadingSpinnerUrl =
       uiData.loading_spinner_url ||
       (uiData.plugin_url || "") + "images/loading.svg";
@@ -397,9 +462,11 @@
 
     var scanTime = new Date();
     scanStartTime = scanTime.getTime();
+    window.setTimeout(wpscex_recheck_scan_temp, 500);
 
     $.ajax({
       url: wpscx_seo_ajax_object.ajax_url,
+      timeout: 7200000,
       type: "POST",
       data: {
         type: scanType,
@@ -408,11 +475,14 @@
       },
       dataType: "html",
       success: function (response) {
-        $("#wpscScanMessage").html(response); // update the scan message to display the scan started message
-        window.setInterval(wpscex_finish_scan_temp(), 100);
-        $("tr.wpsc-row").animate({ opacity: 0 }, 500, function () {
-          $("tr.wpsc-row").hide();
-        });
+        scan_start_request_pending = false;
+        if (!scan_server_confirmed) {
+          $("#wpscScanMessage").html(response);
+          window.setTimeout(wpscex_recheck_scan_temp, 0);
+          $("#wpsc-table-results tr.wpsc-row").fadeOut(500, function () {
+            $(this).remove();
+          });
+        }
         $(".wpsc-mesage-container").animate({ opacity: 0 }, 500, function () {
           $(".wpsc-mesage-container").hide();
         });
@@ -482,7 +552,7 @@
         });
       },
       error: function (xhr, status, thrownError) {
-        window.setInterval(wpscex_recheck_scan_temp(), 500);
+        window.setTimeout(wpscex_recheck_scan_temp, 500);
       },
     });
   });

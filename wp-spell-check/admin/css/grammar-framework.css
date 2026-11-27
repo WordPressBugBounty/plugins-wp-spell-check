@@ -30,16 +30,41 @@
 	color: #59c033;
 }
 
-/* Button Containers */
-.wpgc-button-container-first {
-	width: 49%;
-	display: inline-block;
-	margin-top: 10px;
+/* Publish box proofread UI */
+.wpgc-proofread-stats {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
 }
 
+.wpgc-proofread-buttons {
+	display: flex;
+	flex-wrap: nowrap;
+	justify-content: space-between;
+	gap: 6px;
+	width: 100%;
+	clear: both;
+	margin-top: 10px;
+	box-sizing: border-box;
+}
+
+/* Button Containers */
+.wpgc-button-container-first,
 .wpgc-button-container {
-	width: 49%;
-	display: inline-block;
+	flex: 1 1 0;
+	min-width: 0;
+	display: block;
+	box-sizing: border-box;
+}
+
+.wpgc-button-container-first .button,
+.wpgc-button-container .button {
+	display: block;
+	float: none;
+	clear: none;
+	margin-left: 0;
+	margin-right: 0;
+	box-sizing: border-box;
 }
 
 /* Spell Check Buttons */
@@ -80,6 +105,7 @@
 
 /* Separator */
 .wpgc-separator {
+	clear: both;
 	width: 277px;
 	margin-left: -10px;
 }

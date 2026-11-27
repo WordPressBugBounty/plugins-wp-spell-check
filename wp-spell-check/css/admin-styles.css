@@ -456,6 +456,7 @@ h3.sc-message {
 .wpsc-mouseover-text-post,
 .wpsc-mouseover-text-emfeature,
 .wpsc-mouseover-text-emfeature-seo,
+.wpsc-mouseover-text-generate-seo-api,
 .wpsc-mouseover-text-emfeature-2,
 .wpsc-mouseover-text-emfeature-3,
 .wpsc-mouseover-text-scfeature,
@@ -507,7 +508,8 @@ h3.sc-message {
 }
 
 #current-page-selector {
-  width: 12%;
+  width: auto;
+  min-width: 4ch;
 }
 
 .hidden {
@@ -818,7 +820,8 @@ td {
 }
 
 .wpsc-table #current-page-selector {
-  width: 12%;
+  width: auto;
+  min-width: 4ch;
 }
 
 .wpsc-table .hidden {
@@ -1185,12 +1188,39 @@ td {
   clear: both;
 }
 
+#wpsc-empty-fields-tab .wpsc-generate-seo-wrap {
+  display: inline-block;
+  margin-left: 10px;
+  position: relative;
+  vertical-align: middle;
+}
+
 #wpsc-empty-fields-tab .wpsc-generate-seo-button {
   background: var(--wpsc-color-success);
-  margin-left: 10px;
+  margin-left: 12px;
   color: white;
   border: none;
   font-weight: bold;
+}
+
+#wpsc-empty-fields-tab .wpsc-generate-seo-wrap:has(.wpsc-generate-seo-disabled) {
+  cursor: not-allowed;
+}
+
+#wpsc-empty-fields-tab .wpsc-generate-seo-button.wpsc-generate-seo-disabled {
+  background: #a7aaad !important;
+  color: #f0f0f1 !important;
+  cursor: not-allowed;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+#wpsc-empty-fields-tab .wpsc-mouseover-text-generate-seo-api {
+  left: 0;
+  margin-top: 4px;
+  padding: 8px 10px 12px 10px;
+  top: 100%;
+  width: 220px;
 }
 
 #wpsc-empty-fields-tab .seo-progress {

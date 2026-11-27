@@ -80,7 +80,7 @@ class Wphcx_Table extends WP_List_Table {
 
 		return sprintf(
 			'%1$s <span></span>%3$s',
-			$item['page_name'],
+			esc_html( $item['page_name'] ),
 			$item['ID'],
 			$this->row_actions( $actions )
 		);

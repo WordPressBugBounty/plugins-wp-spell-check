@@ -175,7 +175,7 @@ class Wpscx_Database {
 		$sql = "CREATE TABLE $options_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			option_name VARCHAR(100) NOT NULL,
-			option_value VARCHAR(100) NOT NULL,
+			option_value TEXT NOT NULL,
 			UNIQUE KEY id (id)
 		) $charset_collate;";
 
@@ -486,6 +486,34 @@ class Wpscx_Database {
 		if ( ! empty( $wpdb->collate ) ) {
 			$charset_collate .= " COLLATE {$wpdb->collate}";
 		}
+
+			$sql = "CREATE TABLE $options_table (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			option_name VARCHAR(100) NOT NULL,
+			option_value TEXT NOT NULL,
+			UNIQUE KEY id (id)
+		) $charset_collate;";
+
+			dbDelta( $sql );
+
+			$spellcheck_options_esc = esc_sql( $options_table );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name from prefix + literal. DDL cannot use prepare().
+			$option_value_col = $wpdb->get_results( "SHOW COLUMNS FROM `{$spellcheck_options_esc}` LIKE 'option_value'" );
+			if ( ! empty( $option_value_col ) && isset( $option_value_col[0]->Type ) && false !== stripos( $option_value_col[0]->Type, 'varchar' ) ) {
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name escaped above. ALTER is DDL.
+				$wpdb->query( "ALTER TABLE `{$spellcheck_options_esc}` MODIFY option_value TEXT NOT NULL" );
+			}
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe: constructed from $wpdb->prefix + hardcoded string.
+			$openai_key_exists = $wpdb->get_var( $wpdb->prepare( 'SELECT option_name FROM ' . $options_table . ' WHERE option_name = %s LIMIT 1', 'openAIKey' ) );
+			if ( ! $openai_key_exists ) {
+				$wpdb->insert(
+					$options_table,
+					array(
+						'option_name'  => 'openAIKey',
+						'option_value' => 'None',
+					)
+				);
+			}
 
 			$sql = "CREATE TABLE $empty_table (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,

@@ -53,6 +53,43 @@ class Wpscx_Dashboard {
 	}
 }
 
+/**
+ * Whether a stored OpenAI key value is usable (not empty / placeholder).
+ *
+ * @since 12.5
+ *
+ * @param string $key Raw option value.
+ * @return bool
+ */
+function wpscx_openai_key_is_configured( $key ) {
+	$key = trim( (string) $key );
+	return '' !== $key && 'none' !== strtolower( $key );
+}
+
+/**
+ * Load the OpenAI API key from plugin options (by name, not fixed index).
+ *
+ * @since 12.5
+ *
+ * @return string
+ */
+function wpscx_get_openai_api_key() {
+	global $wpsc_settings;
+	wpscx_set_global_vars();
+	if ( isset( $wpsc_settings ) && $wpsc_settings instanceof SplFixedArray ) {
+		for ( $i = 0; $i < $wpsc_settings->getSize(); $i++ ) {
+			if ( ! isset( $wpsc_settings[ $i ] ) || ! is_object( $wpsc_settings[ $i ] ) ) {
+				continue;
+			}
+			if ( 'openAIKey' === $wpsc_settings[ $i ]->option_name ) {
+				$key = trim( (string) $wpsc_settings[ $i ]->option_value );
+				return wpscx_openai_key_is_configured( $key ) ? $key : '';
+			}
+		}
+	}
+	return '';
+}
+
 class Wpscx_OpenAI {
 
 	private function generateSEODescription( $text, $api_key ) {
@@ -62,7 +99,7 @@ class Wpscx_OpenAI {
 
 		// Define the request parameters
 		$request_params = array(
-			'model'       => 'gpt-3.5-turbo',
+			'model'       => 'gpt-4o-mini',
 			'messages'    => array(
 				array(
 					'role'    => 'user',
@@ -114,7 +151,7 @@ class Wpscx_OpenAI {
 
 		// Define the request parameters
 		$request_params = array(
-			'model'       => 'gpt-3.5-turbo',
+			'model'       => 'gpt-4o-mini',
 			'messages'    => array(
 				array(
 					'role'    => 'user',
@@ -160,8 +197,7 @@ class Wpscx_OpenAI {
 	}
 
 	public function getTitle( $post_id ) {
-		global $wpsc_settings;
-		$api_key = $wpsc_settings[151]->option_value;
+		$api_key = wpscx_get_openai_api_key();
 
 		$post = get_post( $post_id );
 		$text = $post->post_title . ' ' . $post->post_content;
@@ -175,8 +211,7 @@ class Wpscx_OpenAI {
 	}
 
 	public function getDesc( $post_id ) {
-		global $wpsc_settings;
-		$api_key = $wpsc_settings[151]->option_value;
+		$api_key = wpscx_get_openai_api_key();
 
 		$post = get_post( $post_id );
 		$text = $post->post_title . ' ' . $post->post_content;

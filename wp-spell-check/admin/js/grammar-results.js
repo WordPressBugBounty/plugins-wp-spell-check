@@ -69,11 +69,12 @@
 				type: "POST",
 				data: {
 					action: "results_gc",
+					nonce: window.wpgcx_gram_ajax_object.wpgc_scan_nonce,
 				},
 				dataType: "html",
 				success: function (response) {
-					if (response == "true") {
-						window.setInterval( wpgcx_finish_scan_temp(), 2000 );
+					if (response === "true") {
+						window.setTimeout( wpgcx_recheck_scan_temp, 1000 );
 					} else {
 						wpgcx_finish_scan_temp();
 					}
@@ -226,6 +227,7 @@
 				'" alt="Scan in Progress" class="wpsc-loading-spinner" /> Starting New Scan'
 			);
 			$( ".wpscScan" ).addClass( "wpsc-button-greyout" ); // Greyout buttons
+			window.setTimeout( wpgcx_recheck_scan_temp, 500 );
 
 			$.ajax(
 				{
@@ -239,12 +241,11 @@
 					dataType: "html",
 					success: function (response) {
 						$( "#wpscScanMessage" ).html( response ); // update the scan message to display the scan started message
-						window.setInterval( wpgcx_finish_scan_temp(), 500 );
-						$( "tr.wpsc-row" ).animate(
-							{ opacity: 0 },
+						window.setTimeout( wpgcx_recheck_scan_temp, 0 );
+						$( "#wpsc-table-results tr.wpsc-row" ).fadeOut(
 							500,
 							function () {
-								$( "tr.wpsc-row" ).hide();
+								$( this ).remove();
 							}
 						);
 

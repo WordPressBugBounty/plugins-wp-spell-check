@@ -1393,7 +1393,26 @@ function wpscx_show_editor_seo(
         )
     );
   }
+  wpscx_apply_openai_generate_button_state(edit_row);
   wpscx_add_event_handlers();
+}
+
+function wpscx_openai_key_configured() {
+  return (
+    typeof wpsc_empty_results_ui !== "undefined" &&
+    wpsc_empty_results_ui.openai_key_configured
+  );
+}
+
+function wpscx_apply_openai_generate_button_state(edit_row) {
+  var genBtn = edit_row.find(".wpsc-generate-seo-button");
+  if (wpscx_openai_key_configured()) {
+    genBtn.prop("disabled", false);
+    genBtn.removeClass("wpsc-generate-seo-disabled");
+  } else {
+    genBtn.prop("disabled", true);
+    genBtn.addClass("wpsc-generate-seo-disabled");
+  }
 }
 
 function wpscx_add_event_handlers() {

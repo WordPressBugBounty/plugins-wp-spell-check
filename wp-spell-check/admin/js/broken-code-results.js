@@ -69,8 +69,8 @@
 				},
 				dataType: "html",
 				success: function (response) {
-					if (response == "true") {
-						window.setInterval( wphcx_recheck_scan_temp(), 1000 );
+					if (response === "true") {
+						window.setTimeout( wphcx_recheck_scan_temp, 1000 );
 					} else {
 						wphcx_finish_scan_temp();
 					}
@@ -208,6 +208,7 @@
 
 			var scanTime  = new Date();
 			scanStartTime = scanTime.getTime();
+			window.setTimeout( wphcx_recheck_scan_temp, 500 );
 
 			$.ajax(
 				{
@@ -225,12 +226,11 @@
 						var scanFinal   = (scanEndTime - scanStartTime) / 1000;
 
 						$( "#wpscScanMessage" ).html( response ); // update the scan message to display the scan started message
-						window.setInterval( wphcx_recheck_scan_temp(), 500 );
-						$( "tr.wpsc-row" ).animate(
-							{ opacity: 0 },
+						window.setTimeout( wphcx_recheck_scan_temp, 0 );
+						$( "#wpsc-table-results tr.wpsc-row" ).fadeOut(
 							500,
 							function () {
-								$( "tr.wpsc-row" ).hide();
+								$( this ).remove();
 							}
 						);
 
@@ -280,7 +280,7 @@
 						);
 					},
 					error: function (xhr, status, thrownError) {
-						window.setInterval( wphcx_recheck_scan_temp(), 500 );
+						window.setTimeout( wphcx_recheck_scan_temp, 500 );
 					},
 				}
 			);
